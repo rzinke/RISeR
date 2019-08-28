@@ -6,11 +6,11 @@ If you use these scripts, please cite:
 
 
 CONTENTS:
-* MCMCformat.py - User inputs go here
+* CalcSlipRates - User inputs go here
 * OffsetWriter.py - Used for writing out probability density functions (PDFs) to text files for input into MCMCgeneral.py
 * OxCal2PDF.py - Convert OxCal outputs to PDFs
 
-* SlipRateCalc.py - Used for calculating the slip rates
+* MCsample.py - Used for calculating the slip rates
 * FSRsupport.py - Contains age and offset objects and associated definitions
 
 

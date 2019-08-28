@@ -1,16 +1,37 @@
+#!/usr/bin/env python3
 '''
 Objects and support functions for MCMC slip rate calculator
 '''
 
 import numpy as np 
 
-def gauss(x,mu,sigma):
-	y=1/(sigma*np.sqrt(2*np.pi))*np.exp(-0.5*((x-mu)/sigma)**2);
-	return y
+class ageDatum:
+	'''
+	PDF representing an age measurement. Units are thousands of years.
+	'''
+	def __init__(self,name):
+		# Basic parameters
+		self.name=name
 
-def erf(x,mu,sigma):
-	# Do this the stupid way, haha 
-	y=gauss(x,mu,sigma)
-	Y=integrate.cumtrapz(y,x,initial=0) 
-	Y=Y/Y.max() # normalize max value to 1.0
-	return Y 
+class dispDatum:
+	'''
+	PDF representing a displacement measurement. Units are in meters.
+	'''
+	def __init__(self,name):
+		# Basic parameters
+		self.name=name
+
+
+
+##########################
+### Plotting functions ###
+##########################
+
+
+#############################
+### Statistical functions ###
+#############################
+
+# Highest posterior density
+
+# Quantile

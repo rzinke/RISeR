@@ -76,58 +76,8 @@ def makePDF(inpt):
 		plt.show()
 
 
-# --- User inputs --- 
-# Output file name
-# outName=''
 
-# Number of data points in output
-# nDataPts=100 
-
-# Values
-# U=[4.2,0.5]
-# if U is two numbers long, it will be a gaussian distribution ([1] +/- [2])
-# if U is three numbers long, it will be triangle (min pref max) 
-# if U is four numbers long, it will be a trapezoid (min low high max) 
-
-
-
-# # --- PROCESSING ---
-# # Processing 
-# import numpy as np 
-# from scipy import interpolate; interp=interpolate.interp1d 
-# import matplotlib.pyplot as plt 
-# from Gauss import * 
-
-# U=np.array(U) # convert list to array 
-
-# if len(U)==2:
-# 	u=np.linspace(U[0]-4*U[1],U[0]+4*U[1],num=n)
-# 	p=gauss(u,U[0],U[1]) # normal distribution 
-# else:
-# 	u=np.linspace(U[0],U[-1],num=n)
-# 	if len(U)==3:
-# 		pI=interp(U,np.array([0,1,0])) # triangular distribution 
-# 		p=pI(u) # interpolate 
-# 	elif len(U)==4:
-# 		pI=interp(U,np.array([0,1,1,0])) # trapezoidal distribution 
-# 		p=pI(u) # interpolate 
-
-# # Normalize area to 1.0
-# p=p/np.trapz(p,u)
-# print('Area = {}'.format(np.trapz(p,u))) # confirm area = 1.0 
-
-# # Write to text file 
-# np.savetxt(outfile,(u,p)) 
-# print('Saved to: {}'.format(outfile))
-
-# # Plot figure 
-# plt.figure(1) 
-# plt.plot(u,p,'b')
-# plt.xlabel('offset');plt.ylabel('rel. prob.')
-# plt.title('PDF')
-
-# plt.show()
-
+## Misc
 # Definition of gaussian functionn
 def gauss(x,mu,sigma):
 	y=1/(sigma*np.sqrt(2*np.pi))*np.exp(-0.5*((x-mu)/sigma)**2);
