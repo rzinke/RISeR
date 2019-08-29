@@ -5,7 +5,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
-from SlipRateObjects import *
+from slipRateObjects import *
+from MCresampling import *
 
 
 
@@ -18,11 +19,13 @@ def createParser():
 	parser.add_argument('-d','--dsp_list',dest='dsp_list_file',type=str,required=True,help='Text file with one displacement file per line, list in order from smallest (top line) to largest (bottom).')
 	parser.add_argument('-o','--output',dest='outName',type=str,required=True,default='Out',help='Head name for outputs (no extension)')
 	# Recommended
-	parser.add_argument('-n','--n_samples',dest='n_samples',type=int,default=1000,help='Number of samples picked in MC run (default 1000; more is often better).')
+	parser.add_argument('-n','--Nsamples',dest='Nsamples',type=int,default=1000,help='Number of samples picked in MC run (default 1000; more is often better).')
 	parser.add_argument('-verb','--verbose',dest='verbose',type=bool,default=False,help='Verbose? [True/False]')
 	parser.add_argument('-plot_inputs','--plot_inputs',dest='plot_inputs',type=bool,default=False,help='Plot inputs [True/False]')
 	parser.add_argument('-plot_outputs','--plot_outputs',dest='plot_outputs',type=bool,default=False,help='Plot outputs [True/False]')
 	# Highly optional
+	parser.add_argument('-max_rate','--max_rate',dest='max_rate',type=float,default=1E4,help='Maximum rate considered in MC analysis. Units are <dispalcement units> per <age units>')
+	parser.add_argument('-seed','--seed',dest='seed',type=float,default=0,help='Seed value for random number generator.')
 	parser.add_argument('-max_picks','--max_picks',dest='max_picks',type=int,default=1000,help='Max number of picks to plot on MC results figure.')
 	return parser 
 
@@ -58,11 +61,13 @@ def plotRawData(Ages,ageList,Dsps,dspList,xMax,yMax,outName=None):
 def plotMCresults(Ages,ageList,Dsps,dspList,AgePicks,DspPicks, \
 	xMax,yMax,max_picks,outName=None):
 	# Parameters
-	m=len(ageList) # number of data points
+	m=len(ageList) # number of measurements
+	n=AgePicks.shape[1] # number of picks
 
 	# Plot
 	Fmc=plt.figure('MonteCarlo_results')
 	axMC=Fmc.add_subplot(111)
+	# Plot rectangles
 	for i in range(m):
 		ageLower=Ages[ageList[i]].lowerLimit # load bottom
 		dspLower=Dsps[dspList[i]].lowerLimit # load left
@@ -71,9 +76,18 @@ def plotMCresults(Ages,ageList,Dsps,dspList,AgePicks,DspPicks, \
 		axMC.add_patch(Rectangle((ageLower,dspLower), # LL corner
 			boxWidth,boxHeight, # dimensions
 			edgecolor=(0.3,0.3,0.6),fill=False,zorder=3))
+	# Plot picks
+	if n<=max_picks:
+		axMC.plot(AgePicks,DspPicks,color=(0,0,0),alpha=0.1,zorder=1)
+		axMC.plot(AgePicks,DspPicks,color=(0,0,1),marker='.',alpha=0.1,zorder=2)
+	else:
+		axMC.plot(AgePicks[:,:max_picks],DspPicks[:,:max_picks],
+			color=(0,0,0),alpha=0.1,zorder=1)
+		axMC.plot(AgePicks[:,:max_picks],DspPicks[:,:max_picks],
+			color=(0,0,0),alpha=0.1,zorder=1)
 	axMC.set_xlim([0,1.1*xMax]); axMC.set_ylim([0,1.1*yMax])
 	axMC.set_xlabel('age'); axMC.set_ylabel('offset')
-	axMC.set_title('MC Picks (N = )')
+	axMC.set_title('MC Picks (N = {})'.format(n))
 	if outName:
 		Fmc.savefig('{}_MCpicks.png'.format(outName),dpi=300)
 	return Fmc,axMC
@@ -164,10 +178,15 @@ if __name__ == '__main__':
 		outName=inpt.outName)
 
 	## Monte Carlo resamping
+	AgePicks,DspPicks=MCMC_resample(inpt.Nsamples,
+		Ages,ageList,Dsps,dspList,
+		condition='standard',maxRate=inpt.max_rate,
+		seed_value=inpt.seed,
+		outName=None)
 
 	## Plot MC results
 	plotMCresults(Ages,ageList,Dsps,dspList,
-		None, None,
+		AgePicks, DspPicks,
 		xmaxGlobal,ymaxGlobal,inpt.max_picks,
 		outName=inpt.outName)
 
