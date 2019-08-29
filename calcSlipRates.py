@@ -178,11 +178,11 @@ if __name__ == '__main__':
 		outName=inpt.outName)
 
 	## Monte Carlo resamping
-	AgePicks,DspPicks=MCMC_resample(inpt.Nsamples,
+	AgePicks,DspPicks,RatePicks=MCMC_resample(inpt.Nsamples,
 		Ages,ageList,Dsps,dspList,
 		condition='standard',maxRate=inpt.max_rate,
 		seed_value=inpt.seed,
-		outName=None)
+		verbose=True,outName=None)
 
 	## Plot MC results
 	plotMCresults(Ages,ageList,Dsps,dspList,
