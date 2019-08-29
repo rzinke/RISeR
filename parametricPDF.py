@@ -72,6 +72,8 @@ def makePDF(inpt):
 		ax.plot(x,px,'b',linewidth=2)
 		ax.set_title('Probability Density Function')
 		ax.set_xlabel('values'); ax.set_ylabel('rel prob')
+		figOutName=inpt.outName.split('.')[0]
+		F.savefig('{0:s}.png'.format(figOutName),dpi=300)
 
 		plt.show()
 
