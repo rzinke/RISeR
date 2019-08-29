@@ -89,6 +89,9 @@ def MCMC_resample(Nsamples,Ages,ageList,Dsps,dspList,condition='standard',maxRat
 
 	# Save to file
 	if outName:
-		pass
+		# Save picks
+		np.save('{}_AgePicks.npy'.format(outName),AgePicks)
+		np.save('{}_DspPicks.npy'.format(outName),DspPicks)
+		np.save('{}_RatePicks.npy'.format(outName),RatePicks)
 
 	return AgePicks, DspPicks, RatePicks
