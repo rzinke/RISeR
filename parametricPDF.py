@@ -5,6 +5,8 @@ Use this to create a probability density function (PDF) as a text file.
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import interpolate as intrp 
+from SlipRateObjects import gauss
+
 
 ## Parser
 def createParser():
@@ -54,7 +56,7 @@ def makePDF(inpt):
 
 	# Save to text file
 	Fout=open(inpt.outName,'w')
-	Fout.write('# Value, Probability\n')
+	Fout.write('# Value,\tProbability\n')
 	for i in range(inpt.n):
 		Fout.write('{0:f}\t{1:f}\n'.format(x[i],px[i]))
 	Fout.close()
@@ -77,15 +79,6 @@ def makePDF(inpt):
 		F.savefig('{0:s}.png'.format(figOutName),dpi=300)
 
 		plt.show()
-
-
-
-## Misc
-# Definition of gaussian functionn
-def gauss(x,mu,sigma):
-	y=1/(sigma*np.sqrt(2*np.pi))*np.exp(-0.5*((x-mu)/sigma)**2);
-	return y
-
 
 
 ## Main
