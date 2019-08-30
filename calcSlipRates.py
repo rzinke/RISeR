@@ -62,7 +62,7 @@ def plotRawData(Ages,ageList,Dsps,dspList,xMax,yMax,outName=None):
 	axRaw.set_xlabel('age'); axRaw.set_ylabel('offset')
 	axRaw.set_title('Raw data (95 % limits)')
 	if outName:
-		Fraw.savefig('{}_RawData.png'.format(outName),dpi=300)
+		Fraw.savefig('{}_RawData.png'.format(outName),dpi=600)
 	return Fraw,axRaw
 
 # Plot MC results
@@ -97,8 +97,48 @@ def plotMCresults(Ages,ageList,Dsps,dspList,AgePicks,DspPicks, \
 	axMC.set_xlabel('age'); axMC.set_ylabel('offset')
 	axMC.set_title('MC Picks (N = {})'.format(n))
 	if outName:
-		Fmc.savefig('{}_MCpicks.png'.format(outName),dpi=300)
+		Fmc.savefig('{}_MCpicks.png'.format(outName),dpi=600)
 	return Fmc,axMC
+
+# Plot incremental slip rate results
+def plotIncSlipRates(Rates,intervalList,analysis_method,outName=None):
+	# Analysis method is IQR or HPD
+
+	# Setup figure
+	F=plt.figure('IncrementalRates')
+	ax=F.add_subplot(111)
+	intvl_labels=[]; k=0
+	# Loop through each rate
+	for i in intervalList:
+		# Plot full PDF
+		scale_value=Rates[i].probs.max()
+		ax.fill(Rates[i].rate,
+			0.9*Rates[i].probs/scale_value+k,
+			color=(0.4,0.4,0.4),zorder=2)
+		# Plot confidence bounds
+		if analysis_method=='IQR':
+			ax.fill(Rates[i].xIQR,
+				0.9*Rates[i].pxIQR/scale_value+k,
+				color=(0.3,0.3,0.6),zorder=3)
+		elif inpt.pdf_analysis=='HPD':
+			for j in range(Rates[i].Nclusters):
+				xHPD=Rates[i].x_clusters[j]
+				xHPD=np.pad(xHPD,(1,1),'edge')
+				pxHPD=Rates[i].px_clusters[j]
+				pxHPD=np.pad(pxHPD,(1,1),'constant')
+				ax.fill(xHPD,0.9*pxHPD/scale_value+k,
+					color=(0.3,0.3,0.6),zorder=3)
+		# Format axis labels
+		intvl_name='{}-\n{}'.format(i.split('-')[0],i.split('-')[1])
+		intvl_labels.append(intvl_name)
+		k+=1
+	ax.set_yticks(np.arange(0.5,m-1))
+	ax.set_yticklabels(intvl_labels,rotation='vertical')
+	ax.set_ylim([0,m-1]); ax.set_xlim([0,inpt.max_rate])
+	ax.set_xlabel('slip rate')
+	ax.set_title('Incremental slip rates')
+	if outName:
+		F.savefig('{}_Incremental_slip_rates.png'.format(outName),dpi=600)
 
 
 
@@ -182,10 +222,10 @@ if __name__ == '__main__':
 
 	# Formulate interval names
 	#  Intervals are the rates between one measurement and another
-	Intervals=[]
+	intervalList=[]
 	for i in range(m-1):
 		interval_name='{}-{}'.format(dspList[i],dspList[i+1])
-		Intervals.append(interval_name)
+		intervalList.append(interval_name)
 
 	## Plot raw data
 	plotRawData(Ages,ageList,Dsps,dspList,
@@ -212,7 +252,7 @@ if __name__ == '__main__':
 	for i in range(m-1):
 		# Calculate percentile
 		pct=np.percentile(RatePicks[i,:],percentiles)
-		print('{0}: {1:.2f} +{2:.2f} -{3:.2f}'.format(Intervals[i],pct[0],pct[2],pct[1]))
+		print('{0}: {1:.2f} +{2:.2f} -{3:.2f}'.format(intervalList[i],pct[0],pct[2],pct[1]))
 
 	## Convert MC results to PDFs
 	Rates={} # dictionary of object instances similar to Ages, Dsps
@@ -230,59 +270,51 @@ if __name__ == '__main__':
 				verbose=inpt.verbose,plot=False)
 
 		# Ascribe to object
-		Rates[Intervals[i]]=rateObj(Intervals[i])
-		Rates[Intervals[i]].rate=R[:,0] # rate values
-		Rates[Intervals[i]].probs=R[:,1] # corresponding probabilities
+		Rates[intervalList[i]]=rateObj(intervalList[i])
+		Rates[intervalList[i]].rate=R[:,0] # rate values
+		Rates[intervalList[i]].probs=R[:,1] # corresponding probabilities
 
 	# Analyze PDFs
+	print('PDF-based statistics calculated using {}:'.format(inpt.pdf_analysis))
 	for i in range(m-1):
+		print('Interval: {}'.format(intervalList[i]))
+
 		# Interquantile range
 		if inpt.pdf_analysis in ['IQR','quantiles','quantile']:
 			'''
 			More stable option, but slightly skewed toward larger values
 			'''
-			lowerValue,upperValue,xRelevant,pxRelevant=IQRpdf(Rates[Intervals[i]].rate,
-				Rates[Intervals[i]].probs,
+			inpt.pdf_analysis='IQR' # confirm code for later
+			lowerValue,upperValue,xIQR,pxIQR=IQRpdf(Rates[intervalList[i]].rate,
+				Rates[intervalList[i]].probs,
 				inpt.rate_confidence,outName=inpt.outName,
-				verbose=inpt.verbose,plot_input=False,plot_output=inpt.plot_outputs)
-			Rates[Intervals[i]].xRelevant=xRelevant # record lower value
-			Rates[Intervals[i]].pxRelevant=pxRelevant # record upper value
+				verbose=True,plot_input=False,plot_output=False)
+			Rates[intervalList[i]].xIQR=xIQR # record lower value
+			Rates[intervalList[i]].pxIQR=pxIQR # record upper value
 
 		# Highest posterior density
 		elif inpt.pdf_analysis in ['HPD','density']:
 			'''
 			More representative of probable values
 			'''
-			lowerValue,upperValue,x_clusters,px_clusters=HPDpdf(Rates[Intervals[i]].rate,
-				Rates[Intervals[i]].probs,
+			inpt.pdf_analysis='HPD' # confirm code for later
+			lowerValue,upperValue,x_clusters,px_clusters=HPDpdf(Rates[intervalList[i]].rate,
+				Rates[intervalList[i]].probs,
 				inpt.rate_confidence,outName=inpt.outName,
-				verbose=inpt.verbose,plot_input=False,plot_output=inpt.plot_outputs)
-			Rates[Intervals[i]].x_clusters=x_clusters # record cluster values
-			Rates[Intervals[i]].px_clusters=px_clusters # record cluster probs
+				verbose=True,plot_input=False,plot_output=False)
+			Rates[intervalList[i]].x_clusters=x_clusters # record cluster values
+			Rates[intervalList[i]].px_clusters=px_clusters # record cluster probs
+			Rates[intervalList[i]].Nclusters=len(x_clusters) # number of clusters
 
-		Rates[Intervals[i]].lowerValue=lowerValue # record lower value
-		Rates[Intervals[i]].upperValue=upperValue # record upper value
-
-	# Create incremental slip rate plot
-	F=plt.figure('IncrementalRates')
-	ax=F.add_subplot(111)
-	intvl_labels=[]; k=0
-	for i in Intervals:
-		ax.fill(Rates[i].rate,
-			0.9*Rates[i].probs/Rates[i].probs.max()+k,
-			color=(0.4,0.4,0.4),zorder=2)
-		intvl_name='{}-\n{}'.format(i.split('-')[0],i.split('-')[1])
-		intvl_labels.append(intvl_name)
-		k+=1
-	ax.set_yticks(np.arange(0.5,m-1))
-	ax.set_yticklabels(intvl_labels,rotation='vertical')
-	ax.set_ylim([0,m-1]); ax.set_xlim([0,inpt.max_rate])
-	ax.set_xlabel('slip rate')
-	ax.set_title('Incremental slip rates')
+		Rates[intervalList[i]].lowerValue=lowerValue # record lower value
+		Rates[intervalList[i]].upperValue=upperValue # record upper value
 
 
-	## Save data
+	# Plot incremental slip rates on same plot
+	plotIncSlipRates(Rates,intervalList,inpt.pdf_analysis,outName=inpt.outName)
 
+	## Save analyses to text file
+	# Display slip rates (print to screen) 
 
 
 	if inpt.plot_inputs==True or inpt.plot_outputs==True:

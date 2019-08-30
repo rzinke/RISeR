@@ -44,15 +44,16 @@ def IQRpdf(x,px,confidence,outName=None,verbose=False,plot_input=False,plot_outp
 		axCDF.plot([lowerValue,lowerValue],[lower,0],color='b',zorder=1)
 		axCDF.plot([upperValue,upperValue],[upper,0],color='b',zorder=1)
 
-	if plot_output is True:
-		plotNdx=(x>=lowerValue) & (x<=upperValue)
-		xIQR=x[plotNdx]; xIQR=np.pad(xIQR,(1,1),'edge')
-		pxIQR=px[plotNdx]; pxIQR=np.pad(pxIQR,(1,1),'constant')
 
+	plotNdx=(x>=lowerValue) & (x<=upperValue)
+	xIQR=x[plotNdx]; xIQR=np.pad(xIQR,(1,1),'edge')
+	pxIQR=px[plotNdx]; pxIQR=np.pad(pxIQR,(1,1),'constant')
+
+	if plot_output is True:
 		Fpdff,axPDFf=plotPDFfilled(x,px)
 		axPDFf.fill(xIQR,pxIQR,color=(0.3,0.3,0.6),zorder=3)
 		if outName:
-			Fpdff.savefig(outName,dpi=300)
+			Fpdff.savefig(outName,dpi=600)
 
 	return lowerValue, upperValue, xIQR, pxIQR
 
@@ -143,7 +144,7 @@ def HPDpdf(x,px,confidence,outName=None,verbose=False,plot_input=False,plot_outp
 			pxHPD=np.pad(pxHPD,(1,1),'constant')
 			axPDFf.fill(xHPD,pxHPD,color=(0.3,0.3,0.6),zorder=3)
 		if outName:
-			Fpdff.savefig(outName,dpi=300)
+			Fpdff.savefig(outName,dpi=600)
 
 	return lowestValue, highestValue, x_clusters, px_clusters
 
