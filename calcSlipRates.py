@@ -241,11 +241,12 @@ if __name__ == '__main__':
 			'''
 			More stable option, but slightly skewed toward larger values
 			'''
-			lowerValue,upperValue=IQRpdf(Rates[Intervals[i]].rate,Rates[Intervals[i]].probs,
+			lowerValue,upperValue,xRelevant,pxRelevant=IQRpdf(Rates[Intervals[i]].rate,
+				Rates[Intervals[i]].probs,
 				inpt.rate_confidence,outName=inpt.outName,
 				verbose=inpt.verbose,plot_input=False,plot_output=inpt.plot_outputs)
-			Rates[Intervals[i]].lowerValue=lowerValue # record lower value
-			Rates[Intervals[i]].upperValue=upperValue # record upper value
+			Rates[Intervals[i]].xRelevant=xRelevant # record lower value
+			Rates[Intervals[i]].pxRelevant=pxRelevant # record upper value
 
 		# Highest posterior density
 		elif inpt.pdf_analysis in ['HPD','density']:
@@ -265,9 +266,18 @@ if __name__ == '__main__':
 	# Create incremental slip rate plot
 	F=plt.figure('IncrementalRates')
 	ax=F.add_subplot(111)
+	intvl_labels=[]; k=0
+	for i in Intervals:
+		ax.fill(Rates[i].rate,
+			0.9*Rates[i].probs/Rates[i].probs.max()+k,
+			color=(0.4,0.4,0.4),zorder=2)
+		intvl_name='{}-\n{}'.format(i.split('-')[0],i.split('-')[1])
+		intvl_labels.append(intvl_name)
+		k+=1
 	ax.set_yticks(np.arange(0.5,m-1))
-	ax.set_yticklabels(Intervals,rotation='vertical')
-	ax.set_ylim([0,m-1])
+	ax.set_yticklabels(intvl_labels,rotation='vertical')
+	ax.set_ylim([0,m-1]); ax.set_xlim([0,inpt.max_rate])
+	ax.set_xlabel('slip rate')
 	ax.set_title('Incremental slip rates')
 
 
