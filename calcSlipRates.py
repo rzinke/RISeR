@@ -8,6 +8,7 @@ from matplotlib.patches import Rectangle
 from slipRateObjects import *
 from MCresampling import *
 from array2pdf import *
+from PDFanalysis import *
 
 
 
@@ -28,9 +29,12 @@ def createParser():
 	parser.add_argument('-max_rate','--max_rate',dest='max_rate',type=float,default=1E4,help='Maximum rate considered in MC analysis. Units are <dispalcement units> per <age units>')
 	parser.add_argument('-seed','--seed',dest='seed',type=float,default=0,help='Seed value for random number generator.')
 	parser.add_argument('-max_picks','--max_picks',dest='max_picks',type=int,default=500,help='Max number of picks to plot on MC results figure.')
+	parser.add_argument('-pdf_method','--pdf_method',dest='pdf_method',type=str,default='kde',help='Method used for transforming rate picks into slip rate PDF [\'hist\'/\'kde\'].')
 	parser.add_argument('-rate_step','--rate_step',dest='rate_step',type=float,default=0.01,help='Step size for slip rate functions. Default = 0.01.')
 	parser.add_argument('-smoothing_kernel','--smoothing_kernel',dest='smoothing_kernel',type=str,default=None,help='Smoothing kernel type of slip rate functions. [None/mean/gauss]')
 	parser.add_argument('-kernel_width','--kernel_width',dest='kernel_width',type=int,default=2,help='Smoothing kernel width of slip rate functions.')
+	parser.add_argument('-pdf_analysis','--pdf_analysis',dest='pdf_analysis',type=str,default='IQR',help='Method for analyzing slip rate PDFs. \'IQR\' for interquantile range; \'HPD\' for highest posterior density.')
+	parser.add_argument('-rate_confidence','--rate_confidence',dest='rate_confidence',type=float,default=68.27,help='Confidence range for slip rate PDF reporting, [percent, e.g., 68.27, 95.45]')
 	return parser 
 
 def cmdParser(inpt_args=None):
@@ -211,14 +215,60 @@ if __name__ == '__main__':
 		print('{0}: {1:.2f} +{2:.2f} -{3:.2f}'.format(Intervals[i],pct[0],pct[2],pct[1]))
 
 	## Convert MC results to PDFs
-	for i in range(1):
+	Rates={} # dictionary of object instances similar to Ages, Dsps
+	for i in range(m-1):
 		# Convert points to temporary (px2) array
-		R=arrayHist(RatePicks[i,:],inpt.rate_step,
-			smoothing_kernel=inpt.smoothing_kernel,
-			kernel_width=inpt.kernel_width,
-			verbose=inpt.verbose,plot=inpt.plot_outputs)
+		if inpt.pdf_method.lower() in ['hist','histogram']:
+			R=arrayHist(RatePicks[i,:],inpt.rate_step,
+				smoothing_kernel=inpt.smoothing_kernel,
+				kernel_width=inpt.kernel_width,
+				verbose=inpt.verbose,plot=False)
+		elif inpt.pdf_method.lower() in ['kde','kernel']:
+			R=arrayKDE(RatePicks[i,:],inpt.rate_step,
+				smoothing_kernel=inpt.smoothing_kernel,
+				kernel_width=inpt.kernel_width,
+				verbose=inpt.verbose,plot=False)
 
 		# Ascribe to object
+		Rates[Intervals[i]]=rateObj(Intervals[i])
+		Rates[Intervals[i]].rate=R[:,0] # rate values
+		Rates[Intervals[i]].probs=R[:,1] # corresponding probabilities
+
+	# Analyze PDFs
+	for i in range(m-1):
+		# Interquantile range
+		if inpt.pdf_analysis in ['IQR','quantiles','quantile']:
+			'''
+			More stable option, but slightly skewed toward larger values
+			'''
+			lowerValue,upperValue=IQRpdf(Rates[Intervals[i]].rate,Rates[Intervals[i]].probs,
+				inpt.rate_confidence,outName=inpt.outName,
+				verbose=inpt.verbose,plot_input=False,plot_output=inpt.plot_outputs)
+			Rates[Intervals[i]].lowerValue=lowerValue # record lower value
+			Rates[Intervals[i]].upperValue=upperValue # record upper value
+
+		# Highest posterior density
+		elif inpt.pdf_analysis in ['HPD','density']:
+			'''
+			More representative of probable values
+			'''
+			lowerValue,upperValue,x_clusters,px_clusters=HPDpdf(Rates[Intervals[i]].rate,
+				Rates[Intervals[i]].probs,
+				inpt.rate_confidence,outName=inpt.outName,
+				verbose=inpt.verbose,plot_input=False,plot_output=inpt.plot_outputs)
+			Rates[Intervals[i]].x_clusters=x_clusters # record cluster values
+			Rates[Intervals[i]].px_clusters=px_clusters # record cluster probs
+
+		Rates[Intervals[i]].lowerValue=lowerValue # record lower value
+		Rates[Intervals[i]].upperValue=upperValue # record upper value
+
+	# Create incremental slip rate plot
+	F=plt.figure('IncrementalRates')
+	ax=F.add_subplot(111)
+	ax.set_yticks(np.arange(0.5,m-1))
+	ax.set_yticklabels(Intervals,rotation='vertical')
+	ax.set_ylim([0,m-1])
+	ax.set_title('Incremental slip rates')
 
 
 	## Save data
