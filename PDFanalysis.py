@@ -54,7 +54,7 @@ def IQRpdf(x,px,confidence,outName=None,verbose=False,plot_input=False,plot_outp
 		if outName:
 			Fpdff.savefig(outName,dpi=300)
 
-	return lowerValue, upperValue
+	return lowerValue, upperValue, xIQR, pxIQR
 
 
 
