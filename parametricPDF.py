@@ -5,7 +5,7 @@ Use this to create a probability density function (PDF) as a text file.
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import interpolate as intrp 
-from SlipRateObjects import gauss
+from slipRateObjects import gauss
 
 
 ## Parser

@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from slipRateObjects import *
 from MCresampling import *
+from array2pdf import *
 
 
 
@@ -26,7 +27,10 @@ def createParser():
 	# Highly optional
 	parser.add_argument('-max_rate','--max_rate',dest='max_rate',type=float,default=1E4,help='Maximum rate considered in MC analysis. Units are <dispalcement units> per <age units>')
 	parser.add_argument('-seed','--seed',dest='seed',type=float,default=0,help='Seed value for random number generator.')
-	parser.add_argument('-max_picks','--max_picks',dest='max_picks',type=int,default=1000,help='Max number of picks to plot on MC results figure.')
+	parser.add_argument('-max_picks','--max_picks',dest='max_picks',type=int,default=500,help='Max number of picks to plot on MC results figure.')
+	parser.add_argument('-rate_step','--rate_step',dest='rate_step',type=float,default=0.01,help='Step size for slip rate functions. Default = 0.01.')
+	parser.add_argument('-smoothing_kernel','--smoothing_kernel',dest='smoothing_kernel',type=str,default=None,help='Smoothing kernel type of slip rate functions. [None/mean/gauss]')
+	parser.add_argument('-kernel_width','--kernel_width',dest='kernel_width',type=int,default=2,help='Smoothing kernel width of slip rate functions.')
 	return parser 
 
 def cmdParser(inpt_args=None):
@@ -79,12 +83,12 @@ def plotMCresults(Ages,ageList,Dsps,dspList,AgePicks,DspPicks, \
 	# Plot picks
 	if n<=max_picks:
 		axMC.plot(AgePicks,DspPicks,color=(0,0,0),alpha=0.1,zorder=1)
-		axMC.plot(AgePicks,DspPicks,color=(0,0,1),marker='.',alpha=0.1,zorder=2)
+		axMC.plot(AgePicks,DspPicks,color=(0,0,1),marker='.',linewidth=0,alpha=0.1,zorder=2)
 	else:
 		axMC.plot(AgePicks[:,:max_picks],DspPicks[:,:max_picks],
 			color=(0,0,0),alpha=0.1,zorder=1)
 		axMC.plot(AgePicks[:,:max_picks],DspPicks[:,:max_picks],
-			color=(0,0,0),alpha=0.1,zorder=1)
+			color=(0,0,1),marker='.',linewidth=0,alpha=0.1,zorder=2)
 	axMC.set_xlim([0,1.1*xMax]); axMC.set_ylim([0,1.1*yMax])
 	axMC.set_xlabel('age'); axMC.set_ylabel('offset')
 	axMC.set_title('MC Picks (N = {})'.format(n))
@@ -172,6 +176,13 @@ if __name__ == '__main__':
 		for i in range(nAges):
 			print('\t{} - {}'.format(ageList[i],dspList[i]))
 
+	# Formulate interval names
+	#  Intervals are the rates between one measurement and another
+	Intervals=[]
+	for i in range(m-1):
+		interval_name='{}-{}'.format(dspList[i],dspList[i+1])
+		Intervals.append(interval_name)
+
 	## Plot raw data
 	plotRawData(Ages,ageList,Dsps,dspList,
 		xmaxGlobal,ymaxGlobal,
@@ -182,7 +193,7 @@ if __name__ == '__main__':
 		Ages,ageList,Dsps,dspList,
 		condition='standard',maxRate=inpt.max_rate,
 		seed_value=inpt.seed,
-		verbose=True,outName=None)
+		verbose=False,outName=None)
 
 	## Plot MC results
 	plotMCresults(Ages,ageList,Dsps,dspList,
@@ -190,7 +201,25 @@ if __name__ == '__main__':
 		xmaxGlobal,ymaxGlobal,inpt.max_picks,
 		outName=inpt.outName)
 
+	# Raw statistics
+	percentiles=[50, 50-68.27/2, 50+68.27/2]
+	print('Slip rate statistics from {} samples (raw):'.format(inpt.Nsamples))
+	print('\nInterval: 50% values and 68% confidence')
+	for i in range(m-1):
+		# Calculate percentile
+		pct=np.percentile(RatePicks[i,:],percentiles)
+		print('{0}: {1:.2f} +{2:.2f} -{3:.2f}'.format(Intervals[i],pct[0],pct[2],pct[1]))
+
 	## Convert MC results to PDFs
+	for i in range(1):
+		# Convert points to temporary (px2) array
+		R=arrayHist(RatePicks[i,:],inpt.rate_step,
+			smoothing_kernel=inpt.smoothing_kernel,
+			kernel_width=inpt.kernel_width,
+			verbose=inpt.verbose,plot=inpt.plot_outputs)
+
+		# Ascribe to object
+
 
 	## Save data
 
