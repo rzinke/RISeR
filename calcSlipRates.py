@@ -62,7 +62,7 @@ def plotRawData(Ages,ageList,Dsps,dspList,xMax,yMax,outName=None):
 	axRaw.set_xlabel('age'); axRaw.set_ylabel('offset')
 	axRaw.set_title('Raw data (95 % limits)')
 	if outName:
-		Fraw.savefig('{}_RawData.png'.format(outName),dpi=600)
+		Fraw.savefig('{}_Fig1_RawData.png'.format(outName),dpi=600)
 	return Fraw,axRaw
 
 # Plot MC results
@@ -97,7 +97,7 @@ def plotMCresults(Ages,ageList,Dsps,dspList,AgePicks,DspPicks, \
 	axMC.set_xlabel('age'); axMC.set_ylabel('offset')
 	axMC.set_title('MC Picks (N = {})'.format(n))
 	if outName:
-		Fmc.savefig('{}_MCpicks.png'.format(outName),dpi=600)
+		Fmc.savefig('{}_Fig2_MCpicks.png'.format(outName),dpi=600)
 	return Fmc,axMC
 
 # Plot incremental slip rate results
@@ -138,7 +138,7 @@ def plotIncSlipRates(Rates,intervalList,analysis_method,outName=None):
 	ax.set_xlabel('slip rate')
 	ax.set_title('Incremental slip rates')
 	if outName:
-		F.savefig('{}_Incremental_slip_rates.png'.format(outName),dpi=600)
+		F.savefig('{}_Fig3_Incremental_slip_rates.png'.format(outName),dpi=600)
 
 
 
@@ -245,14 +245,24 @@ if __name__ == '__main__':
 		xmaxGlobal,ymaxGlobal,inpt.max_picks,
 		outName=inpt.outName)
 
+	# Save to file as script progresses
+	TXTout=open('{}_slip_rate_report.txt'.format(inpt.outName),'w')
+
 	# Raw statistics
-	percentiles=[50, 50-68.27/2, 50+68.27/2]
-	print('Slip rate statistics from {} samples (raw):'.format(inpt.Nsamples))
-	print('\nInterval: 50% values and 68% confidence')
+	percentiles=[50-68.27/2, 50, 50+68.27/2]
+	pct_report='''Slip rate statistics from {} samples:
+Raw slip rates: (Interval: median values and 68% confidence)'''.format(inpt.Nsamples)
+	print(pct_report)
+	TXTout.write(pct_report)
+
 	for i in range(m-1):
 		# Calculate percentile
 		pct=np.percentile(RatePicks[i,:],percentiles)
-		print('{0}: {1:.2f} +{2:.2f} -{3:.2f}'.format(intervalList[i],pct[0],pct[2],pct[1]))
+		median=pct[1]
+		high_err=pct[2]-pct[1]
+		low_err=pct[1]-pct[0]
+		raw_stats_report='{0}: {1:.2f} +{2:.2f} -{3:.2f}'.format(intervalList[i],median,high_err,low_err)
+		print(raw_stats_report); TXTout.write('\n{}'.format(raw_stats_report))
 
 	## Convert MC results to PDFs
 	Rates={} # dictionary of object instances similar to Ages, Dsps
@@ -275,9 +285,9 @@ if __name__ == '__main__':
 		Rates[intervalList[i]].probs=R[:,1] # corresponding probabilities
 
 	# Analyze PDFs
-	print('PDF-based statistics calculated using {}:'.format(inpt.pdf_analysis))
+	pdf_report='PDF-based statistics ({0}% confidence) calculated using {1}.'.format(inpt.rate_confidence,inpt.pdf_analysis)
+	print(pdf_report); TXTout.write('\n\n{}'.format(pdf_report))
 	for i in range(m-1):
-		print('Interval: {}'.format(intervalList[i]))
 
 		# Interquantile range
 		if inpt.pdf_analysis in ['IQR','quantiles','quantile']:
@@ -285,12 +295,22 @@ if __name__ == '__main__':
 			More stable option, but slightly skewed toward larger values
 			'''
 			inpt.pdf_analysis='IQR' # confirm code for later
-			lowerValue,upperValue,xIQR,pxIQR=IQRpdf(Rates[intervalList[i]].rate,
+			PDF=IQRpdf(Rates[intervalList[i]].rate,
 				Rates[intervalList[i]].probs,
-				inpt.rate_confidence,outName=inpt.outName,
-				verbose=True,plot_input=False,plot_output=False)
-			Rates[intervalList[i]].xIQR=xIQR # record lower value
-			Rates[intervalList[i]].pxIQR=pxIQR # record upper value
+				inpt.rate_confidence,verbose=False)
+			Rates[intervalList[i]].median=PDF.median 
+			Rates[intervalList[i]].xIQR=PDF.xIQR
+			Rates[intervalList[i]].pxIQR=PDF.pxIQR
+			Rates[intervalList[i]].lowerValue=PDF.lowerValue # record lower value
+			Rates[intervalList[i]].upperValue=PDF.upperValue # record upper value
+
+			# Report relevant stats
+			median=PDF.median
+			low_err=median-PDF.lowerValue
+			high_err=PDF.upperValue-median
+
+			incr_slip_rate_report='{0}: {1:.2f} +{2:.2f} -{3:.2f}'.format(intervalList[i],median,high_err,low_err)
+			print(incr_slip_rate_report); TXTout.write('\n{}'.format(incr_slip_rate_report))
 
 		# Highest posterior density
 		elif inpt.pdf_analysis in ['HPD','density']:
@@ -298,23 +318,33 @@ if __name__ == '__main__':
 			More representative of probable values
 			'''
 			inpt.pdf_analysis='HPD' # confirm code for later
-			lowerValue,upperValue,x_clusters,px_clusters=HPDpdf(Rates[intervalList[i]].rate,
+			PDF=HPDpdf(Rates[intervalList[i]].rate,
 				Rates[intervalList[i]].probs,
-				inpt.rate_confidence,outName=inpt.outName,
-				verbose=True,plot_input=False,plot_output=False)
-			Rates[intervalList[i]].x_clusters=x_clusters # record cluster values
-			Rates[intervalList[i]].px_clusters=px_clusters # record cluster probs
-			Rates[intervalList[i]].Nclusters=len(x_clusters) # number of clusters
+				inpt.rate_confidence,verbose=False)
+			Rates[intervalList[i]].mode=PDF.mode # peak value
+			Rates[intervalList[i]].x_clusters=PDF.x_clusters # record cluster values
+			Rates[intervalList[i]].px_clusters=PDF.px_clusters # record cluster probs
+			Rates[intervalList[i]].Nclusters=len(PDF.x_clusters) # number of clusters
+			Rates[intervalList[i]].lowerValue=PDF.lowestValue # record lower value
+			Rates[intervalList[i]].upperValue=PDF.highestValue # record upper value
 
-		Rates[intervalList[i]].lowerValue=lowerValue # record lower value
-		Rates[intervalList[i]].upperValue=upperValue # record upper value
+			# Report relevant stats
+			peak=PDF.mode
+			high_err=PDF.highestValue-peak
+			low_err=peak-PDF.lowestValue
 
+			incr_slip_rate_report='{0}: {1:.2f} +{2:.2f} -{3:.2f}'.format(intervalList[i],peak,high_err,low_err)
+			print(incr_slip_rate_report); TXTout.write('\n{}'.format(incr_slip_rate_report))
+			TXTout.write('\n\tRanges:')
+			for i in range(PDF.nClusters):
+				cluster_range_report='\t\t({0:.2f} to {1:.2f})'.format(PDF.lowestValue,PDF.highestValue)
+				print(cluster_range_report); TXTout.write('\n{}'.format(cluster_range_report))
 
 	# Plot incremental slip rates on same plot
 	plotIncSlipRates(Rates,intervalList,inpt.pdf_analysis,outName=inpt.outName)
 
-	## Save analyses to text file
-	# Display slip rates (print to screen) 
+	# Close saved file
+	TXTout.close()
 
 
 	if inpt.plot_inputs==True or inpt.plot_outputs==True:
