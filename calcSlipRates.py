@@ -337,7 +337,9 @@ Raw slip rates: (Interval: median values and 68% confidence)'''.format(inpt.Nsam
 			print(incr_slip_rate_report); TXTout.write('\n{}'.format(incr_slip_rate_report))
 			TXTout.write('\n\tRanges:')
 			for i in range(PDF.nClusters):
-				cluster_range_report='\t\t({0:.2f} to {1:.2f})'.format(PDF.lowestValue,PDF.highestValue)
+				cluster_low_value=PDF.x_clusters[i].min()
+				cluster_hi_value=PDF.x_clusters[i].max()
+				cluster_range_report='\t\t({0:.2f} to {1:.2f})'.format(cluster_low_value,cluster_hi_value)
 				print(cluster_range_report); TXTout.write('\n{}'.format(cluster_range_report))
 
 	# Plot incremental slip rates on same plot

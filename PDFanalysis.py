@@ -159,6 +159,8 @@ class HPDpdf:
 			nClusters=len(x_clusters)
 			print('\tLowest value: {0:5f};\tHighest value: {1:5f}'.format(lowestValue,highestValue))
 			print('\tNumber of clusters: {}'.format(nClusters))
+			for n in range(nClusters):
+				print('\t\tcluster {0}: {1:.2f}-{2:.2f}'.format(n,x_clusters[n].min(),x_clusters[n].max()))
 
 		self.x=x; self.px=px # PDF
 		self.PxSort=PxSort
