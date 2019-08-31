@@ -46,12 +46,12 @@ class ageDatum:
 		# Inverse interpolation function
 		#	use cdf as "x" value for inverse interpolation
 		#	leave kind as linear to avoid values < 0 or > 1
-		self.InvInt=interp1d(self.cdf,self.ages,kind='linear')
+		self.InvCDF=interp1d(self.cdf,self.ages,kind='linear')
 		if verbose is True:
 			print('\t...built inverse interpolation function')
 
 		# Basic statistics
-		self.lowerLimit,self.median,self.upperLimit=self.InvInt([0.025,0.5,0.975])
+		self.lowerLimit,self.median,self.upperLimit=self.InvCDF([0.025,0.5,0.975])
 		if verbose is True:
 			print('\t95.45 % limits: {0:.5f}; {1:.5f}'.format(self.lowerLimit,self.upperLimit))
 
@@ -106,12 +106,12 @@ class dspDatum:
 		# Inverse interpolation function
 		#	use cdf as "x" value for inverse interpolation
 		#	leave kind as linear to avoid values < 0 or > 1
-		self.InvInt=interp1d(self.cdf,self.dsps,kind='linear')
+		self.InvCDF=interp1d(self.cdf,self.dsps,kind='linear')
 		if verbose is True:
 			print('\t...built inverse interpolation function')
 
 		# Basic stats
-		self.lowerLimit,self.median,self.upperLimit=self.InvInt([0.025,0.5,0.975])
+		self.lowerLimit,self.median,self.upperLimit=self.InvCDF([0.025,0.5,0.975])
 		if verbose is True:
 			print('\t95.45 % limits: {0:.5f}; {1:.5f}'.format(self.lowerLimit,self.upperLimit))
 
@@ -128,15 +128,15 @@ class dspDatum:
 			ax.legend()
 
 
-##########################
-### Plotting functions ###
-##########################
+
+class rateObj:
+	def __init__(self,name):
+		self.name=name
+		# Add parameters as needed
 
 
-#####################
-### Miscellaneous ###
-#####################
 
+# --- Miscellaneous ---
 # Definition of gaussian functionn
 def gauss(x,mu,sigma):
 	y=1/(sigma*np.sqrt(2*np.pi))*np.exp(-0.5*((x-mu)/sigma)**2);
