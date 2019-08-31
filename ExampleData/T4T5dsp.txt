@@ -1,4 +1,4 @@
-# Value, Probability
+# Value,	Probability
 4.000000	0.000000
 4.040404	0.010102
 4.080808	0.020204
