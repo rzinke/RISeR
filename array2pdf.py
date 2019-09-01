@@ -14,6 +14,10 @@ def arrayHist(V,stepsize,smoothing_kernel=None,kernel_width=2,verbose=False,plot
 	'''
 	INPUTS: 
 		V is an array of values
+		stepsize is the sample spacing of the output function
+		smoothing_kernel (optional) is the type of kernel with which the raw output function 
+		 will be convolved to reduce undersampling artifacts
+		kernel_width is the width of the smoothing kernel
 	OUTPUTS:
 		x is the values
 		px is the probability of occurrence
@@ -82,6 +86,10 @@ def arrayKDE(V,stepsize,smoothing_kernel=None,kernel_width=2,verbose=False,plot=
 	'''
 	INPUTS: 
 		V is an array of values
+		stepsize is the sample spacing of the output function
+		smoothing_kernel (optional) is the type of kernel with which the raw output function 
+		 will be convolved to reduce undersampling artifacts
+		kernel_width is the width of the smoothing kernel
 	OUTPUTS:
 		x is the values
 		px is the probability of occurrence
