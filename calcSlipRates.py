@@ -19,7 +19,7 @@ def createParser():
 	# Required
 	parser.add_argument('-a','--age_list',dest='age_list_file',type=str,required=True,help='Text file with one age file per line, list in order from youngest (top line) to oldest (bottom).')
 	parser.add_argument('-d','--dsp_list',dest='dsp_list_file',type=str,required=True,help='Text file with one displacement file per line, list in order from smallest (top line) to largest (bottom).')
-	parser.add_argument('-o','--output',dest='outName',type=str,required=True,default='Out',help='Head name for outputs (no extension)')
+	parser.add_argument('-o','--output',dest='outName',type=str,default='Out',help='Head name for outputs (no extension)')
 	# Recommended
 	parser.add_argument('-n','--Nsamples',dest='Nsamples',type=int,default=10000,help='Number of samples picked in MC run (default 1000; more is often better).')
 	parser.add_argument('-verb','--verbose',dest='verbose',action='store_true',default=False,help='Verbose?')
