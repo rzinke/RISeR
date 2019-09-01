@@ -16,8 +16,8 @@ def createParser():
 	parser.add_argument('-v', '--values', dest='values', type=str, required=True, help='Values to specify distribution.\nTwo values for gaussian ([1] +/- [2])\nThree values for triangle ([min], [pref], [max])\nFour values for trapezoid.')
 	parser.add_argument('-o', '--output', dest='outName', type=str, required=True, help='Output file path/name')
 	parser.add_argument('-n', '--nDataPts', dest='n', type=int, default=100, help='Number of data points. Default = 100')
-	parser.add_argument('-p', '--plot', dest='plot', type=bool, default=False, help='Show plot of output [True/False]')
-	parser.add_argument('-verb', '--verbose', dest='verbose', type=bool, default=False, help='Print outputs to command line [True/False]')
+	parser.add_argument('-p', '--plot', dest='plot', action='store_true', help='Show plot of output')
+	parser.add_argument('-verb', '--verbose', dest='verbose', action='store_true', help='Print outputs to command line')
 	return parser
 
 def cmdParser(inpt_args=None):

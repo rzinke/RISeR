@@ -21,10 +21,10 @@ def createParser():
 	parser.add_argument('-d','--dsp_list',dest='dsp_list_file',type=str,required=True,help='Text file with one displacement file per line, list in order from smallest (top line) to largest (bottom).')
 	parser.add_argument('-o','--output',dest='outName',type=str,required=True,default='Out',help='Head name for outputs (no extension)')
 	# Recommended
-	parser.add_argument('-n','--Nsamples',dest='Nsamples',type=int,default=1000,help='Number of samples picked in MC run (default 1000; more is often better).')
-	parser.add_argument('-verb','--verbose',dest='verbose',type=bool,default=False,help='Verbose? [True/False]')
-	parser.add_argument('-plot_inputs','--plot_inputs',dest='plot_inputs',type=bool,default=False,help='Plot inputs [True/False]')
-	parser.add_argument('-plot_outputs','--plot_outputs',dest='plot_outputs',type=bool,default=False,help='Plot outputs [True/False]')
+	parser.add_argument('-n','--Nsamples',dest='Nsamples',type=int,default=10000,help='Number of samples picked in MC run (default 1000; more is often better).')
+	parser.add_argument('-verb','--verbose',dest='verbose',action='store_true',default=False,help='Verbose?')
+	parser.add_argument('-plot_inputs','--plot_inputs',dest='plot_inputs',action='store_true',help='Plot inputs')
+	parser.add_argument('-plot_outputs','--plot_outputs',dest='plot_outputs',action='store_true',help='Plot outputs')
 	# Highly optional
 	parser.add_argument('-max_rate','--max_rate',dest='max_rate',type=float,default=1E4,help='Maximum rate considered in MC analysis. Units are <dispalcement units> per <age units>')
 	parser.add_argument('-seed','--seed',dest='seed',type=float,default=0,help='Seed value for random number generator.')
@@ -35,6 +35,7 @@ def createParser():
 	parser.add_argument('-kernel_width','--kernel_width',dest='kernel_width',type=int,default=2,help='Smoothing kernel width of slip rate functions.')
 	parser.add_argument('-pdf_analysis','--pdf_analysis',dest='pdf_analysis',type=str,default='IQR',help='Method for analyzing slip rate PDFs. \'IQR\' for interquantile range; \'HPD\' for highest posterior density.')
 	parser.add_argument('-rate_confidence','--rate_confidence',dest='rate_confidence',type=float,default=68.27,help='Confidence range for slip rate PDF reporting, [percent, e.g., 68.27, 95.45]')
+	parser.add_argument('-max_rate2plot','--max_rate2plot',dest='max_rate2plot',type=float,default=None,help='Maximum spreading rate to plot (unlike -max_rate, this will not affect calculations)')
 	return parser 
 
 def cmdParser(inpt_args=None):
@@ -101,7 +102,7 @@ def plotMCresults(Ages,ageList,Dsps,dspList,AgePicks,DspPicks, \
 	return Fmc,axMC
 
 # Plot incremental slip rate results
-def plotIncSlipRates(Rates,intervalList,analysis_method,outName=None):
+def plotIncSlipRates(Rates,intervalList,analysis_method,plot_max=None,outName=None):
 	# Analysis method is IQR or HPD
 
 	# Setup figure
@@ -134,7 +135,9 @@ def plotIncSlipRates(Rates,intervalList,analysis_method,outName=None):
 		k+=1
 	ax.set_yticks(np.arange(0.5,m-1))
 	ax.set_yticklabels(intvl_labels,rotation='vertical')
-	ax.set_ylim([0,m-1]); ax.set_xlim([0,inpt.max_rate])
+	ax.set_ylim([0,m-1])
+	if plot_max:
+		ax.set_xlim([0,plot_max])
 	ax.set_xlabel('slip rate')
 	ax.set_title('Incremental slip rates')
 	if outName:
@@ -343,11 +346,11 @@ Raw slip rates: (Interval: median values and 68% confidence)'''.format(inpt.Nsam
 				print(cluster_range_report); TXTout.write('\n{}'.format(cluster_range_report))
 
 	# Plot incremental slip rates on same plot
-	plotIncSlipRates(Rates,intervalList,inpt.pdf_analysis,outName=inpt.outName)
+	plotIncSlipRates(Rates,intervalList,inpt.pdf_analysis,plot_max=inpt.max_rate2plot,outName=inpt.outName)
 
 	# Close saved file
 	TXTout.close()
 
 
-	if inpt.plot_inputs==True or inpt.plot_outputs==True:
+	if inpt.plot_inputs or inpt.plot_outputs:
 		plt.show()
