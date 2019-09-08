@@ -2,7 +2,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt 
 from scipy.stats import gaussian_kde
-from slipRateObjects import gauss
+from slipRateObjects import gauss_kernel
 
 '''
 Covert an array of numbers into a probability density function (PDF).
@@ -57,9 +57,7 @@ def arrayHist(V,stepsize,smoothing_kernel=None,kernel_width=2,verbose=False,plot
 			H[0]=0; H[-1]=0
 		elif smoothing_kernel.lower() in ['gauss','gaussian']:
 			# Form kernel
-			kernel_width=kernel_width/2
-			x=np.linspace(-2*kernel_width,2*kernel_width,6*kernel_width) # width of kernel = +- 2 std dev
-			K=gauss(x,0,kernel_width)
+			K=gauss_kernel(kernel_width)
 			# Apply via convolution
 			H=np.convolve(H,K,'same')
 			# Set ends back to zero
@@ -128,9 +126,7 @@ def arrayKDE(V,stepsize,smoothing_kernel=None,kernel_width=2,verbose=False,plot=
 			Kde[0]=0; Kde[-1]=0
 		elif smoothing_kernel.lower() in ['gauss','gaussian']:
 			# Form kernel
-			kernel_width=kernel_width/2
-			x=np.linspace(-2*kernel_width,2*kernel_width,6*kernel_width) # width of kernel = +- 2 std dev
-			K=gauss(x,0,kernel_width)
+			K=gauss_kernel(kernel_width)
 			# Apply via convolution
 			Kde=np.convolve(Kde,K,'same')
 			# Set ends back to zero

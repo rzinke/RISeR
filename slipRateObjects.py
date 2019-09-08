@@ -141,3 +141,12 @@ class rateObj:
 def gauss(x,mu,sigma):
 	y=1/(sigma*np.sqrt(2*np.pi))*np.exp(-0.5*((x-mu)/sigma)**2);
 	return y
+
+
+# Gaussian kernel for filtering
+def gauss_kernel(sigma):
+	# Return a kernel with Gaussian shape over 2-sigma range with 
+	#  width = sigma (samples)
+	x=np.arange(-2*sigma,2*sigma+1)
+	y=1/(sigma*np.sqrt(2*np.pi))*np.exp(-0.5*(x/sigma)**2);
+	return y
