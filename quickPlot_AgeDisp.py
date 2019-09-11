@@ -3,6 +3,7 @@ import os
 import numpy as np 
 import matplotlib.pyplot as plt 
 from slipRateObjects import *
+from calcSlipRates import plotRawData, plotMCresults
 
 ### --- Parser ---
 def createParser():
@@ -13,6 +14,7 @@ def createParser():
 	parser.add_argument('-d','--dsp_list',dest='dsp_list_file',type=str,required=True,help='Text file with one displacement file per line, list in order from smallest (top line) to largest (bottom).')
 	parser.add_argument('-o','--output',dest='outName',type=str,default='Out',help='Head name for outputs (no extension)')
 	# Recommended
+	parser.add_argument('-plot_type','--plot_type',dest='plot_type',type=str,default='whisker',help='Plot marker type [\'wkisker\',\'rectangle\']')
 	parser.add_argument('-t','--title',dest='title',type=str,default=None,help='Plot title')
 	parser.add_argument('-l','--labels',dest='labels',action='store_true',default=False,help='Label features')
 	parser.add_argument('-verb','--verbose',dest='verbose',action='store_true',default=False,help='Verbose?')
@@ -113,21 +115,27 @@ if __name__ == '__main__':
 		intervalList.append(interval_name)
 
 	## Plot raw data (whisker plot)
-	Fraw=plt.figure('RawData')
-	axRaw=Fraw.add_subplot(111)
-	for i in range(m):
-		x_mid=Ages[ageList[i]].median
-		x_err=np.array([[x_mid-Ages[ageList[i]].lowerLimit],
-			[Ages[ageList[i]].upperLimit-x_mid]])
-		y_mid=Dsps[dspList[i]].median
-		y_err=np.array([[y_mid-Dsps[dspList[i]].lowerLimit],
-			[Dsps[dspList[i]].upperLimit-y_mid]])
-		axRaw.errorbar(x_mid,y_mid,xerr=x_err,yerr=y_err,
-			color=(0.3,0.3,0.6),marker='o')
-		# Label if desired
-		if inpt.labels is True:
-			feature_name=Ages[ageList[i]].name
-			axRaw.text(x_mid,y_mid,feature_name)
+	if inpt.plot_type.lower() in ['whisker','whiskers']:
+		# Whisker plot
+		Fraw,axRaw=plotRawData(Ages,ageList,Dsps,dspList,
+			xmaxGlobal,ymaxGlobal)
+	elif inpt.plot_type.lower() in ['rectangle','rectangles','box']:
+		# Rectangle plot
+		Fraw,axRaw=plotMCresults(Ages,ageList,Dsps,dspList,
+			AgePicks=-np.ones((1,1)),DspPicks=-np.ones((1,1)),
+			xMax=1.1*xmaxGlobal,yMax=1.1*ymaxGlobal,max_picks=0)
+
+	# Label if desired
+	if inpt.labels is True:
+		for i in range(m):
+			x_mid=Ages[ageList[i]].median
+			x_err=np.array([[x_mid-Ages[ageList[i]].lowerLimit],
+				[Ages[ageList[i]].upperLimit-x_mid]])
+			y_mid=Dsps[dspList[i]].median
+			y_err=np.array([[y_mid-Dsps[dspList[i]].lowerLimit],
+				[Dsps[dspList[i]].upperLimit-y_mid]])
+			feature_name=Dsps[dspList[i]].name
+			axRaw.text(1.02*x_mid,1.02*y_mid,feature_name)
 	# Format chart
 	axRaw.set_xlim([0,1.1*xmaxGlobal]) # x-limits
 	axRaw.set_ylim([0,1.1*ymaxGlobal]) # y-limits

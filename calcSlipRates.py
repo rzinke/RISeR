@@ -47,6 +47,10 @@ def cmdParser(inpt_args=None):
 ### --- Ancilary Functions ---
 # Plot raw data (whisker plot)
 def plotRawData(Ages,ageList,Dsps,dspList,xMax,yMax,outName=None):
+	# Parameters
+	m=len(ageList)
+
+	# Plot
 	Fraw=plt.figure('RawData')
 	axRaw=Fraw.add_subplot(111)
 	for i in range(m):
