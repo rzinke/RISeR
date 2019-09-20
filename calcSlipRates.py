@@ -22,20 +22,20 @@ def createParser():
 	parser.add_argument('-o','--output',dest='outName',type=str,default='Out',help='Head name for outputs (no extension)')
 	# Recommended
 	parser.add_argument('-n','--Nsamples',dest='Nsamples',type=int,default=10000,help='Number of samples picked in MC run (default 1000; more is often better).')
-	parser.add_argument('-verb','--verbose',dest='verbose',action='store_true',default=False,help='Verbose?')
+	parser.add_argument('-v','--verbose',dest='verbose',action='store_true',default=False,help='Verbose?')
 	parser.add_argument('-plot_inputs','--plot_inputs',dest='plot_inputs',action='store_true',help='Plot inputs')
 	parser.add_argument('-plot_outputs','--plot_outputs',dest='plot_outputs',action='store_true',help='Plot outputs')
 	# Highly optional
-	parser.add_argument('-max_rate','--max_rate',dest='max_rate',type=float,default=1E4,help='Maximum rate considered in MC analysis. Units are <dispalcement units> per <age units>')
-	parser.add_argument('-seed','--seed',dest='seed',type=float,default=0,help='Seed value for random number generator.')
-	parser.add_argument('-max_picks','--max_picks',dest='max_picks',type=int,default=500,help='Max number of picks to plot on MC results figure.')
-	parser.add_argument('-pdf_method','--pdf_method',dest='pdf_method',type=str,default='kde',help='Method used for transforming rate picks into slip rate PDF [\'hist\'/\'kde\'].')
+	parser.add_argument('-max_rate','--max_rate',dest='max_rate',type=float,default=1E4,help='Maximum rate considered in MC analysis. Units are <dispalcement units> per <age units>. Default = 10,000')
+	parser.add_argument('-seed','--seed',dest='seed',type=float,default=0,help='Seed value for random number generator. Default = 0')
+	parser.add_argument('-max_picks','--max_picks',dest='max_picks',type=int,default=500,help='Max number of picks to plot on MC results figure. Default = 500')
+	parser.add_argument('-pdf_method','--pdf_method',dest='pdf_method',type=str,default='kde',help='Method used for transforming rate picks into slip rate PDF [\'hist\'/\'kde\']. Default = kde')
 	parser.add_argument('-rate_step','--rate_step',dest='rate_step',type=float,default=0.01,help='Step size for slip rate functions. Default = 0.01.')
-	parser.add_argument('-smoothing_kernel','--smoothing_kernel',dest='smoothing_kernel',type=str,default=None,help='Smoothing kernel type of slip rate functions. [None/mean/gauss]')
+	parser.add_argument('-smoothing_kernel','--smoothing_kernel',dest='smoothing_kernel',type=str,default=None,help='Smoothing kernel type of slip rate functions. [None/mean/gauss]. Default = None')
 	parser.add_argument('-kernel_width','--kernel_width',dest='kernel_width',type=int,default=2,help='Smoothing kernel width of slip rate functions.')
-	parser.add_argument('-pdf_analysis','--pdf_analysis',dest='pdf_analysis',type=str,default='IQR',help='Method for analyzing slip rate PDFs. \'IQR\' for interquantile range; \'HPD\' for highest posterior density.')
-	parser.add_argument('-rate_confidence','--rate_confidence',dest='rate_confidence',type=float,default=68.27,help='Confidence range for slip rate PDF reporting, [percent, e.g., 68.27, 95.45]')
-	parser.add_argument('-max_rate2plot','--max_rate2plot',dest='max_rate2plot',type=float,default=None,help='Maximum spreading rate to plot (unlike -max_rate, this will not affect calculations)')
+	parser.add_argument('-pdf_analysis','--pdf_analysis',dest='pdf_analysis',type=str,default='IQR',help='Method for analyzing slip rate PDFs. \'IQR\' for interquantile range; \'HPD\' for highest posterior density. Default = IQR')
+	parser.add_argument('-rate_confidence','--rate_confidence',dest='rate_confidence',type=float,default=68.27,help='Confidence range for slip rate PDF reporting, [percent, e.g., 68.27, 95.45]. Default = 68.27')
+	parser.add_argument('-max_rate2plot','--max_rate2plot',dest='max_rate2plot',type=float,default=None,help='Maximum spreading rate to plot (unlike -max_rate, this will not affect calculations). Default = None')
 	return parser 
 
 def cmdParser(inpt_args=None):

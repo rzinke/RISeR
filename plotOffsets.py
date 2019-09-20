@@ -6,17 +6,17 @@ import matplotlib.pyplot as plt
 def createParser():
 	import argparse
 	parser = argparse.ArgumentParser(description='Main function for calculating incremental slip rates.')
-	parser.add_argument(dest='dates_list',type=str,help='File with list of dates.')
-	parser.add_argument('-d','--date_offset',dest='date_offset',default=None,type=int,help='Reference age for date (e.g., 2019)')
+	parser.add_argument(dest='offsets_list',type=str,help='File with list of dates.')
+	parser.add_argument('-u','--offset_units',dest='offset_units',default='m',type=str,help='Units of offset measurements')
 	parser.add_argument('-s','--scale',dest='scale',default=1.0,type=float,help='Vertical scale for PDFs')
+	parser.add_argument('-c','--color',dest='color',default='b',type=str,help='Color for generic PDFs')
 	parser.add_argument('-m','--smoothing',dest='smoothing',default=None,type=int,help='If selected, specify kernel width')
 	parser.add_argument('-r','--label_rotation',dest='label_rotation',default=0,type=float,help='Label rotation')
 	parser.add_argument('-p','--plot',dest='plot',action='store_true',help='Plot outcome?')
 	parser.add_argument('-t','--title',dest='title',default=None,type=str,help='Base for graph title.')
 	parser.add_argument('-o','--outName',dest='outName',default=None,type=str,help='Base for graph title.')
-
-	parser.add_argument('-gen_color','--generic_color',dest='generic_color',default='k',help='Color for generic plot.')
-	parser.add_argument('-gen_alpha','--generic_alpha',dest='generic_alpha',type=float,default=1.0,help='Opacity for generic plot.')
+	parser.add_argument('-a','--alpha',dest='alpha',default=1,type=float,help='Opacity value for \"contributing\" PDFs')
+	parser.add_argument('--axis_values',dest='axis_values',default=None,type=str,help='Min/Max axis values: \'min max\'')
 	return parser
 
 def cmdParser(inpt_args=None):
@@ -24,32 +24,11 @@ def cmdParser(inpt_args=None):
 	return parser.parse_args(inpt_args)
 
 # Plotting functions
-def plotPrior(ax,x,px):
-	ax.fill(x,px,color=(0.6,0.6,0.6))
+def plotContributing(ax,x,px,alpha=1.0):
+	ax.fill(x,px,color=(0.6,0.6,0.6),alpha=alpha)
 
-def plotPosterior(ax,x,px):
-	ax.fill(x,px,color=(0,0,0))
-
-def plotSilt(ax,x,px):
-	ax.fill(x,px,color=(0.843,0.867,0.235))
-
-def plotSandySilt(ax,x,px):
-	ax.fill(x,px,color=(0.529,0.831,0.898))
-
-def plotSand(ax,x,px):
-	ax.fill(x,px,color=(0.961,0.580,0.192))
-
-def plotGravel(ax,x,px):
-	ax.fill(x,px,color=(0.922,0.129,0.184))
-
-def plotBetweenAge(ax,x,px):
-	ax.fill(x,px,color='b')
-
-def plotPhaseAge(ax,x,px):
-	ax.fill(x,px,color='m')
-
-def plotGeneric(ax,x,px,color,alpha):
-	ax.fill(x,px,color=color,alpha=alpha)
+def plotGeneric(ax,x,px,color):
+	ax.fill(x,px,color=color)
 
 def plotFullBreak(ax,y):
 	ax.axhline(y,color=(0.3,0.35,0.35))
@@ -71,7 +50,7 @@ if __name__ == '__main__':
 	k=0
 
 	# Read lines of input file
-	Fin=open(inpt.dates_list,'r')
+	Fin=open(inpt.offsets_list,'r')
 	Lines=Fin.readlines()
 	Fin.close()
 
@@ -82,35 +61,31 @@ if __name__ == '__main__':
 	for Line in Lines:
 		Line=Line.strip('\n') # remove trailing new line
 		print(Line)
-		Dates=Line.split() # parse dates in line
-		nDates=len(Dates) # 
+		Offsets=Line.split() # parse dates in line
+		nOffsets=len(Offsets) # 
 		
 		# Work date by date
-		for Date in Dates:
-			dateInfo=Date.split(':')
+		for Offset in Offsets:
+			offsetInfo=Offset.split(':')
 
 			# Breaks
-			if dateInfo[0] in ['FullBreak','Break']:
-				if dateInfo[0] in ['FullBreak']:
+			if offsetInfo[0] in ['FullBreak','Break']:
+				if offsetInfo[0] in ['FullBreak']:
 					plotFullBreak(axMain,k+0.5)
-					datename=dateInfo[1]
-				elif dateInfo[0] in ['Break']:
+					offsetname=offsetInfo[1]
+				elif offsetInfo[0] in ['Break']:
 					plotBreak(axMain,k+0.5)
-					datename=dateInfo[1]
+					offsetname=offsetInfo[1]
 
-			# Dates
+			# Offsets
 			else:
-				datetype=dateInfo[0]
-				filename=dateInfo[1]
-				datename=dateInfo[2]
+				offsettype=offsetInfo[0]
+				filename=offsetInfo[1]
+				offsetname=offsetInfo[2]
 
 				# Load data
-				datePDF=np.loadtxt(filename)
-				x=datePDF[:,0]; px=datePDF[:,1]
-
-				# Age/Calendar years
-				if inpt.date_offset:
-					x=inpt.date_offset-x
+				offsetPDF=np.loadtxt(filename)
+				x=offsetPDF[:,0]; px=offsetPDF[:,1]
 
 				# Format probability curve
 				if inpt.smoothing:
@@ -119,35 +94,25 @@ if __name__ == '__main__':
 				px=inpt.scale*px/px.max()+k
 
 				# Plot
-				if datetype=='Prior':
-					plotPrior(axMain,x,px)
-				elif datetype=='Posterior':
-					plotPosterior(axMain,x,px)
-				elif datetype=='Silt':
-					plotSilt(axMain,x,px)
-				elif datetype=='SandySilt':
-					plotSandySilt(axMain,x,px)
-				elif datetype=='Sand':
-					plotSand(axMain,x,px)
-				elif datetype=='Gravel':
-					plotGravel(axMain,x,px)
+				if offsettype=='Contributing':
+					plotContributing(axMain,x,px,alpha=inpt.alpha)
 				else:
-					plotGeneric(axMain,x,px,inpt.generic_color,inpt.generic_alpha)
+					plotGeneric(axMain,x,px,inpt.color)
 
 		# Update counter for each line
-		label_list.append(datename)
+		label_list.append(offsetname)
 		k+=1
 
 	# Finishing plot
 	if inpt.title:
 		axMain.set_title(inpt.title)
-	if inpt.date_offset:
-		axMain.set_xlabel('age yb{}'.format(inpt.date_offset))
-	else:
-		axMain.set_xlabel('age')
-	axMain.invert_xaxis()
+	axMain.set_xlabel('offset ({})'.format(inpt.offset_units))
 	axMain.set_yticks(np.arange(0.5,k+1.5))
 	axMain.set_yticklabels(label_list,rotation=inpt.label_rotation)
+	if inpt.axis_values:
+		vals=inpt.axis_values.split()
+		axMain.set_xlim([float(vals[0]),float(vals[1])])
+
 	if inpt.outName:
 		savename='{}.png'.format(inpt.outName)
 		Fmain.savefig(savename,dpi=600)
