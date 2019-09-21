@@ -42,7 +42,6 @@ if __name__ == '__main__':
 
 	# Smooth if requested
 	if inpt.smoothing:
-		#kernel=np.ones(inpt.smoothing)
 		kernel=gauss_kernel(inpt.smoothing)
 		pxAge=np.convolve(pxAge,kernel,'same')
 
