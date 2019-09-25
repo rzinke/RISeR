@@ -13,7 +13,7 @@ def createParser():
 	import argparse
 	parser = argparse.ArgumentParser(description='Create a probability density function (PDF) given reference points and a specified, parametric distribution.')
 	parser.add_argument('-d', '--distribution', dest='dstrb', type=str, required=True, help='Distribution type [\'gauss\'/\'triangle\'/\'trapezoid\']]')
-	parser.add_argument('-v', '--values', dest='values', type=str, required=True, help='Values to specify distribution.\nTwo values for gaussian ([1] +/- [2])\nThree values for triangle ([min], [pref], [max])\nFour values for trapezoid.')
+	parser.add_argument('-v', '--values', dest='values', type=str, required=True, help='Values to specify distribution, separated by spaces.\nTwo values for gaussian ([1] +/- [2])\nThree values for triangle ([min], [pref], [max])\nFour values for trapezoid.')
 	parser.add_argument('-o', '--output', dest='outName', type=str, required=True, help='Output file path/name')
 	parser.add_argument('-n', '--nDataPts', dest='n', type=int, default=100, help='Number of data points. Default = 100')
 	parser.add_argument('-p', '--plot', dest='plot', action='store_true', help='Show plot of output')
@@ -48,6 +48,8 @@ def makePDF(inpt):
 		x=np.linspace(values[0],values[3],inpt.n)
 		Ix=intrp.interp1d(values,[0,1,1,0],kind='linear')
 		px=Ix(x) # interpolate
+	else:
+		print('{} not a valid distribution'.format(inpt.dstrb))
 
 	# Normalize to area = 1.0
 	P=np.trapz(px,x) # integrated area
