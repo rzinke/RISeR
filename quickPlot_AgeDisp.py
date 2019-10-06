@@ -148,9 +148,9 @@ if __name__ == '__main__':
 	# Save output if specified 
 	if inpt.outName:
 		if inpt.labels is True:
-			Fraw.savefig('{}_Fig1_RawData-labelled.png'.format(inpt.outName),dpi=600)
+			Fraw.savefig('{}_RawData-labelled.png'.format(inpt.outName),dpi=600)
 		else:
-			Fraw.savefig('{}_Fig1_RawData.png'.format(inpt.outName),dpi=600)
+			Fraw.savefig('{}_RawData.png'.format(inpt.outName),dpi=600)
 
 	# Show plots if specified
 	if inpt.plot_inputs or inpt.plot_outputs:
