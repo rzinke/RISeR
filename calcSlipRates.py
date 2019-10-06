@@ -244,7 +244,7 @@ if __name__ == '__main__':
 		Ages,ageList,Dsps,dspList,
 		condition='standard',maxRate=inpt.max_rate,
 		seed_value=inpt.seed,
-		verbose=False,outName=None)
+		verbose=inpt.verbose,outName=None)
 
 	## Plot MC results
 	plotMCresults(Ages,ageList,Dsps,dspList,
