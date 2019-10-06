@@ -139,7 +139,7 @@ if __name__ == '__main__':
 	# Format chart
 	axRaw.set_xlim([0,1.1*xmaxGlobal]) # x-limits
 	axRaw.set_ylim([0,1.1*ymaxGlobal]) # y-limits
-	axRaw.set_xlabel('age'); axRaw.set_ylabel('offset')
+	axRaw.set_xlabel('age'); axRaw.set_ylabel('displacement')
 	# Title if specified
 	if inpt.title:
 		axRaw.set_title('{} raw data (95 % limits)'.format(inpt.title))
