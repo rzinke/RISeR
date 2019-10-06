@@ -147,7 +147,10 @@ if __name__ == '__main__':
 		axRaw.set_title('Raw data (95 % limits)')
 	# Save output if specified 
 	if inpt.outName:
-		Fraw.savefig('{}_Fig1_RawData.png'.format(inpt.outName),dpi=600)
+		if inpt.labels is True:
+			Fraw.savefig('{}_Fig1_RawData-labelled.png'.format(inpt.outName),dpi=600)
+		else:
+			Fraw.savefig('{}_Fig1_RawData.png'.format(inpt.outName),dpi=600)
 
 	# Show plots if specified
 	if inpt.plot_inputs or inpt.plot_outputs:
