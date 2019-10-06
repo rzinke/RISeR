@@ -64,7 +64,7 @@ def plotRawData(Ages,ageList,Dsps,dspList,xMax,yMax,outName=None):
 			color=(0.3,0.3,0.6),marker='o')
 	axRaw.set_xlim([0,1.1*xMax]) # x-limits
 	axRaw.set_ylim([0,1.1*yMax]) # y-limits
-	axRaw.set_xlabel('age'); axRaw.set_ylabel('offset')
+	axRaw.set_xlabel('age'); axRaw.set_ylabel('displacement')
 	axRaw.set_title('Raw data (95 % limits)')
 	if outName:
 		Fraw.savefig('{}_Fig1_RawData.png'.format(outName),dpi=600)
@@ -244,7 +244,7 @@ if __name__ == '__main__':
 		Ages,ageList,Dsps,dspList,
 		condition='standard',maxRate=inpt.max_rate,
 		seed_value=inpt.seed,
-		verbose=False,outName=None)
+		verbose=inpt.verbose,outName=None)
 
 	## Plot MC results
 	plotMCresults(Ages,ageList,Dsps,dspList,

@@ -139,7 +139,7 @@ if __name__ == '__main__':
 	# Format chart
 	axRaw.set_xlim([0,1.1*xmaxGlobal]) # x-limits
 	axRaw.set_ylim([0,1.1*ymaxGlobal]) # y-limits
-	axRaw.set_xlabel('age'); axRaw.set_ylabel('offset')
+	axRaw.set_xlabel('age'); axRaw.set_ylabel('displacement')
 	# Title if specified
 	if inpt.title:
 		axRaw.set_title('{} raw data (95 % limits)'.format(inpt.title))
@@ -147,7 +147,10 @@ if __name__ == '__main__':
 		axRaw.set_title('Raw data (95 % limits)')
 	# Save output if specified 
 	if inpt.outName:
-		Fraw.savefig('{}_Fig1_RawData.png'.format(inpt.outName),dpi=600)
+		if inpt.labels is True:
+			Fraw.savefig('{}_RawData-labelled.png'.format(inpt.outName),dpi=600)
+		else:
+			Fraw.savefig('{}_RawData.png'.format(inpt.outName),dpi=600)
 
 	# Show plots if specified
 	if inpt.plot_inputs or inpt.plot_outputs:
