@@ -116,7 +116,12 @@ if __name__ == '__main__':
 				if inpt.smoothing:
 					smoothing_kernel=np.ones(inpt.smoothing)
 					px=np.convolve(px,smoothing_kernel,'same')
-				px=inpt.scale*px/px.max()+k
+				px=inpt.scale*px/px.max()
+
+				x=np.pad(x,(1,1),'edge')
+				px=np.pad(px,(1,1),'constant')
+
+				px+=k
 
 				# Plot
 				if datetype=='Prior':
@@ -131,6 +136,8 @@ if __name__ == '__main__':
 					plotSand(axMain,x,px)
 				elif datetype=='Gravel':
 					plotGravel(axMain,x,px)
+				elif datetype.lower() in ['date','between_age','betweenage','riser']:
+					plotBetweenAge(axMain,x,px)
 				else:
 					plotGeneric(axMain,x,px,inpt.generic_color,inpt.generic_alpha)
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-Objects and support functions for MCMC slip rate calculator
+	Objects and support functions for MCMC slip rate calculator
 '''
 
 import numpy as np 
