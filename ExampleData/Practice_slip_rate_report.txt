@@ -1,0 +1,18 @@
+Slip rate statistics from 10000 samples:
+Raw slip rates: (Interval: median values and 68% confidence)
+T4T5dsp-T3T4dsp: 3.69 +5.97 -1.67
+T3T4dsp-T2T3dsp: 5.52 +10.74 -2.97
+T2T3dsp-T1T2dsp: 2.25 +4.91 -1.58
+
+PDF-based statistics (95.0% confidence) calculated using HPD.
+T4T5dsp-T3T4dsp: 2.31 +20.50 -1.70
+	Ranges:
+		(0.61 to 20.81)
+		(21.91 to 22.81)
+T3T4dsp-T2T3dsp: 2.76 +29.40 -2.20
+	Ranges:
+		(0.56 to 32.16)
+T2T3dsp-T1T2dsp: 0.75 +18.80 -0.70
+	Ranges:
+		(0.05 to 17.45)
+		(18.65 to 19.55)
