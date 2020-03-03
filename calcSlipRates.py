@@ -68,6 +68,7 @@ def plotRawData(Ages,ageList,Dsps,dspList,xMax,yMax,outName=None):
 	axRaw.set_title('Raw data (95 % limits)')
 	if outName:
 		Fraw.savefig('{}_Fig1_RawData.png'.format(outName),dpi=600)
+		Fraw.savefig('{}_Fig1_RawData.pdf'.format(outName),type='pdf')
 	return Fraw,axRaw
 
 # Plot MC results
@@ -103,6 +104,7 @@ def plotMCresults(Ages,ageList,Dsps,dspList,AgePicks,DspPicks, \
 	axMC.set_title('MC Picks (N = {})'.format(n))
 	if outName:
 		Fmc.savefig('{}_Fig2_MCpicks.png'.format(outName),dpi=600)
+		Fmc.savefig('{}_Fig2_MCpicks.pdf'.format(outName),type='pdf')
 	return Fmc,axMC
 
 # Plot incremental slip rate results
@@ -146,7 +148,7 @@ def plotIncSlipRates(Rates,intervalList,analysis_method,plot_max=None,outName=No
 	ax.set_title('Incremental slip rates')
 	if outName:
 		F.savefig('{}_Fig3_Incremental_slip_rates.png'.format(outName),dpi=600)
-
+		F.savefig('{}_Fig3_Incremental_slip_rates.pdf'.format(outName),type='pdf')
 
 
 ### --- Main call function ---
