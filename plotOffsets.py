@@ -1,17 +1,26 @@
 #!/usr/bin/env python3
+"""
+	** MCMC Incremental Slip Rate Calculator **
+	Plot ages on a single figure
+
+	Rob Zinke 2019, 2020
+"""
+
+### IMPORT MODULES ---
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Parser
+
+### PARSER ---
 def createParser():
 	import argparse
 	parser = argparse.ArgumentParser(description='Main function for calculating incremental slip rates.')
 	parser.add_argument(dest='offsets_list',type=str,help='File with list of dates.')
-	parser.add_argument('-u','--offset_units',dest='offset_units',default='m',type=str,help='Units of offset measurements')
+	parser.add_argument('-u','--offset-units',dest='offsetUnits',default='m',type=str,help='Units of offset measurements')
 	parser.add_argument('-s','--scale',dest='scale',default=1.0,type=float,help='Vertical scale for PDFs')
 	parser.add_argument('-c','--color',dest='color',default='b',type=str,help='Color for generic PDFs')
 	parser.add_argument('-m','--smoothing',dest='smoothing',default=None,type=int,help='If selected, specify kernel width')
-	parser.add_argument('-r','--label_rotation',dest='label_rotation',default=0,type=float,help='Label rotation')
+	parser.add_argument('-r','--label-rotation',dest='labelRotation',default=0,type=float,help='Label rotation')
 	parser.add_argument('-p','--plot',dest='plot',action='store_true',help='Plot outcome?')
 	parser.add_argument('-t','--title',dest='title',default=None,type=str,help='Base for graph title.')
 	parser.add_argument('-o','--outName',dest='outName',default=None,type=str,help='Base for graph title.')
@@ -23,7 +32,9 @@ def cmdParser(inpt_args=None):
 	parser=createParser()
 	return parser.parse_args(inpt_args)
 
-# Plotting functions
+
+
+### PLOTTING FUNCTIONS ---
 def plotContributing(ax,x,px,alpha=1.0):
 	ax.fill(x,px,color=(0.6,0.6,0.6),alpha=alpha)
 
@@ -37,7 +48,8 @@ def plotBreak(ax,y):
 	ax.axhline(y,color=(0.7,0.75,0.8),linestyle='--')
 
 
-# Main
+
+### MAIN ---
 if __name__ == '__main__':
 	# Parse command line arguments
 	inpt=cmdParser()
@@ -46,7 +58,7 @@ if __name__ == '__main__':
 	Fmain=plt.figure(figsize=(10,10))
 	axMain=Fmain.add_subplot(111)
 
-	label_list=[]
+	labelList=[]
 	k=0
 
 	# Read lines of input file
@@ -100,15 +112,16 @@ if __name__ == '__main__':
 					plotGeneric(axMain,x,px,inpt.color)
 
 		# Update counter for each line
-		label_list.append(offsetname)
+		labelList.append(offsetname)
 		k+=1
 
-	# Finishing plot
+
+	## Finishing plot
 	if inpt.title:
 		axMain.set_title(inpt.title)
-	axMain.set_xlabel('offset ({})'.format(inpt.offset_units))
+	axMain.set_xlabel('offset ({})'.format(inpt.offsetUnits))
 	axMain.set_yticks(np.arange(0.5,k+1.5))
-	axMain.set_yticklabels(label_list,rotation=inpt.label_rotation)
+	axMain.set_yticklabels(labelList,rotation=inpt.labelRotation)
 	if inpt.axis_values:
 		vals=inpt.axis_values.split()
 		axMain.set_xlim([float(vals[0]),float(vals[1])])

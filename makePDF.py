@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
-'''
-Use this to create a probability density function (PDF) as a text file. 
-'''
+"""
+	** MCMC Incremental Slip Rate Calculator **
+	Use this to create a probability density function (PDF) as a text file.
+
+	Rob Zinke 2019, 2020
+"""
+
+### IMPORT MODULES ---
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import interpolate as intrp 
 from slipRateObjects import gauss
 
 
-## Parser
+### PARSER ---
 def createParser():
 	import argparse
 	parser = argparse.ArgumentParser(description='Create a probability density function (PDF) given reference points and a specified, parametric distribution.')
@@ -25,7 +30,8 @@ def cmdParser(inpt_args=None):
 	return parser.parse_args(args=inpt_args)
 
 
-## Create PDF
+
+### CREATE PDF ---
 def makePDF(inpt):
 	# Convert values to list
 	values=[] # empty list
@@ -83,7 +89,8 @@ def makePDF(inpt):
 		plt.show()
 
 
-## Main
+
+### MAIN ---
 if __name__ == '__main__':
 	inpt=cmdParser()
 	makePDF(inpt)
