@@ -93,12 +93,12 @@ def plotMCresults(Ages,ageList,Dsps,dspList,AgePicks,DspPicks, \
 	# Plot picks
 	if n<=max_picks:
 		axMC.plot(AgePicks,DspPicks,color=(0,0,0),alpha=0.1,zorder=1)
-		axMC.plot(AgePicks,DspPicks,color=(0,0,1),marker='.',linewidth=0,alpha=0.1,zorder=2)
+		axMC.plot(AgePicks,DspPicks,color=(0,0,1),marker='.',linewidth=0,alpha=0.5,zorder=2)
 	else:
 		axMC.plot(AgePicks[:,:max_picks],DspPicks[:,:max_picks],
 			color=(0,0,0),alpha=0.1,zorder=1)
 		axMC.plot(AgePicks[:,:max_picks],DspPicks[:,:max_picks],
-			color=(0,0,1),marker='.',linewidth=0,alpha=0.1,zorder=2)
+			color=(0,0,1),marker='.',linewidth=0,alpha=0.4,zorder=2)
 	axMC.set_xlim([0,1.1*xMax]); axMC.set_ylim([0,1.1*yMax])
 	axMC.set_xlabel('age'); axMC.set_ylabel('displacement')
 	axMC.set_title('MC Picks (N = {})'.format(n))
