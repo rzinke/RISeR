@@ -1,24 +1,29 @@
 #!/usr/bin/env python3
+"""
+	** MCMC Incremental Slip Rate Calculator **
+	This script accepts two probability density functions and computes the
+	 normalized cross-correlation value of them.
+	Definitions within this script are intended for generic use, and so 
+	 some operations might be redundant.
+
+	Rob Zinke 2019, 2020
+"""
+
+### IMPORT MODULES ---
 import os
 import numpy as np 
 import matplotlib.pyplot as plt 
 from scipy.interpolate import interp1d
 from slipRateObjects import gauss_kernel
 
-'''
-This script accepts two probability density functions and computes the
- normalized cross-correlation value of them.
-Definitions within this script are intended for generic use, and so 
- some operations might be redundant. 
-'''
 
-### --- PARSER --- ###
+### PARSER ---
 def createParser():
 	import argparse
 	parser = argparse.ArgumentParser(description='This script computes the normalized cross-correlation for two PDFs')
 	parser.add_argument(dest='filenames',nargs='+',help='Functions, stored as files formatted with col 0 = x-values; col 1 = y-values')
 	parser.add_argument('-s','--smoothing',dest='smoothing',type=int,default=None,help='Smoothing filter width. Default is None')
-	parser.add_argument('-interp_kind','--interp_kind',dest='interp_kind',type=str,default='linear',help='Kind of interpolation. Default is \'linear\'')
+	parser.add_argument('--interp-kind',dest='interpKind',type=str,default='linear',help='Kind of interpolation. Default is \'linear\'')
 	parser.add_argument('-p','--plot',dest='plot',action='store_true',help='Plot inputs')
 	return parser
 
@@ -28,13 +33,14 @@ def cmdParser(iargs = None):
 
 
 
-### --- PROCESSING FUNCTIONS --- ###
-# Normalize 1D function
+### PROCESSING FUNCTIONS ---
+## Normalize 1D function
 def normFct(y):
 	y/=np.sqrt(np.sum(y**2))
 	return y 
 
-# Normalized 1D cross-correlation
+
+## Normalized 1D cross-correlation
 def normd_cross(y1,y2):
 	# Reshape into vectors
 	y1=y1.reshape(1,-1)
@@ -48,7 +54,8 @@ def normd_cross(y1,y2):
 	Y=np.dot(y1,y2.T)/(Y1*Y2)
 	return Y 
 
-# Print triangular matrix of values
+
+## Print triangular matrix of values
 def print_table(X):
 	m,n=X.shape # rows and columns
 	for i in range(1,m):
@@ -56,9 +63,12 @@ def print_table(X):
 	print(X)
 
 
-### --- MAIN --- ###
+
+### MAIN ---
 if __name__=='__main__':
+	## Gather arguments
 	inpt=cmdParser()
+
 
 	## Load data
 	# Set up parameters
@@ -78,6 +88,7 @@ if __name__=='__main__':
 	xmax=np.max(xmax)
 	dx=np.mean(dx)
 
+
 	## Format functions for analysis
 	# Define common range of values
 	xresampled=np.arange(xmin,xmax+dx,dx).reshape(-1,1) 
@@ -95,7 +106,7 @@ if __name__=='__main__':
 			y=np.convolve(y,kernel,'same')
 		
 		# Interpolate
-		I=interp1d(x,y,kind=inpt.interp_kind,bounds_error=False,fill_value=0.)
+		I=interp1d(x,y,kind=inpt.interpKind,bounds_error=False,fill_value=0.)
 
 		# Resample on common axis
 		yresampled=I(xresampled)
