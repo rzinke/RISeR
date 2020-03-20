@@ -1,7 +1,7 @@
 """
 	** MCMC Incremental Slip Rate Calculator **
 	Find inter-quantile range (IQR) or highest posterior density (HPD)
-	of a probability density function (PDF).
+	 of a probability density function (PDF).
 
 	Rob Zinke 2019, 2020
 """
@@ -13,7 +13,7 @@ from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 
 
-### ANALYZE PDF ---
+### PDF ANALYSIS CLASSES ---
 ## IQR method
 class IQRpdf:
 	"""
@@ -22,7 +22,6 @@ class IQRpdf:
 			x is an array of evenly spaced values -- even spacing is important!
 			px is an array of probabilities at those values
 			confidence is the confidence interval, in percent (e.g., 95, 68)
-		OUTPUTS
 	"""
 	def __init__(self,x,px,confidence,outName=None,verbose=False):
 		if verbose is True:
@@ -106,7 +105,6 @@ class HPDpdf:
 			x is an array of evenly spaced values -- even spacing is important!
 			px is an array of probabilities at those values
 			confidence is the confidence interval, in percent (e.g., 95, 68)
-		OUTPUTS
 	"""
 	def __init__(self,x,px,confidence,outName=None,verbose=False):
 		if verbose is True:

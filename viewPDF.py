@@ -9,6 +9,8 @@
 ### IMPORT MODULES ---
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.integrate import cumtrapz
+from scipy.interpolate import interp1d
 
 
 ### PARSER ---
@@ -20,12 +22,45 @@ def createParser():
 	parser.add_argument('-t','--title', dest='title', default=None, type=str, help='x-axis label')
 	parser.add_argument('--x-label', dest='xLabel', default=None, type=str, help='x-axis label')
 	parser.add_argument('--y-label', dest='yLabel', default='rel. probability', type=str, help='y-axis label')
-	parser.add_argument('-o','--out-name', dest='outName',type=str,default=None, help='Save plot to outName.')
+	parser.add_argument('--show-stats', dest='showStats', action='store_true', help='Plot lines representing statistics.')
+	parser.add_argument('-o','--out-name', dest='outName', type=str, default=None, help='Save plot to outName.')
 	return parser
 
 def cmdParser(inpt_args=None):
 	parser=createParser()
 	return parser.parse_args(inpt_args)
+
+
+
+### ANCILLARY FUNCTIONS ---
+class pdfStats:
+	# Initialize
+	def __init__(self,x,px):
+		## Simple stats
+		self.min=x.min()
+		self.max=x.max()
+
+		# Mode
+		self.mode=x[px==px.max()][0]
+
+
+		## Percentiles
+		# Compute CDF
+		Px=cumtrapz(px,x,initial=0)
+
+		# Interpolate percentiles
+		Icdf=interp1d(Px,x,kind='linear')
+
+		# Find percentiles
+		confidenceInterval=95.45
+		self.lower=Icdf((50-confidenceInterval/2)/100)
+		self.upper=Icdf((50+confidenceInterval/2)/100)
+		self.median=Icdf(50/100)
+
+
+		## Mean
+		dx=np.mean(np.diff(x))
+		self.mean=np.sum(dx*x*px)
 
 
 
@@ -41,16 +76,44 @@ if __name__ == '__main__':
 	px=PDF[:,1] # probabilities
 
 
+	## Check area = 1.0
+	P=np.trapz(px,x)
+	if np.abs(1-P) > 1E-15:
+		print('WARNING: Mass is not unity')
+
+
+	## Compute statistics
+	stats=pdfStats(x,px)
+
+	# Report stats
+	print('Mass: {}'.format(P))
+	print('Min: {:.4f}'.format(stats.min))
+	print('Lower 95.45%: {:.4f}'.format(stats.lower))
+	print('Mean: {:.4f}'.format(stats.mean))
+	print('Median: {:.4f}'.format(stats.median))
+	print('Upper 95.45%: {:.4f}'.format(stats.upper))
+	print('Max: {:.4f}'.format(stats.max))
+	print('Mode & 95%: {:.2f} +{:.2f} -{:.2f}'.format(stats.mode,stats.upper-stats.mode,stats.mode-stats.lower))
+
+
 	## Plot figure
 	F=plt.figure()
 	ax=F.add_subplot(111)
-	ax.plot(x,px,'k',linewidth=2)
-	if inpt.title:
-		ax.set_title(inpt.title)
-	if inpt.xLabel:
-		ax.set_xlabel(inpt.xLabel)
-	if inpt.yLabel:
-		ax.set_ylabel(inpt.yLabel)
+	ax.plot(x,px,'k',linewidth=2,zorder=2,label='data')
+	if inpt.title: ax.set_title(inpt.title)
+	if inpt.xLabel: ax.set_xlabel(inpt.xLabel)
+	if inpt.yLabel: ax.set_ylabel(inpt.yLabel)
+
+	# Label statistics if requested
+	if inpt.showStats is True:
+		ax.axvline(stats.lower,color='b',alpha=0.25,zorder=1,label='95.45%')
+		ax.axvline(stats.upper,color='b',alpha=0.25,zorder=1,label='95.45%')
+		ax.axvline(stats.median,color='b',alpha=0.5,zorder=1,label='median')
+		ax.axvline(stats.mode,color='r',alpha=0.5,zorder=1,label='mode')
+		ax.axvline(stats.mean,color=(148/255,0/255,211/255),alpha=0.5,zorder=1,label='mean')
+		ax.legend()
+
+	# Save if requested
 	if inpt.outName:
 		if inpt.outName[-4:] in ['.png','.PNG']:
 			inpt.outName=inpt.outName[:-4] 
