@@ -1,11 +1,20 @@
 #!/usr/bin/env python3
+"""
+	** MCMC Incremental Slip Rate Calculator **
+	Combine probability density functions (PDFs) as union (sum)
+	 for intersection (multiplication).
+
+	Rob Zinke 2019, 2020
+"""
+
+### IMPORT MODULES ---
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from PDFanalysis import HPDpdf
 
 
-# Command line parser
+### PARSER ---
 def createParser():
 	import argparse
 	parser = argparse.ArgumentParser(description='Combine probability density functions (PDFs) by pointwise summing or mulitplication.')
@@ -16,15 +25,19 @@ def createParser():
 	parser.add_argument('-p','--plot',dest='plot',action='store_true',help='Plot?')
 	return parser
 
-
 def cmdParser(inpt_args=None):
 	parser=createParser()
 	return parser.parse_args(inpt_args)
 
 
+
+### MAIN ---
 if __name__ == '__main__':
+	## Gather arguments
 	inpt=cmdParser()
 
+
+	## Combine PDFs
 	# Loop through PDFs to get basic parameters
 	nPDFs=len(inpt.pdfList)
 	PDFs={} # store pdf data here
@@ -93,7 +106,8 @@ if __name__ == '__main__':
 	if inpt.verbose:
 		HPDpdf(xCombo,pxCombo,confidence=95.45,verbose=True)
 
-	# Save to file
+
+	## Save to file
 	if inpt.outName:
 		Fout=open(inpt.outName,'w')
 		Fout.write('# value\tProbability\n')
@@ -102,7 +116,8 @@ if __name__ == '__main__':
 		Fout.close()
 		print('Saved to: {}'.format(inpt.outName))
 
-	# Plot
+
+	## Plot
 	if inpt.plot:
 		F=plt.figure()
 		ax=F.add_subplot(111)

@@ -1,29 +1,40 @@
 #!/usr/bin/env python3
+"""
+	** MCMC Incremental Slip Rate Calculator **
+	Plot ages on a single figure
+
+	Rob Zinke 2019, 2020
+"""
+
+### IMPORT MODULES ---
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Parser
+
+### PARSER ---
 def createParser():
 	import argparse
-	parser = argparse.ArgumentParser(description='Main function for calculating incremental slip rates.')
-	parser.add_argument(dest='dates_list',type=str,help='File with list of dates.')
-	parser.add_argument('-d','--date_offset',dest='date_offset',default=None,type=int,help='Reference age for date (e.g., 2019)')
-	parser.add_argument('-s','--scale',dest='scale',default=1.0,type=float,help='Vertical scale for PDFs')
-	parser.add_argument('-m','--smoothing',dest='smoothing',default=None,type=int,help='If selected, specify kernel width')
-	parser.add_argument('-r','--label_rotation',dest='label_rotation',default=0,type=float,help='Label rotation')
-	parser.add_argument('-p','--plot',dest='plot',action='store_true',help='Plot outcome?')
-	parser.add_argument('-t','--title',dest='title',default=None,type=str,help='Base for graph title.')
-	parser.add_argument('-o','--outName',dest='outName',default=None,type=str,help='Base for graph title.')
+	parser = argparse.ArgumentParser(description='Plot ages on a single figure.')
+	parser.add_argument(dest='datesList', type=str, help='File with list of dates.')
+	parser.add_argument('-d','--date-offset', dest='dateOffset', default=None, type=int, help='Reference age for date (e.g., 2019)')
+	parser.add_argument('-s','--scale', dest='scale', default=1.0, type=float, help='Vertical scale for PDFs')
+	parser.add_argument('-m','--smoothing', dest='smoothing', default=None, type=int, help='If selected, specify kernel width')
+	parser.add_argument('-r','--label-rotation', dest='labelRotation', default=0, type=float, help='Label rotation')
+	parser.add_argument('-p','--plot', dest='plot', action='store_true', help='Plot outcome?')
+	parser.add_argument('-t','--title', dest='title', default=None, type=str, help='Base for graph title.')
+	parser.add_argument('-o','--outName', dest='outName', default=None, type=str, help='Base for graph title.')
 
-	parser.add_argument('-gen_color','--generic_color',dest='generic_color',default='k',help='Color for generic plot.')
-	parser.add_argument('-gen_alpha','--generic_alpha',dest='generic_alpha',type=float,default=1.0,help='Opacity for generic plot.')
+	parser.add_argument('--generic-color',dest='genericColor',default='k',help='Color for generic plot.')
+	parser.add_argument('--generic-alpha',dest='genericAlpha',type=float,default=1.0,help='Opacity for generic plot.')
 	return parser
 
 def cmdParser(inpt_args=None):
 	parser=createParser()
 	return parser.parse_args(inpt_args)
 
-# Plotting functions
+
+
+### PLOTTING FUNCTIONS ---
 def plotPrior(ax,x,px):
 	ax.fill(x,px,color=(0.6,0.6,0.6))
 
@@ -58,20 +69,24 @@ def plotBreak(ax,y):
 	ax.axhline(y,color=(0.7,0.75,0.8),linestyle='--')
 
 
-# Main
+
+### MAIN ---
 if __name__ == '__main__':
-	# Parse command line arguments
+	## Arguments and setup
+	# Parser
 	inpt=cmdParser()
 
 	# Setup initial figure
 	Fmain=plt.figure(figsize=(10,10))
 	axMain=Fmain.add_subplot(111)
 
-	label_list=[]
+	labelList=[]
 	k=0
 
+
+	## Plot data
 	# Read lines of input file
-	Fin=open(inpt.dates_list,'r')
+	Fin=open(inpt.datesList,'r')
 	Lines=Fin.readlines()
 	Fin.close()
 
@@ -109,13 +124,13 @@ if __name__ == '__main__':
 				x=datePDF[:,0]; px=datePDF[:,1]
 
 				# Age/Calendar years
-				if inpt.date_offset:
-					x=inpt.date_offset-x
+				if inpt.dateOffset:
+					x=inpt.dateOffset-x
 
 				# Format probability curve
 				if inpt.smoothing:
-					smoothing_kernel=np.ones(inpt.smoothing)
-					px=np.convolve(px,smoothing_kernel,'same')
+					smoothingKernel=np.ones(inpt.smoothing)
+					px=np.convolve(px,smoothingKernel,'same')
 				px=inpt.scale*px/px.max()
 
 				x=np.pad(x,(1,1),'edge')
@@ -139,22 +154,23 @@ if __name__ == '__main__':
 				elif datetype.lower() in ['date','between_age','betweenage','riser']:
 					plotBetweenAge(axMain,x,px)
 				else:
-					plotGeneric(axMain,x,px,inpt.generic_color,inpt.generic_alpha)
+					plotGeneric(axMain,x,px,inpt.genericColor,inpt.genericAlpha)
 
 		# Update counter for each line
-		label_list.append(datename)
+		labelList.append(datename)
 		k+=1
 
-	# Finishing plot
+
+	## Finishing plot
 	if inpt.title:
 		axMain.set_title(inpt.title)
-	if inpt.date_offset:
-		axMain.set_xlabel('age yb{}'.format(inpt.date_offset))
+	if inpt.dateOffset:
+		axMain.set_xlabel('age yb{}'.format(inpt.dateOffset))
 	else:
 		axMain.set_xlabel('age')
 	axMain.invert_xaxis()
 	axMain.set_yticks(np.arange(0.5,k+1.5))
-	axMain.set_yticklabels(label_list,rotation=inpt.label_rotation)
+	axMain.set_yticklabels(labelList,rotation=inpt.labelRotation)
 	if inpt.outName:
 		savename='{}.png'.format(inpt.outName)
 		Fmain.savefig(savename,dpi=600)
