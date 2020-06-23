@@ -53,9 +53,9 @@ if __name__ == '__main__':
 	Ages={}; ageList=[]; xmaxGlobal=0.
 	for ageLine in ageLines:
 		"""
-		Record one dictionary entry per age file. Each entry in an 
-		 instance of an "ageDatum" object. Append age name (path and 
-		 suffix removed) to list for later.
+			Record one dictionary entry per age file. Each entry in an 
+			 instance of an "ageDatum" object. Append age name (path and 
+			 suffix removed) to list for later.
 		"""
 		# Isolate basename
 		ageLine=ageLine.strip('\n') # remove extraneous newline
@@ -85,10 +85,10 @@ if __name__ == '__main__':
 	# Load displacements into dictionary
 	Dsps={}; dspList=[]; ymaxGlobal=0.
 	for dspLine in dspLines:
-		'''
-		Record one dictionary entry per displacement file. Each entry in an instance of 
-		an "dspDatum" object. Append displacement name (path and suffix removed) to list for later.
-		'''
+		"""
+			Record one dictionary entry per displacement file. Each entry in an instance of 
+			an "dspDatum" object. Append displacement name (path and suffix removed) to list for later.
+		"""
 		# Isolate basename
 		dspLine=dspLine.strip('\n') # remove extraneous newline
 		dspName=os.path.basename(dspLine)

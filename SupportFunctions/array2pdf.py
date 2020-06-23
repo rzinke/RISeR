@@ -52,20 +52,20 @@ def arrayHist(V,stepsize,smoothingKernel=None,kernelWidth=2,verbose=False,plot=F
 	H=np.pad(H,(1,1),'constant')
 
 	# Smooth if requested
-	if smoothing_kernel:
+	if smoothingKernel:
 		if verbose is True:
 			print('Applying smoothing kernel:\n\ttype: {}\twidth: {}'.format(smoothingKernel,kernelWidth))
 		# Moving mean smoothing
-		if smoothing_kernel.lower() in ['mean']:
+		if smoothingKernel.lower() in ['mean']:
 			# Form kernel
-			K=np.ones(kernel_width)
+			K=np.ones(kernelWidth)
 			# Apply via convolution
 			H=np.convolve(H,K,'same')
 			# Set ends back to zero
 			H[0]=0; H[-1]=0
-		elif smoothing_kernel.lower() in ['gauss','gaussian']:
+		elif smoothingKernel.lower() in ['gauss','gaussian']:
 			# Form kernel
-			K=gauss_kernel(kernel_width)
+			K=gauss_kernel(kernelWidth)
 			# Apply via convolution
 			H=np.convolve(H,K,'same')
 			# Set ends back to zero
@@ -123,20 +123,20 @@ def arrayKDE(V,stepsize,smoothingKernel=None,kernelWidth=2,verbose=False,plot=Fa
 	Kde[0]=0; Kde[-1]=0
 
 	# Smooth if requested
-	if smoothing_kernel:
+	if smoothingKernel:
 		if verbose is True:
 			print('Applying smoothing kernel:\n\ttype: {}\twidth: {}'.format(smoothingKernel,kernelWidth))
 		# Moving mean smoothing
-		if smoothing_kernel.lower() in ['mean']:
+		if smoothingKernel.lower() in ['mean']:
 			# Form kernel
-			K=np.ones(kernel_width)
+			K=np.ones(kernelWidth)
 			# Apply via convolution
 			Kde=np.convolve(Kde,K,'same')
 			# Set ends back to zero
 			Kde[0]=0; Kde[-1]=0
-		elif smoothing_kernel.lower() in ['gauss','gaussian']:
+		elif smoothingKernel.lower() in ['gauss','gaussian']:
 			# Form kernel
-			K=gauss_kernel(kernel_width)
+			K=gauss_kernel(kernelWidth)
 			# Apply via convolution
 			Kde=np.convolve(Kde,K,'same')
 			# Set ends back to zero
