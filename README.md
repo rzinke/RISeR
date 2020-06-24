@@ -9,6 +9,11 @@ If you use these scripts, please cite:
 * Zinke, R., Dolan, J.F., Rhodes, E.J., Van Dissen, R., McGuire, C.P., Hatem, A.E., Brown, N.D., Langridge, R.M. (2019) Multimillennial Incremental Slip Rate Variability of the Clarence Fault at the Tophouse Road Site, Marlborough Fault System, New Zealand, Geophysical Research Letters, 46, https://doi.org/10.1029/2018GL080688
 
 
+SETUP:
+These scripts have been tested for Linux, Mac, and Windows systems.
+To use these scripts on Linux or Mac, clone the directly to a location of your choice, which will be referred to as ```MCMC_HOME```.
+
+
 CONTENTS:
 Executable functions:
 * calcSlipRates.py - This is the main function for calculating incremental slip rates based on previously developed inputs. Users should run this function as a command, e.g., calcSlipRates.py -a List-of-ages.txt -d List-of-displacements.txt. This function requires two lists of filenames, as described in the INPUTS section below. This function calculates the incremental slip rates by sampling the input data (priors) and rejecting samples based on the condition that no slip rates should be negative at any point in their history. There are many optional parameters for the calcSlipRates function. Use calcSlipRates.py -h for help.
