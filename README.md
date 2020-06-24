@@ -9,6 +9,7 @@ If you use these scripts, please cite:
 * Zinke, R., Dolan, J.F., Rhodes, E.J., Van Dissen, R., McGuire, C.P., Hatem, A.E., Brown, N.D., Langridge, R.M. (2019) Multimillennial Incremental Slip Rate Variability of the Clarence Fault at the Tophouse Road Site, Marlborough Fault System, New Zealand, Geophysical Research Letters, 46, https://doi.org/10.1029/2018GL080688
 
 
+
 SETUP:
 These scripts have been tested for Linux, Mac, and Windows systems.
 To use these scripts, clone the GitHub repository to a location of your choice, which will be referred to as ```MCMC_HOME```. 
@@ -20,6 +21,7 @@ export PYTHONPATH="${PYTHONPATH}:${MCMC_HOME}:${MCMC_HOME}/SupportFunctions"
 ```
 
 If you are using Windows, it is recommended you set additional environmental variables. 
+
 
 
 CONTENTS:
