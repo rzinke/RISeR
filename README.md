@@ -11,13 +11,18 @@ If you use these scripts, please cite:
 
 SETUP:
 These scripts have been tested for Linux, Mac, and Windows systems.
-To use these scripts on Linux or Mac, clone the directly to a location of your choice, which will be referred to as ```MCMC_HOME```.
+To use these scripts, clone the GitHub repository to a location of your choice, which will be referred to as ```MCMC_HOME```. 
+Once cloned, add the following paths to your ```~/.bash_rc``` file for a Linux system or ```~/.bash_profile``` for a Mac system. 
+
+```export PATH="${PATH}:${MCMC_HOME}:${MCMC_HOME}/SupportFunctions"
+export PYTHONPATH="${PYTHONPATH}:${MCMC_HOME}:${MCMC_HOME}/SupportFunctions"
+```
+
+If you are using Windows, it is recommended you set additional environmental variables. 
 
 
 CONTENTS:
 Executable functions:
-* calcSlipRates.py - This is the main function for calculating incremental slip rates based on previously developed inputs. Users should run this function as a command, e.g., calcSlipRates.py -a List-of-ages.txt -d List-of-displacements.txt. This function requires two lists of filenames, as described in the INPUTS section below. This function calculates the incremental slip rates by sampling the input data (priors) and rejecting samples based on the condition that no slip rates should be negative at any point in their history. There are many optional parameters for the calcSlipRates function. Use calcSlipRates.py -h for help.
-
 * makePDF.py - Use this to create a probability density function (PDF) as a text file. A distribution is specified, as well as the "parameters" or specific points in that distribution: For a gaussian distribution, two numbers are required 'mean stddev'; for a triangular distribution, three numbers are required 'min preferred max'; for a trapezoidal function, four numbers are required 'min shoulder1 shoulder2 max'. Supported types currently are Gaussian, tringular, and trapezoidal shapes. Gaussian distributions are printed out to 4-sigma. Uniform (boxcar) sampling distributions are specified using the trapezoidal function, with steeply sloping sides (e.g., closely approximates a boxcar). Users should run this function as a command, e.g., makePDF.py -d triangular -v 3 5 6 -o Offset1
 
 * calyr2age.py - This function converts calendar ages in C.E./B.C.E. to years before "physics" (i.e., 1950 per radiocarbon convention) or years before some given calendar year (e.g., 2019). This is especially useful outputs from age calibration programs such as OxCal, which report ages in calendar years, whereas the slip rate calculator here requires age data be expressed as functions increasing in age from the present. Optional arguments include the "reference date", which defaults to 1950 C.E., and can be set to the current year, e.g., 2019. An age factor is also available, and used to scale the numbers to the desired age unit of choice (e.g., an age factor of 1000 scales the units from years to kilo-years). One may also wish to smooth their data, especially if the probability function were computed from binned values of a Monte Carlo resampling method (e.g., OxCal). Example calendar year-formatted ages can be found in the folder /ExampleAges/SampleX_Cal_Yr.txt. They can be converted into the kybp (ka) sample ages using the command calyr2age.py Sample1_CalYr.txt Sample1_age.txt -r 2019 -f 1000 -s 3 -p [note the -p option to plot the result].
@@ -26,6 +31,7 @@ Executable functions:
 
 * plotAges.py - If the use wants to plot a series of age PDFs on a common plot, the plotAges function may be used. This requires construction of a "list" file that specifies the type of data, file location, and legend entry. An example list (AgeList.txt) can be found in the ExampleAges folder. To generate the plot shown there, use plotAges.py AgeList.txt -s 0.95 -r 15 -t 'Example ages' -gen_color 'b' -o SamplePlot -p
 
+* calcSlipRates.py - This is the main function for calculating incremental slip rates based on previously developed inputs. Users should run this function as a command, e.g., calcSlipRates.py -a List-of-ages.txt -d List-of-displacements.txt. This function requires two lists of filenames, as described in the INPUTS section below. This function calculates the incremental slip rates by sampling the input data (priors) and rejecting samples based on the condition that no slip rates should be negative at any point in their history. There are many optional parameters for the calcSlipRates function. Use calcSlipRates.py -h for help.
 
 
 Support scripts:
@@ -38,7 +44,6 @@ INPUTS:
 The calcSlipRates function requires two text files: (1) A list of age filenames, written out from youngest at the top, to oldest at the bottom; and (2) a list of displacement names, similarly written out from yougest (least offset) at the top, to oldest (most offset) at the bottom. Note that these lists do not contain any data; they simply list the files in which the data are contained.
 
 Each "data file" consists of a two-column list describing a single measurement of displacement or age. In each, the first column is the value measured (i.e., age or displacement), and the second column is the relative probability of that value. If a measurement can be described as parametric function, a properly formatted PDF can be generated using makePDF.py, described above. Any arbitrary, pseudo-continuous PDF can be used as an input.
-
 
 Two examples are provided. The data files are named, e.g., T1T2age.txt, T3T4dsp.txt, etc.
 
