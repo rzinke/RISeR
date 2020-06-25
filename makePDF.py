@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""
+'''
     ** MCMC Incremental Slip Rate Calculator **
     Use this to create a probability density function (PDF) as a text file.
 
     Rob Zinke 2019, 2020
-"""
+'''
 
 ### IMPORT MODULES ---
 import os
@@ -49,9 +49,9 @@ def createParser():
         help='Show plot of output')
     return parser
 
-def cmdParser(inps_args=None):
+def cmdParser(inpt_args=None):
     parser = createParser()
-    return parser.parse_args(args=inps_args)
+    return parser.parse_args(args=inpt_args)
 
 
 

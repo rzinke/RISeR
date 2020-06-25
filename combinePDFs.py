@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""
+'''
     ** MCMC Incremental Slip Rate Calculator **
     Combine probability density functions (PDFs) as union (sum)
      for intersection (multiplication).
 
     Rob Zinke 2019, 2020
-"""
+'''
 
 ### IMPORT MODULES ---
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
-from PDFanalysis import HPDpdf
+from PDFanalysis import HPDpdf, smoothPDF
 
 
 ### PARSER ---
@@ -39,6 +39,10 @@ def createParser():
         help='Output name.')
     parser.add_argument('-m','--method', dest='method', default='union', type=str,
         help='Method for combining (union or intersection). Default = union.')
+    parser.add_argument('-s','--smoothing', dest='smoothing', default=None, type=int,
+        help='Smoothing kernel width')
+    parser.add_argument('-k','--smoothing-kernel', dest='smoothingKernel', default='boxcar', type=str,
+        help='Smoothing kernel type [boxcar/Gaussian]')
     parser.add_argument('-v','--verbose', dest='verbose', action='store_true',
         help='Verbose mode')
     parser.add_argument('-p','--plot', dest='plot', action='store_true',
@@ -160,6 +164,13 @@ class PDFcombo:
             HPDpdf(self.xCombo,self.pxCombo,confidence=95.45,verbose=True)
 
 
+    def smooth(self, ktype, kwidth):
+        '''
+            Smooth combined PDF using a boxcar or Gaussian filter of finite width.
+        '''
+        self.pxCombo = smoothPDF(px = self.pxCombo, ktype = ktype, kwidth = kwidth)
+
+
     def saveToFile(self, outName):
         '''
             Save to two-column file.
@@ -213,6 +224,10 @@ if __name__ == '__main__':
 
     # Instantiate object
     combo = PDFcombo(PDFs, method = inps.method, verbose = inps.verbose)
+
+    # Smoooth if requested
+    if inps.smoothing:
+        combo.smooth(ktype = inps.smoothingType, kwidth = inps.smoothing)
 
     # Save to file
     combo.saveToFile(outName = inps.outName)
