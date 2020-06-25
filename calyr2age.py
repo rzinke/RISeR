@@ -115,7 +115,7 @@ def saveOutputs(x, px, outName, verbose = False):
         print('Saved data to {}'.format(fname))
 
 
-def plotPDF(xDate, pxDate, xAge, pxAge, ageFactor):
+def plotPDF(xDate, pxDate, xAge, pxAge, refDate, ageFactor):
     '''
         Plot date and equivalent age PDFs.
     '''
@@ -131,14 +131,14 @@ def plotPDF(xDate, pxDate, xAge, pxAge, ageFactor):
     axDate.plot(xDate,pxDate,'k')
     axDate.invert_xaxis()
     axDate.set_yticks([])
-    axDate.set_ylabel('Cal date')
+    axDate.set_ylabel('Cal date CE/BCE')
 
     # Plot age
     axAge=Fig.add_subplot(212)
     axAge.plot(xAge,pxAge/pxAge.max(),'k',linewidth=2,zorder=2,label='PDF')
     axAge.plot(xAge,PxAge,'b',linewidth=2,zorder=1,label='CDF')
     axAge.set_yticks([])
-    axAge.set_ylabel('Age ({0:1.1e} yr)'.format(ageFactor))
+    axAge.set_ylabel('Age ({:1.1e} yr)\nbefore {:.0f}'.format(ageFactor,refDate))
     axAge.legend()
 
 
@@ -164,5 +164,5 @@ if __name__ == '__main__':
 
     # Plot if requested
     if inps.plot:
-        plotPDF(xDate, pxDate, xAge, pxAge, inps.ageFactor)
+        plotPDF(xDate, pxDate, xAge, pxAge, inps.refDate, inps.ageFactor)
         plt.show()
