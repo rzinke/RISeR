@@ -1,0 +1,8 @@
+Slip rate statistics from 10000 samples:
+Raw slip rates: (Interval: median values and 68% confidence)
+T3T4dsp-T2T3dsp: 1.92 +0.70 -0.57
+T2T3dsp-T1T2dsp: 1.05 +0.31 -0.24
+
+PDF-based statistics (68.27% confidence) calculated using IQR.
+T3T4dsp-T2T3dsp: 1.93 +0.71 -0.58
+T2T3dsp-T1T2dsp: 1.05 +0.32 -0.25
