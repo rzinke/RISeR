@@ -24,25 +24,41 @@ def createParser():
     import argparse
     parser = argparse.ArgumentParser(description='Main function for calculating incremental slip rates.')
     # Required
-    parser.add_argument('-a','--age_list', dest='ageListFile', type=str, required=True, help='Text file with one age file per line, list in order from youngest (top line) to oldest (bottom).')
-    parser.add_argument('-d','--dsp_list', dest='dspListFile', type=str, required=True, help='Text file with one displacement file per line, list in order from smallest (top line) to largest (bottom).')
-    parser.add_argument('-o','--out-name', dest='outName', type=str, default='Out', help='Head name for outputs (no extension)')
+    parser.add_argument('-a','--age_list', dest='ageListFile', type=str, required=True,
+    	help='Text file with one age file per line, list in order from youngest (top line) to oldest (bottom).')
+    parser.add_argument('-d','--dsp_list', dest='dspListFile', type=str, required=True,
+    	help='Text file with one displacement file per line, list in order from smallest (top line) to largest (bottom).')
+    parser.add_argument('-o','--out-name', dest='outName', type=str, default='Out',
+    	help='Head name for outputs (no extension)')
     # Recommended
-    parser.add_argument('-n','--Nsamples', dest='Nsamples', type=int, default=10000, help='Number of samples picked in MC run (default 1000; more is often better).')
-    parser.add_argument('-v','--verbose', dest='verbose', action='store_true', default=False,help='Verbose?')
-    parser.add_argument('--plot-inputs', dest='plotInputs', action='store_true', help='Plot inputs')
-    parser.add_argument('--plot-outputs', dest='plotOutputs', action='store_true', help='Plot outputs')
+    parser.add_argument('-n','--Nsamples', dest='Nsamples', type=int, default=10000,
+    	help='Number of samples picked in MC run (default 1000; more is often better).')
+    parser.add_argument('-v','--verbose', dest='verbose', action='store_true', default=False,
+    	help='Verbose?')
+    parser.add_argument('--plot-inputs', dest='plotInputs', action='store_true',
+    	help='Plot inputs')
+    parser.add_argument('--plot-outputs', dest='plotOutputs', action='store_true',
+    	help='Plot outputs')
     # Highly optional
-    parser.add_argument('--max-rate', dest='maxRate', type=float, default=1E4, help='Maximum rate considered in MC analysis. Units are <dispalcement units> per <age units>. Default = 10,000')
+    parser.add_argument('--max-rate', dest='maxRate', type=float, default=1E4,
+    	help='Maximum rate considered in MC analysis. Units are <dispalcement units> per <age units>. Default = 10,000')
     parser.add_argument('--seed', dest='seed', type=float, default=0, help='Seed value for random number generator. Default = 0')
-    parser.add_argument('--max-picks', dest='maxPicks', type=int, default=500, help='Max number of picks to plot on MC results figure. Default = 500')
-    parser.add_argument('--pdf-method', dest='pdfMethod', type=str, default='kde', help='Method used for transforming rate picks into slip rate PDF [\'hist\'/\'kde\']. Default = kde')
-    parser.add_argument('--rate-step', dest='rateStep', type=float, default=0.01, help='Step size for slip rate functions. Default = 0.01.')
-    parser.add_argument('--smoothing-kernel', dest='smoothingKernel', type=str, default=None, help='Smoothing kernel type of slip rate functions. [None/mean/gauss]. Default = None')
-    parser.add_argument('--kernel-width', dest='kernelWidth', type=int, default=2, help='Smoothing kernel width of slip rate functions.')
-    parser.add_argument('--pdf-analysis', dest='pdfAnalysis', type=str, default='IQR', help='Method for analyzing slip rate PDFs. \'IQR\' for interquantile range; \'HPD\' for highest posterior density. Default = IQR')
-    parser.add_argument('--rate-confidence', dest='rateConfidence', type=float, default=68.27, help='Confidence range for slip rate PDF reporting, [percent, e.g., 68.27, 95.45]. Default = 68.27')
-    parser.add_argument('--max-rate2plot', dest='maxRate2plot', type=float, default=None, help='Maximum spreading rate to plot (unlike -max_rate, this will not affect calculations). Default = None')
+    parser.add_argument('--max-picks', dest='maxPicks', type=int, default=500,
+    	help='Max number of picks to plot on MC results figure. Default = 500')
+    parser.add_argument('--pdf-method', dest='pdfMethod', type=str, default='kde',
+    	help='Method used for transforming rate picks into slip rate PDF [\'hist\'/\'kde\']. Default = kde')
+    parser.add_argument('--rate-step', dest='rateStep', type=float, default=0.01,
+    	help='Step size for slip rate functions. Default = 0.01.')
+    parser.add_argument('--smoothing-kernel', dest='smoothingKernel', type=str, default=None,
+    	help='Smoothing kernel type of slip rate functions. [None/mean/gauss]. Default = None')
+    parser.add_argument('--kernel-width', dest='kernelWidth', type=int, default=2,
+    	help='Smoothing kernel width of slip rate functions.')
+    parser.add_argument('--pdf-analysis', dest='pdfAnalysis', type=str, default='IQR',
+    	help='Method for analyzing slip rate PDFs. \'IQR\' for interquantile range; \'HPD\' for highest posterior density. Default = IQR')
+    parser.add_argument('--rate-confidence', dest='rateConfidence', type=float, default=68.27,
+    	help='Confidence range for slip rate PDF reporting, [percent, e.g., 68.27, 95.45]. Default = 68.27')
+    parser.add_argument('--max-rate2plot', dest='maxRate2plot', type=float, default=None,
+    	help='Maximum spreading rate to plot (unlike -max_rate, this will not affect calculations). Default = None')
     return parser
 
 def cmdParser(inpt_args=None):

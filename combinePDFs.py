@@ -41,7 +41,7 @@ def createParser():
         help='Method for combining (union or intersection). Default = union.')
     parser.add_argument('-s','--smoothing', dest='smoothing', default=None, type=int,
         help='Smoothing kernel width')
-    parser.add_argument('-k','--smoothing-kernel', dest='smoothingKernel', default='boxcar', type=str,
+    parser.add_argument('-k','--smoothing-kernel', dest='smoothingKernel', default='gaussian', type=str,
         help='Smoothing kernel type [boxcar/Gaussian]')
     parser.add_argument('-v','--verbose', dest='verbose', action='store_true',
         help='Verbose mode')
@@ -161,6 +161,7 @@ class PDFcombo:
 
         # Report final statistics if requested
         if self.verbose == True:
+            print('Stats for combined function:')
             HPDpdf(self.xCombo,self.pxCombo,confidence=95.45,verbose=True)
 
 
@@ -168,7 +169,9 @@ class PDFcombo:
         '''
             Smooth combined PDF using a boxcar or Gaussian filter of finite width.
         '''
-        self.pxCombo = smoothPDF(px = self.pxCombo, ktype = ktype, kwidth = kwidth)
+        self.pxCombo = smoothPDF(self.xCombo, self.pxCombo, ktype, kwidth)
+
+        if self.verbose == True: print('Smoothed output function.')
 
 
     def saveToFile(self, outName):
@@ -227,7 +230,7 @@ if __name__ == '__main__':
 
     # Smoooth if requested
     if inps.smoothing:
-        combo.smooth(ktype = inps.smoothingType, kwidth = inps.smoothing)
+        combo.smooth(ktype = inps.smoothingKernel, kwidth = inps.smoothing)
 
     # Save to file
     combo.saveToFile(outName = inps.outName)

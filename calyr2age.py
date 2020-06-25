@@ -14,12 +14,20 @@ from PDFanalysis import smoothPDF
 
 
 ### PARSER ---
-Description = '''Convert a date PDF in CE/BCE to years before present (ybp). This is designed to work with OxCal posterior distributions in which the left column is age in CE/BCE and the right column is relative probability.'''
+Description = '''Convert a date PDF in CE/BCE to years before present (ybp). This is designed to
+work with OxCal posterior distributions in which the left column is age in CE/BCE and the right
+column is relative probability.'''
 
 Examples = '''EXAMPLES
 
 # Convert date to age relative to 1950 C.E.
-calyr2age.py date-1_posterior.txt -o age-1
+calyr2age.py Date1_posterior.txt -o Age1
+
+# Convert date to age relative to 2020 C.E.
+calyr2age.py Date1_posterior.txt -o Age1 -r 2020
+
+# Convert date to age, smooth age and convert to thousands years B.P.
+calyr2age.py Date1_posterior.txt -o Age1 -s 3 -f 1000
 '''
 
 def createParser():
@@ -149,6 +157,7 @@ if __name__ == '__main__':
     # Smooth if requested
     if inps.smoothing:
         pxAge = smoothPDF(xAge, pxAge, ktype = inps.smoothingKernel, kwidth = inps.smoothing)
+        if inps.verbose == True: print('Smoothed function')
 
     # Save to text file
     saveOutputs(xAge, pxAge, inps.outName, verbose = inps.verbose)
