@@ -1,8 +1,0 @@
-Posterior:Sample5_age.txt:Sample5
-Posterior:Sample6_age.txt:Sample6
-FullBreak:Strat_boundary:
-:Sample_ages_intersection.txt:Intersection
-Posterior:Sample4_age.txt:Sample4
-Posterior:Sample3_age.txt:Sample3
-Posterior:Sample2_age.txt:Sample2
-Posterior:Sample1_age.txt:Sample1
