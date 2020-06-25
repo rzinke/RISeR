@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 '''
     ** MCMC Incremental Slip Rate Calculator **
-    Plot ages on a single figure
+    Plot displacements on a single figure
 
     Rob Zinke 2019, 2020
 '''
@@ -12,29 +12,22 @@ import matplotlib.pyplot as plt
 
 
 ### PARSER ---
-Description = '''Plot ages on a single figure. This script is meant for display purposes only and
+Description = '''Plot displacements on a single figure. This script is meant for display purposes only and
 will not affect the slip rate calculations.
 
-This script accepts a list of ages, encoded with the sample type, sample label, and path to file,
+This script accepts a list of displacements, encoded with the sample type, sample label, and path to file,
 separated by colons. I.e.,
 DatumType:[SampleName]:[FilePath]
 
 For example:
-Age:Sample1:Sample1_age.txt
+Displacement:Offset1:Offset1.txt
 
-shows that the sample is an Age datum, labelled Sample1, and the path to file Sample1_age.txt is
-provided. The age sample type can be color coded by one of several statistical or stratigraphic
-types:
-* Prior
-* Posterior
-* PhaseAge
-* BetweenAge
-* Silt
-* SandySilt
-* Sand
-* Gravel
+shows that the sample is a Displacement datum, labelled Offset1, and the path to file Offset1.txt is
+provided. The displacement sample type can be color coded by type or user specification:
+* Displacement
+* Generic
 
-Generic age PDFs can also be specified by the user with the --generic-color and --generic-alpha
+Generic displacement PDFs can also be specified by the user with the --generic-color and --generic-alpha
 options.
 
 Other plot elements are also available, including line separators for ease of visualization:
@@ -48,22 +41,22 @@ Line:Strat Boundary
 
 Examples = '''EXAMPLES
 
-# Plot ages from age list
-plotAges.py AgeList.txt -x 'ages (ka)' -t 'Sample Examples' -r 10 -o AgePlotExample
+# Plot displacements from displacement list
+plotDisplacements.py DspList.txt -y 'displacements (m)' -t 'Measurement Examples' -r 80 -o DspPlotExample --generic-color b
 '''
 
 def createParser():
     import argparse
     parser = argparse.ArgumentParser(description=Description,
         formatter_class=argparse.RawTextHelpFormatter, epilog=Examples)
-    parser.add_argument(dest='agesList', type=str,
-        help='Text document with list of age files. See above for example.')
+    parser.add_argument(dest='dspsList', type=str,
+        help='Text document with list of displacement files. See above for example.')
     parser.add_argument('-r','--label-rotation', dest='labelRotation', default=0, type=float,
         help='Label rotation')
     parser.add_argument('-t','--title', dest='title', default=None, type=str,
         help='Base for graph title.')
-    parser.add_argument('-x','--xlabel', dest='xlabel', default='Age', type=str,
-        help='X-axis label')
+    parser.add_argument('-y','--ylabel', dest='ylabel', default='Displacement', type=str,
+        help='Y-axis label')
     parser.add_argument('-o','--outName', dest='outName', default=None, type=str,
         help='Base for graph title')
     parser.add_argument('--pdf-scale', dest='pdfScale', default=1.0, type=float,
@@ -81,18 +74,18 @@ def cmdParser(inpt_args=None):
 
 
 
-### PLOT AGES ---
-class agePlot:
+### PLOT DISPLACEMENTS ---
+class dspPlot:
     '''
-        Plot provided ages on a single figure
+        Plot provided displacements on a single figure
     '''
-    def __init__(self, agesList):
+    def __init__(self, dspsList):
         '''
-            Establish figure and plot data. See examples for "agesList".
+            Establish figure and plot data. See examples for "dspsList".
         '''
 
         # Read and parse data
-        self.__readData__(agesList)
+        self.__readData__(dspsList)
 
         # Initialize figure
         self.__setupFig__()
@@ -108,14 +101,14 @@ class agePlot:
         self.labelList = [] # keep track of labels
 
 
-    def __readData__(self,agesList):
+    def __readData__(self,dspsList):
         '''
-            Open list of age files, gather inputs as "data".
+            Open list of displacement files, gather inputs as "data".
         '''
         # Read data from file
-        with open(agesList,'r') as ageListFile:
-            self.data = ageListFile.readlines()
-            ageListFile.close()
+        with open(dspsList,'r') as dspListFile:
+            self.data = dspListFile.readlines()
+            dspListFile.close()
 
         # Flip so top line is at the chart top
         self.data = self.data[::-1]
@@ -149,26 +142,26 @@ class agePlot:
             ## Plot line breaks
             # Plot simple line
             if datumType.lower() == 'line':
-                self.ax.axhline(k, color = (0.7,0.75,0.8))
+                self.ax.axvline(k, color = (0.7,0.75,0.8))
 
             # Plot dashed line
             elif datumType.lower() == 'dashedline':
-                self.ax.axhline(k, color = (0.7,0.75,0.8), linestyle = '--')
+                self.ax.axvline(k, color = (0.7,0.75,0.8), linestyle = '--')
 
             # Plot thicker line
             elif datumType.lower() == 'boldline':
-                self.ax.axhline(k, color = (0.3,0.35,0.35))
+                self.ax.axvline(k, color = (0.3,0.35,0.35))
 
-            ## Assume age PDF
+            ## Assume displacement PDF
             else:
-                # Load and format age datum
-                xAge, pxAge = self.__formatAge__(datum, pdfScale)
+                # Load and format displacement datum
+                xDsp, pxDsp = self.__formatDsp__(datum, pdfScale)
 
                 # Shift
-                pxAge += k
+                pxDsp += k
 
                 # Plot data using color from color table
-                self.ax.fill(xAge, pxAge,
+                self.ax.fill(pxDsp, xDsp,
                     color = self.colors[datumType.lower()],
                     alpha = self.alphas[datumType.lower()])
 
@@ -176,25 +169,26 @@ class agePlot:
             k += 1 # update counter
 
 
-    def __formatAge__(self, datum, pdfScale):
+    def __formatDsp__(self, datum, pdfScale):
         '''
-            Load and format age data.
+            Load and format displacement data.
         '''
         # Load data from file
-        assert len(datum) == 3, 'Cannot plot age. Type, label, and filepath must be specified.'
-        ageFile = datum[2]
-        ageData = np.loadtxt(ageFile)
-        xAge = ageData[:,0]
-        pxAge = ageData[:,1]
+        assert len(datum) == 3, 'Cannot plot displacement. Type, label, and filepath must be specified.'
+        dspFile = datum[2]
+        dspData = np.loadtxt(dspFile)
+        xDsp = dspData[:,0]
+        pxDsp = dspData[:,1]
 
         # Zero-pad
-        xAge = np.pad(xAge,(1,1),'edge')
-        pxAge = np.pad(pxAge,(1,1),'constant')
+        xDsp = np.pad(xDsp,(1,1),'edge')
+        pxDsp = np.pad(pxDsp,(1,1),'constant')
+        # print(xDsp); exit()
 
         # Scale probability to 1.0 * scale factor
-        pxAge = pdfScale*pxAge/pxAge.max()
+        pxDsp = pdfScale*pxDsp/pxDsp.max()
 
-        return xAge, pxAge
+        return xDsp, pxDsp
 
 
     def __initColors__(self, genericColor, genericAlpha):
@@ -203,49 +197,25 @@ class agePlot:
         '''
         self.colors = {}
         self.alphas = {}
-        # Non-specific age
-        self.colors['age'] = (0,0,0)
-        self.alphas['age'] = 1.0
-        # Prior age
-        self.colors['prior'] = (0.6,0.6,0.6)
-        self.alphas['prior'] = 1.0
-        # Posterior age
-        self.colors['posterior'] = (0,0,0)
-        self.alphas['posterior'] = 1.0
-        # Phase age
-        self.colors['phaseage'] = 'm'
-        self.alphas['phaseage'] = 1.0
-        # Between age
-        self.colors['betweenage'] = 'b'
-        self.alphas['betweenage'] = 1.0
-        # Silt age
-        self.colors['silt'] = (0.843,0.867,0.235)
-        self.alphas['silt'] = 1.0
-        # Sandy silt age
-        self.colors['sandysilt'] = (0.529,0.831,0.898)
-        self.alphas['sandysilt'] = 1.0
-        # Sand age
-        self.colors['sand'] = (0.961,0.580,0.192)
-        self.alphas['sand'] = 1.0
-        # Gravel age
-        self.colors['gravel'] = (0.922,0.129,0.184)
-        self.alphas['gravel'] = 1.0
+        # Non-specific displacement
+        self.colors['displacement'] = (0,0,0)
+        self.alphas['displacement'] = 1.0
         # Generic PDF
         self.colors['generic'] = genericColor
         self.alphas['generic'] = genericAlpha
 
 
-    def finalizeFig(self, title=None, xlabel='Age', labelRotation=0, outName=None):
+    def finalizeFig(self, title=None, ylabel='Displacement', labelRotation=0, outName=None):
         '''
             Finalize figure.
         '''
-        # Y-labels
-        ticks = np.arange(len(self.labelList))
-        self.ax.set_yticks(ticks)
-        self.ax.set_yticklabels(self.labelList, rotation=labelRotation)
-
         # X-labels
-        self.ax.set_xlabel(xlabel)
+        ticks = np.arange(len(self.labelList))
+        self.ax.set_xticks(ticks)
+        self.ax.set_xticklabels(self.labelList, rotation=labelRotation)
+
+        # Y-labels
+        self.ax.set_ylabel(ylabel)
 
         # Title
         if title: self.ax.set_title(title)
@@ -267,14 +237,14 @@ if __name__ == '__main__':
     # Parser
     inps = cmdParser()
 
-    # Plot ages
-    ages = agePlot(agesList = inps.agesList)
+    # Plot displacements
+    displacements = dspPlot(dspsList = inps.dspsList)
 
-    ages.plotData(pdfScale = inps.pdfScale,
+    displacements.plotData(pdfScale = inps.pdfScale,
         genericColor = inps.genericColor, genericAlpha = inps.genericAlpha)
 
-    ages.finalizeFig(title = inps.title,
-        xlabel = inps.xlabel,
+    displacements.finalizeFig(title = inps.title,
+        ylabel = inps.ylabel,
         labelRotation = inps.labelRotation,
         outName = inps.outName)
 
