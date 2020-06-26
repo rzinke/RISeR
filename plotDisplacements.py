@@ -7,6 +7,7 @@
 '''
 
 ### IMPORT MODULES ---
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -46,7 +47,6 @@ plotDisplacements.py DspList.txt -y 'displacements (m)' -t 'Measurement Examples
 '''
 
 def createParser():
-    import argparse
     parser = argparse.ArgumentParser(description=Description,
         formatter_class=argparse.RawTextHelpFormatter, epilog=Examples)
     parser.add_argument(dest='dspsList', type=str,

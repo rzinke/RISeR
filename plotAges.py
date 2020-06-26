@@ -7,6 +7,7 @@
 '''
 
 ### IMPORT MODULES ---
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -53,7 +54,6 @@ plotAges.py AgeList.txt -x 'ages (ka)' -t 'Sample Examples' -r 10 -o AgePlotExam
 '''
 
 def createParser():
-    import argparse
     parser = argparse.ArgumentParser(description=Description,
         formatter_class=argparse.RawTextHelpFormatter, epilog=Examples)
     parser.add_argument(dest='agesList', type=str,

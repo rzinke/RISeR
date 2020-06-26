@@ -7,6 +7,7 @@
 '''
 
 ### IMPORT MODULES ---
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import cumtrapz
@@ -31,7 +32,6 @@ calyr2age.py Date1_posterior.txt -o Age1 -s 3 -f 1000
 '''
 
 def createParser():
-    import argparse
     parser = argparse.ArgumentParser(description=Description,
         formatter_class=argparse.RawTextHelpFormatter, epilog=Examples)
     parser.add_argument(dest='datefile',

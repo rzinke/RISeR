@@ -25,45 +25,45 @@ def createParser():
     parser = argparse.ArgumentParser(description='Main function for calculating incremental slip rates.')
     # Required
     parser.add_argument('-a','--age_list', dest='ageListFile', type=str, required=True,
-    	help='Text file with one age file per line, list in order from youngest (top line) to oldest (bottom).')
+        help='Text file with one age file per line, list in order from youngest (top line) to oldest (bottom).')
     parser.add_argument('-d','--dsp_list', dest='dspListFile', type=str, required=True,
-    	help='Text file with one displacement file per line, list in order from smallest (top line) to largest (bottom).')
+        help='Text file with one displacement file per line, list in order from smallest (top line) to largest (bottom).')
     parser.add_argument('-o','--out-name', dest='outName', type=str, default='Out',
-    	help='Head name for outputs (no extension)')
+        help='Head name for outputs (no extension)')
     # Recommended
     parser.add_argument('-n','--Nsamples', dest='Nsamples', type=int, default=10000,
-    	help='Number of samples picked in MC run (default 1000; more is often better).')
+        help='Number of samples picked in MC run (default 1000; more is often better).')
     parser.add_argument('-v','--verbose', dest='verbose', action='store_true', default=False,
-    	help='Verbose?')
+        help='Verbose?')
     parser.add_argument('--plot-inputs', dest='plotInputs', action='store_true',
-    	help='Plot inputs')
+        help='Plot inputs')
     parser.add_argument('--plot-outputs', dest='plotOutputs', action='store_true',
-    	help='Plot outputs')
+        help='Plot outputs')
     # Highly optional
     parser.add_argument('--max-rate', dest='maxRate', type=float, default=1E4,
-    	help='Maximum rate considered in MC analysis. Units are <dispalcement units> per <age units>. Default = 10,000')
+        help='Maximum rate considered in MC analysis. Units are <dispalcement units> per <age units>. Default = 10,000')
     parser.add_argument('--seed', dest='seed', type=float, default=0, help='Seed value for random number generator. Default = 0')
     parser.add_argument('--max-picks', dest='maxPicks', type=int, default=500,
-    	help='Max number of picks to plot on MC results figure. Default = 500')
+        help='Max number of picks to plot on MC results figure. Default = 500')
     parser.add_argument('--pdf-method', dest='pdfMethod', type=str, default='kde',
-    	help='Method used for transforming rate picks into slip rate PDF [\'hist\'/\'kde\']. Default = kde')
+        help='Method used for transforming rate picks into slip rate PDF [\'hist\'/\'kde\']. Default = kde')
     parser.add_argument('--rate-step', dest='rateStep', type=float, default=0.01,
-    	help='Step size for slip rate functions. Default = 0.01.')
+        help='Step size for slip rate functions. Default = 0.01.')
     parser.add_argument('--smoothing-kernel', dest='smoothingKernel', type=str, default=None,
-    	help='Smoothing kernel type of slip rate functions. [None/mean/gauss]. Default = None')
+        help='Smoothing kernel type of slip rate functions. [None/mean/gauss]. Default = None')
     parser.add_argument('--kernel-width', dest='kernelWidth', type=int, default=2,
-    	help='Smoothing kernel width of slip rate functions.')
+        help='Smoothing kernel width of slip rate functions.')
     parser.add_argument('--pdf-analysis', dest='pdfAnalysis', type=str, default='IQR',
-    	help='Method for analyzing slip rate PDFs. \'IQR\' for interquantile range; \'HPD\' for highest posterior density. Default = IQR')
+        help='Method for analyzing slip rate PDFs. \'IQR\' for interquantile range; \'HPD\' for highest posterior density. Default = IQR')
     parser.add_argument('--rate-confidence', dest='rateConfidence', type=float, default=68.27,
-    	help='Confidence range for slip rate PDF reporting, [percent, e.g., 68.27, 95.45]. Default = 68.27')
+        help='Confidence range for slip rate PDF reporting, [percent, e.g., 68.27, 95.45]. Default = 68.27')
     parser.add_argument('--max-rate2plot', dest='maxRate2plot', type=float, default=None,
-    	help='Maximum spreading rate to plot (unlike -max_rate, this will not affect calculations). Default = None')
+        help='Maximum spreading rate to plot (unlike -max_rate, this will not affect calculations). Default = None')
     return parser
 
-def cmdParser(inpt_args=None):
+def cmdParser(inps_args=None):
     parser = createParser()
-    return parser.parse_args(inpt_args)
+    return parser.parse_args(inps_args)
 
 
 
@@ -138,6 +138,39 @@ def loadDsps(dspListFile,verbose=False,plot=False):
             maxDsp=Dsps[dspName].upperLimit
 
     return Dsps, dspList, maxDsp
+
+
+## Check inputs
+def checkInputs(ageList, dspList, verbose = False):
+    '''
+        Check that the same number of inputs are provided for age and displacement.
+    '''
+    # Check
+    nAges=len(ageList); nDsps=len(dspList)
+    assert nAges == nDsps, 'MUST HAVE SAME NUMBER OF AGE AND DISPLACEMENT MEASUREMENTS'
+    m=nAges # assign number of measurements
+
+    # Report if requested
+    if verbose == True:
+        print('Detected m = {} age and displacement measurements'.format(nAges))
+        # Confirm pairing
+        print('Pairing (youngest at top):')
+        for i in range(nAges):
+            print('\t{} - {}'.format(ageList[i],dspList[i]))
+
+
+## Formulate interval names
+def intervalsFromDspList(dspList):
+    '''
+        Intervals are the rates between one measurement and another
+    '''
+    intervalList=[]
+    m = len(dspList)
+    for i in range(m-1):
+        interval_name='{}-{}'.format(dspList[i],dspList[i+1])
+        intervalList.append(interval_name)
+
+    return intervalList
 
 
 
@@ -238,7 +271,7 @@ def plotIncSlipRates(Rates,intervalList,analysis_method,plot_max=None,outName=No
             ax.fill(Rates[i].xIQR,
                 0.9*Rates[i].pxIQR/scale_value+k,
                 color=(0.3,0.3,0.6),zorder=3)
-        elif inpt.pdfAnalysis=='HPD':
+        elif inps.pdfAnalysis=='HPD':
             for j in range(Rates[i].Nclusters):
                 xHPD=Rates[i].x_clusters[j]
                 xHPD=np.pad(xHPD,(1,1),'edge')
@@ -265,67 +298,55 @@ def plotIncSlipRates(Rates,intervalList,analysis_method,plot_max=None,outName=No
 
 ### MAIN ---
 if __name__ == '__main__':
-    inpt=cmdParser()
+    inps = cmdParser()
 
     ## Load files
     # Read age file
-    Ages,ageList,maxAge=loadAges(inpt.ageListFile,inpt.verbose,inpt.plotInputs)
+    Ages,ageList,maxAge=loadAges(inps.ageListFile,inps.verbose,inps.plotInputs)
 
     # Read disp file
-    Dsps,dspList,maxDsp=loadDsps(inpt.dspListFile,inpt.verbose,inpt.plotInputs)
+    Dsps,dspList,maxDsp=loadDsps(inps.dspListFile,inps.verbose,inps.plotInputs)
 
     # Check input files have same number of lines
-    nAges=len(ageList); nDsps=len(dspList)
-    assert nAges == nDsps, 'MUST HAVE SAME NUMBER OF AGE AND DISPLACEMENT MEASUREMENTS'
-    m=nAges # assign number of measurements
-    if inpt.verbose is True:
-        print('Detected m = {} age and displacement measurements'.format(nAges))
-        # Confirm pairing
-        print('Pairing (youngest at top):')
-        for i in range(nAges):
-            print('\t{} - {}'.format(ageList[i],dspList[i]))
+    checkInputs(ageList,dspList,verbose = inps.verbose)
+    m = len(ageList) # record number of dated displacement measurements
 
-
-    ## Formulate interval names
-    #  Intervals are the rates between one measurement and another
-    intervalList=[]
-    for i in range(m-1):
-        interval_name='{}-{}'.format(dspList[i],dspList[i+1])
-        intervalList.append(interval_name)
+    # Formulate interval names
+    intervalList = intervalsFromDspList(dspList)
 
 
     ## Plot raw data
     plotRawData(Ages,ageList,Dsps,dspList,
         maxAge,maxDsp,
-        outName=inpt.outName)
+        outName=inps.outName)
 
 
     ## Monte Carlo resamping
-    AgePicks,DspPicks,RatePicks=MCMC_resample(inpt.Nsamples,
+    AgePicks,DspPicks,RatePicks=MCMC_resample(inps.Nsamples,
         Ages,ageList,Dsps,dspList,
-        condition='standard',maxRate=inpt.maxRate,
-        seed_value=inpt.seed,
-        verbose=inpt.verbose,outName=None)
+        condition='standard',maxRate=inps.maxRate,
+        seed_value=inps.seed,
+        verbose=inps.verbose,outName=None)
 
     # Save picks to npz file
-    if inpt.outName:
-        savename='{}_Picks'.format(inpt.outName)
+    if inps.outName:
+        savename='{}_Picks'.format(inps.outName)
         np.savez(savename,AgePicks=AgePicks,DspPicks=DspPicks,RatePicks=RatePicks)
 
 
     ## Plot MC results
     plotMCresults(Ages,ageList,Dsps,dspList,
         AgePicks, DspPicks,
-        maxAge,maxDsp,inpt.maxPicks,
-        outName=inpt.outName)
+        maxAge,maxDsp,inps.maxPicks,
+        outName=inps.outName)
 
     # Save to file as script progresses
-    TXTout=open('{}_slip_rate_report.txt'.format(inpt.outName),'w')
+    TXTout=open('{}_slip_rate_report.txt'.format(inps.outName),'w')
 
     # Raw statistics
     percentiles=[50-68.27/2, 50, 50+68.27/2]
     pct_report='''Slip rate statistics from {} samples:
-Raw slip rates: (Interval: median values and 68% confidence)'''.format(inpt.Nsamples)
+Raw slip rates: (Interval: median values and 68% confidence)'''.format(inps.Nsamples)
     print(pct_report)
     TXTout.write(pct_report)
 
@@ -343,16 +364,16 @@ Raw slip rates: (Interval: median values and 68% confidence)'''.format(inpt.Nsam
     Rates={} # dictionary of object instances similar to Ages, Dsps
     for i in range(m-1):
         # Convert points to temporary (px2) array
-        if inpt.pdfMethod.lower() in ['hist','histogram']:
-            R=arrayHist(RatePicks[i,:],inpt.rateStep,
-                smoothingKernel=inpt.smoothingKernel,
-                kernelWidth=inpt.kernelWidth,
-                verbose=inpt.verbose,plot=False)
-        elif inpt.pdfMethod.lower() in ['kde','kernel']:
-            R=arrayKDE(RatePicks[i,:],inpt.rateStep,
-                smoothingKernel=inpt.smoothingKernel,
-                kernelWidth=inpt.kernelWidth,
-                verbose=inpt.verbose,plot=False)
+        if inps.pdfMethod.lower() in ['hist','histogram']:
+            R=arrayHist(RatePicks[i,:],inps.rateStep,
+                smoothingKernel=inps.smoothingKernel,
+                kernelWidth=inps.kernelWidth,
+                verbose=inps.verbose,plot=False)
+        elif inps.pdfMethod.lower() in ['kde','kernel']:
+            R=arrayKDE(RatePicks[i,:],inps.rateStep,
+                smoothingKernel=inps.smoothingKernel,
+                kernelWidth=inps.kernelWidth,
+                verbose=inps.verbose,plot=False)
 
         # Ascribe to object
         Rates[intervalList[i]]=rateObj(intervalList[i])
@@ -361,19 +382,19 @@ Raw slip rates: (Interval: median values and 68% confidence)'''.format(inpt.Nsam
 
 
     ## Analyze PDFs
-    pdf_report='PDF-based statistics ({0}% confidence) calculated using {1}.'.format(inpt.rateConfidence,inpt.pdfAnalysis)
+    pdf_report='PDF-based statistics ({0}% confidence) calculated using {1}.'.format(inps.rateConfidence,inps.pdfAnalysis)
     print(pdf_report); TXTout.write('\n\n{}'.format(pdf_report))
     for i in range(m-1):
 
         # Interquantile range
-        if inpt.pdfAnalysis in ['IQR','quantiles','quantile']:
+        if inps.pdfAnalysis in ['IQR','quantiles','quantile']:
             '''
                 More stable option, but slightly skewed toward larger values
             '''
-            inpt.pdfAnalysis='IQR' # confirm code for later
+            inps.pdfAnalysis='IQR' # confirm code for later
             PDF=IQRpdf(Rates[intervalList[i]].rate,
                 Rates[intervalList[i]].probs,
-                inpt.rateConfidence,verbose=False)
+                inps.rateConfidence,verbose=False)
             Rates[intervalList[i]].median=PDF.median
             Rates[intervalList[i]].xIQR=PDF.xIQR
             Rates[intervalList[i]].pxIQR=PDF.pxIQR
@@ -389,14 +410,14 @@ Raw slip rates: (Interval: median values and 68% confidence)'''.format(inpt.Nsam
             print(incr_slip_rate_report); TXTout.write('\n{}'.format(incr_slip_rate_report))
 
         # Highest posterior density
-        elif inpt.pdfAnalysis in ['HPD','density']:
+        elif inps.pdfAnalysis in ['HPD','density']:
             '''
                 More representative of probable values
             '''
-            inpt.pdfAnalysis='HPD' # confirm code for later
+            inps.pdfAnalysis='HPD' # confirm code for later
             PDF=HPDpdf(Rates[intervalList[i]].rate,
                 Rates[intervalList[i]].probs,
-                inpt.rateConfidence,verbose=False)
+                inps.rateConfidence,verbose=False)
             Rates[intervalList[i]].mode=PDF.mode # peak value
             Rates[intervalList[i]].x_clusters=PDF.x_clusters # record cluster values
             Rates[intervalList[i]].px_clusters=PDF.px_clusters # record cluster probs
@@ -419,12 +440,12 @@ Raw slip rates: (Interval: median values and 68% confidence)'''.format(inpt.Nsam
                 print(cluster_range_report); TXTout.write('\n{}'.format(cluster_range_report))
 
     # Plot incremental slip rates on same plot
-    plotIncSlipRates(Rates,intervalList,inpt.pdfAnalysis,plot_max=inpt.maxRate2plot,outName=inpt.outName)
+    plotIncSlipRates(Rates,intervalList,inps.pdfAnalysis,plot_max=inps.maxRate2plot,outName=inps.outName)
 
 
     ## Close saved file
     TXTout.close()
 
 
-    if inpt.plotInputs or inpt.plotOutputs:
+    if inps.plotInputs or inps.plotOutputs:
         plt.show()
