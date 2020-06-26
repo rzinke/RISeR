@@ -30,7 +30,7 @@ def arrayHist(V,stepsize,smoothingKernel=None,kernelWidth=2,verbose=False,plot=F
     '''
 
     # Report basic stats if requested
-    if verbose is True:
+    if verbose == True:
         print('Converting array to histogram')
         # Compute raw statistics
         pct=np.percentile(V,[50-95.45/2,50-68.27/2,50,50+68.27/2,50+95.45/2])
@@ -53,7 +53,7 @@ def arrayHist(V,stepsize,smoothingKernel=None,kernelWidth=2,verbose=False,plot=F
 
     # Smooth if requested
     if smoothingKernel:
-        if verbose is True:
+        if verbose == True:
             print('Applying smoothing kernel:\n\ttype: {}\twidth: {}'.format(smoothingKernel,kernelWidth))
         # Moving mean smoothing
         if smoothingKernel.lower() in ['mean']:
@@ -78,7 +78,7 @@ def arrayHist(V,stepsize,smoothingKernel=None,kernelWidth=2,verbose=False,plot=F
     PDF=np.hstack([Hcntrs.reshape(-1,1),H.reshape(-1,1)])
 
     # Plot if requested
-    if plot is True:
+    if plot == True:
         F=plt.figure()
         ax=F.add_subplot(111)
         ax.plot(PDF[:,0],PDF[:,1],'k',linewidth=1)
@@ -102,7 +102,7 @@ def arrayKDE(V,stepsize,smoothingKernel=None,kernelWidth=2,verbose=False,plot=Fa
     '''
 
     # Report basic stats if requested
-    if verbose is True:
+    if verbose == True:
         print('Converting array to histogram')
         # Compute raw statistics
         pct=np.percentile(V,[50-95.45/2,50-68.27/2,50,50+68.27/2,50+95.45/2])
@@ -124,7 +124,7 @@ def arrayKDE(V,stepsize,smoothingKernel=None,kernelWidth=2,verbose=False,plot=Fa
 
     # Smooth if requested
     if smoothingKernel:
-        if verbose is True:
+        if verbose == True:
             print('Applying smoothing kernel:\n\ttype: {}\twidth: {}'.format(smoothingKernel,kernelWidth))
         # Moving mean smoothing
         if smoothingKernel.lower() in ['mean']:
@@ -149,7 +149,7 @@ def arrayKDE(V,stepsize,smoothingKernel=None,kernelWidth=2,verbose=False,plot=Fa
     PDF=np.hstack([x.reshape(-1,1),Kde.reshape(-1,1)])
 
     # Plot if requested
-    if plot is True:
+    if plot == True:
         F=plt.figure()
         ax=F.add_subplot(111)
         ax.plot(PDF[:,0],PDF[:,1],'k',linewidth=1)

@@ -38,10 +38,11 @@ Executable functions:
 
 * quickPlotSlipHistory - Show the dated displacement history of the fault (offset as a function of age) without computing the incremental slip rates between markers. It is recommended to use this step once the displacement and age PDFs have been established, and before slip rate computation. That way the user can get a "feel" for whether the inputs make sense in the context of this pipeline. For example, from the Examples/SimpleExample folder, try ```quickPlotSlipHistory.py -a AgeList.txt -d DspList.txt -pt rectangle```
 
-* calcSlipRates.py - This is the main function for calculating incremental slip rates based on previously developed inputs. Users should run this function as a command, e.g., calcSlipRates.py -a List-of-ages.txt -d List-of-displacements.txt. This function requires two lists of filenames, as described in the INPUTS section below. This function calculates the incremental slip rates by sampling the input data (priors) and rejecting samples based on the condition that no slip rates should be negative at any point in their history. There are many optional parameters for the calcSlipRates function. Use calcSlipRates.py -h for help.
+* calcSlipRates.py - This is the main function for calculating incremental slip rates based on previously developed inputs. Users should run this function as a command, e.g., calcSlipRates.py -a List-of-ages.txt -d List-of-displacements.txt. This function requires two lists of filenames, as described in the INPUTS section below. This function calculates the incremental slip rates by sampling the input data (priors) and rejecting samples based on the condition that no slip rates should be negative at any point in their history. There are many optional parameters for the calcSlipRates function. Use ```calcSlipRates.py -h``` for help.
 
 
 Support scripts:
+* SlipRateObjects.py - Contains the classes for age and displacement PDFs, as well as an empty class for slip rate PDFs. The age and displacement PDFs carry subroutines for computing basic statistics, and an interpolation function for inverse transform sampling.
 * MCresampling.py - Used for sampling the input data and calculating the slip rates by enforcing the no-negative-rates condition. Other conditions can be specified and applied, though this is not recommended. Additionally, a maximum physically reasonable slip rate to be considered can be specified based on the user's judgement to avoid statistically implausible calculations.
 * array2pdf.py - Converts an unordered array of sample picks into a continuous PDF. Two options are available. Kernel density estimation (KDE) gives a weight to data points using an automatic bandwidth determination scheme-- this tends to overweight slow slip rates and overweight fast slip rates due to inherently uneven sampling. A most reliable, alternative method is to bin the samples in a histogram using the 'hist' option. If sampling is uneven, this may lead to artificially spiky, poorly conditioned results. To overcome this limitation, smoothing methods are available. All these parameters can be specified in the calcSlipRates call.
 * PDFanalysis - The range of possible slip rates can be quite large; it is often useful to report a range representing the most probable slip rates based on the data. To do this, two functions are provided within PDFanalysis: IQR reports the requested inter-quantile range of the PDF. This is more stable than HPD, but can be skewed, especially toward larger values. HPD reports the highest posterior density (most probable values) of a PDF. This method can give more meaningful results than IQR, but can result in anomalous values in spiky, non-smooth functions. For HPD, multiple value ranges are reported, depending on the continuity of probable values in the PDF.
@@ -50,11 +51,13 @@ Support scripts:
 INPUTS:
 The calcSlipRates function requires two text files: (1) A list of age filenames, written out from youngest at the top, to oldest at the bottom; and (2) a list of displacement names, similarly written out from yougest (least offset) at the top, to oldest (most offset) at the bottom. Note that these lists do not contain any data; they simply list the files in which the data are contained.
 
-Each "data file" consists of a two-column list describing a single measurement of displacement or age. In each, the first column is the value measured (i.e., age or displacement), and the second column is the relative probability of that value. If a measurement can be described as parametric function, a properly formatted PDF can be generated using makePDF.py, described above. Any arbitrary, pseudo-continuous PDF can be used as an input.
+Each "data file" consists of a two-column list describing a single measurement of displacement or age. In each, the first column is the value measured (i.e., age or displacement), and the second column is the relative probability of that value. If a measurement can be described as parametric function, a properly formatted PDF can be generated using makePDF.py, described above. Any arbitrary, pseudo-continuous PDF can be used as an input. 
 
 Two examples are provided. The data files are named, e.g., T1T2age.txt, T3T4dsp.txt, etc.
 
+**Note!** for OxCal outputs or any file in CE/BCE (AD/BC) format must be converted to years before present or years before physics. This can be done using the ```calyr2age.py``` function listed above.
 
-NOTE!
+
+**Disclaimer:**
 This is research code. The author(s) assumes no responsibility for any errors in the methods or scripts, or any damages resulting from the code's use.
 Do not use this code without citing Zinke et al., 2017; 2019. Please contact Robert Zinke with any questions or comments.

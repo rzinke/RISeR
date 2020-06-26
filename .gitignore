@@ -3,3 +3,8 @@ __pycache__/
 *.DS_Store
 *.png
 *.pdf
+*.npy
+*.npz
+
+Examples/SimpleExample/outputs
+Examples/ComplexExample/outputs

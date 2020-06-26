@@ -31,7 +31,6 @@ quickPlotSlipHistory.py -a AgeList.txt -d DspList.txt -l
 quickPlotSlipHistory.py -a AgeList.txt -d DspList.txt -pt rectangle
 '''
 
-
 def createParser():
     parser = argparse.ArgumentParser(description=Description,
         formatter_class=argparse.RawTextHelpFormatter, epilog=Examples)
@@ -66,7 +65,7 @@ def cmdParser(inpt_args=None):
 
 
 ### PLOTTING FUNCTIONS ---
-def whiskerPlot(ax,Ages,ageList,Dsps,dspList,labels=False):
+def whiskerPlot(ax,Ages,ageList,maxAge,Dsps,dspList,maxDsp,labels=False):
     '''
         Plot uncertainties as error bars.
     '''
@@ -86,10 +85,10 @@ def whiskerPlot(ax,Ages,ageList,Dsps,dspList,labels=False):
             color=(0.3,0.3,0.6), marker='o')
         # Labels
         if labels == True:
-            ax.text(x_mid,y_mid,dspList[i])
+            ax.text(x_mid+0.01*maxAge, y_mid+0.01*maxDsp, dspList[i])
 
 
-def rectanglePlot(ax,Ages,ageList,Dsps,dspList,labels=False):
+def rectanglePlot(ax,Ages,ageList,maxAge,Dsps,dspList,maxDsp,labels=False):
     '''
         Plot uncertainties as rectangles.
     '''
@@ -106,7 +105,8 @@ def rectanglePlot(ax,Ages,ageList,Dsps,dspList,labels=False):
             edgecolor=(0.3,0.3,0.6), fill=False, zorder=3))
         # Labels
         if labels == True:
-            ax.text(ageLower+boxWidth,dspLower,dspList[i])
+            ax.text((ageLower+boxWidth)+0.01*maxAge,
+                dspLower+0.01*maxDsp, dspList[i])
 
 
 ### MAIN ---
@@ -134,10 +134,10 @@ if __name__ == '__main__':
 
     # Plot data
     if inps.plotType == 'whisker':
-        whiskerPlot(ax,Ages,ageList,Dsps,dspList,
+        whiskerPlot(ax,Ages,ageList,maxAge,Dsps,dspList,maxDsp,
             labels = inps.labelFeatures)
     elif inps.plotType == 'rectangle':
-        rectanglePlot(ax,Ages,ageList,Dsps,dspList,
+        rectanglePlot(ax,Ages,ageList,maxAge,Dsps,dspList,maxDsp,
             labels = inps.labelFeatures)
 
 

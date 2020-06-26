@@ -10,6 +10,7 @@
 
 ### IMPORT MODULES ---
 import os
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
@@ -20,45 +21,76 @@ from PDFanalysis import *
 
 
 ### PARSER ---
+Description = '''Calculate incremental slip rates for a dated fault slip history. Inputs are
+are provided as probability density functions (PDFs) representing the age and displacement of each
+marker. From those PDFs, random samples are drawn, and samples resulting in negative slip rates
+are discarded. From the n valid random draws, incremental slip rates are calculated.
+
+REQUIRED INPUTS
+* age-list is a list of file paths to the PDFs representing marker ages--youngest markers at the
+    top of the list
+* dsp-list is a list of file paths to the PDFs representing marker displacement measurements--youngest
+    markers at the top of the list
+'''
+
+Examples = '''EXAMPLES
+From the Examples/SimpleExample folder
+
+calcSlipRates.py -a AgeList.txt -d DspList.txt
+'''
+
 def createParser():
-    import argparse
-    parser = argparse.ArgumentParser(description='Main function for calculating incremental slip rates.')
+    parser = argparse.ArgumentParser(description=Description,
+        formatter_class=argparse.RawTextHelpFormatter, epilog=Examples)
+
     # Required
-    parser.add_argument('-a','--age_list', dest='ageListFile', type=str, required=True,
+    requiredArgs = parser.add_argument_group('ESSENTIAL ARGUMENTS')
+    requiredArgs.add_argument('-a','--age-list', dest='ageListFile', type=str, required=True,
         help='Text file with one age file per line, list in order from youngest (top line) to oldest (bottom).')
-    parser.add_argument('-d','--dsp_list', dest='dspListFile', type=str, required=True,
+    requiredArgs.add_argument('-d','--dsp-list', dest='dspListFile', type=str, required=True,
         help='Text file with one displacement file per line, list in order from smallest (top line) to largest (bottom).')
-    parser.add_argument('-o','--out-name', dest='outName', type=str, default='Out',
-        help='Head name for outputs (no extension)')
-    # Recommended
-    parser.add_argument('-n','--Nsamples', dest='Nsamples', type=int, default=10000,
+    requiredArgs.add_argument('-n','--Nsamples', dest='Nsamples', type=int, default=10000,
         help='Number of samples picked in MC run (default 1000; more is often better).')
-    parser.add_argument('-v','--verbose', dest='verbose', action='store_true', default=False,
-        help='Verbose?')
-    parser.add_argument('--plot-inputs', dest='plotInputs', action='store_true',
-        help='Plot inputs')
-    parser.add_argument('--plot-outputs', dest='plotOutputs', action='store_true',
+    requiredArgs.add_argument('-o','--outName', dest='outName', type=str, default='Out',
+        help='Head name for outputs (no extension)')
+
+    # Generic arguments
+    generalArgs = parser.add_argument_group('GENERIC ARGUMENTS')
+    generalArgs.add_argument('-v','--verbose', dest='verbose', action='store_true', default=False,
+        help='Verbose mode')
+    generalArgs.add_argument('-p','--plot-outputs', dest='plotOutputs', action='store_true',
         help='Plot outputs')
-    # Highly optional
-    parser.add_argument('--max-rate', dest='maxRate', type=float, default=1E4,
+    generalArgs.add_argument('-l','--label-markers', dest='labelMarkers', action='store_true',
+        help='Label dated displacement markers on raw data plot')
+
+    # Fine-tuning
+    detailMCargs = parser.add_argument_group('DETAILED MC ARGUMENTS')
+    detailMCargs.add_argument('--seed', dest='seed', type=float, default=0,
+        help='Seed value for random number generator. Default = 0')
+    detailMCargs.add_argument('--max-rate', dest='maxRate', type=float, default=1E4,
         help='Maximum rate considered in MC analysis. Units are <dispalcement units> per <age units>. Default = 10,000')
-    parser.add_argument('--seed', dest='seed', type=float, default=0, help='Seed value for random number generator. Default = 0')
-    parser.add_argument('--max-picks', dest='maxPicks', type=int, default=500,
-        help='Max number of picks to plot on MC results figure. Default = 500')
-    parser.add_argument('--pdf-method', dest='pdfMethod', type=str, default='kde',
+
+    detailAnalysisArgs = parser.add_argument_group('DETAILED SLIP RATE ANALYSIS ARGUMENTS')
+    detailAnalysisArgs.add_argument('--pdf-method', dest='pdfMethod', type=str, default='kde',
         help='Method used for transforming rate picks into slip rate PDF [\'hist\'/\'kde\']. Default = kde')
-    parser.add_argument('--rate-step', dest='rateStep', type=float, default=0.01,
+    detailAnalysisArgs.add_argument('--rate-step', dest='rateStep', type=float, default=0.01,
         help='Step size for slip rate functions. Default = 0.01.')
-    parser.add_argument('--smoothing-kernel', dest='smoothingKernel', type=str, default=None,
+    detailAnalysisArgs.add_argument('--smoothing-kernel', dest='smoothingKernel', type=str, default=None,
         help='Smoothing kernel type of slip rate functions. [None/mean/gauss]. Default = None')
-    parser.add_argument('--kernel-width', dest='kernelWidth', type=int, default=2,
+    detailAnalysisArgs.add_argument('--kernel-width', dest='kernelWidth', type=int, default=2,
         help='Smoothing kernel width of slip rate functions.')
-    parser.add_argument('--pdf-analysis', dest='pdfAnalysis', type=str, default='IQR',
+    detailAnalysisArgs.add_argument('--pdf-analysis', dest='pdfAnalysis', type=str, default='IQR',
         help='Method for analyzing slip rate PDFs. \'IQR\' for interquantile range; \'HPD\' for highest posterior density. Default = IQR')
-    parser.add_argument('--rate-confidence', dest='rateConfidence', type=float, default=68.27,
+    detailAnalysisArgs.add_argument('--rate-confidence', dest='rateConfidence', type=float, default=68.27,
         help='Confidence range for slip rate PDF reporting, [percent, e.g., 68.27, 95.45]. Default = 68.27')
-    parser.add_argument('--max-rate2plot', dest='maxRate2plot', type=float, default=None,
+
+    detailFigureArgs = parser.add_argument_group('DETAILED SLIP RATE PLOT ARGUMENTS')
+    detailFigureArgs.add_argument('--max-picks', dest='maxPicks', type=int, default=500,
+        help='Max number of picks to plot on MC results figure. Default = 500')
+    detailFigureArgs.add_argument('--max-rate2plot', dest='maxRate2plot', type=float, default=None,
         help='Maximum spreading rate to plot (unlike -max_rate, this will not affect calculations). Default = None')
+    detailFigureArgs.add_argument('--plot-inputs', dest='plotInputs', action='store_true',
+        help='Plot inputs')
     return parser
 
 def cmdParser(inps_args=None):
@@ -68,6 +100,25 @@ def cmdParser(inps_args=None):
 
 
 ### DATA LOADING FUNCTIONS ---
+## Confirm output directory
+def confirmOutputDir(outName,verbose=False):
+    '''
+        Confirm the existence of the output directory. If it does not exist, create it.
+    '''
+    # Convert outName to aboslute path
+    outName = os.path.abspath(outName)
+
+    # Get directory name
+    dirName = os.path.dirname(outName)
+
+    # Create directory if it does not exist
+    if not os.path.exists(dirName):
+        os.mkdir(dirName)
+
+    # Return outName as absolute path
+    return outName
+
+
 ## Load age PDFs
 def loadAges(ageListFile,verbose=False,plot=False):
     # Load ages into dictionary
@@ -84,13 +135,13 @@ def loadAges(ageListFile,verbose=False,plot=False):
         '''
 
         # Isolate basename
-        ageLine=ageLine.strip('\n') # remove extraneous newline
-        ageName=os.path.basename(ageLine)
-        ageName=ageName.split('.')[0] # remove file extension
+        ageLine = ageLine.strip('\n') # remove extraneous newline
+        ageName = os.path.basename(ageLine)
+        ageName = ageName.split('.')[0] # remove file extension
         ageList.append(ageName) # append to list
 
         # Spawn age object and record to dictionary
-        Ages[ageName]=ageDatum(ageName)
+        Ages[ageName] = ageDatum(ageName)
         Ages[ageName].readFromFile(ageLine) # load data to object
 
         # Format for slip rate analysis
@@ -99,7 +150,7 @@ def loadAges(ageListFile,verbose=False,plot=False):
 
         # Set global limit for plotting
         if Ages[ageName].upperLimit>maxAge:
-            maxAge=Ages[ageName].upperLimit
+            maxAge = Ages[ageName].upperLimit
 
     return Ages, ageList, maxAge
 
@@ -120,13 +171,13 @@ def loadDsps(dspListFile,verbose=False,plot=False):
         '''
 
         # Isolate basename
-        dspLine=dspLine.strip('\n') # remove extraneous newline
-        dspName=os.path.basename(dspLine)
-        dspName=dspName.split('.')[0] # remove file extension
+        dspLine = dspLine.strip('\n') # remove extraneous newline
+        dspName = os.path.basename(dspLine)
+        dspName = dspName.split('.')[0] # remove file extension
         dspList.append(dspName) # append to list
 
         # Spawn age object and record to dictionary
-        Dsps[dspName]=dspDatum(dspName)
+        Dsps[dspName]=  dspDatum(dspName)
         Dsps[dspName].readFromFile(dspLine) # load data to object
 
         # Format for slip rate analysis
@@ -135,7 +186,7 @@ def loadDsps(dspListFile,verbose=False,plot=False):
 
         # Set global limit for plotting
         if Dsps[dspName].upperLimit>maxDsp:
-            maxDsp=Dsps[dspName].upperLimit
+            maxDsp = Dsps[dspName].upperLimit
 
     return Dsps, dspList, maxDsp
 
@@ -146,9 +197,9 @@ def checkInputs(ageList, dspList, verbose = False):
         Check that the same number of inputs are provided for age and displacement.
     '''
     # Check
-    nAges=len(ageList); nDsps=len(dspList)
+    nAges = len(ageList); nDsps=len(dspList)
     assert nAges == nDsps, 'MUST HAVE SAME NUMBER OF AGE AND DISPLACEMENT MEASUREMENTS'
-    m=nAges # assign number of measurements
+    m = nAges # assign number of measurements
 
     # Report if requested
     if verbose == True:
@@ -162,7 +213,7 @@ def checkInputs(ageList, dspList, verbose = False):
 ## Formulate interval names
 def intervalsFromDspList(dspList):
     '''
-        Intervals are the rates between one measurement and another
+        List of intervals between one offset marker and another.
     '''
     intervalList=[]
     m = len(dspList)
@@ -176,13 +227,19 @@ def intervalsFromDspList(dspList):
 
 ### PLOTTING FUNCTIONS ---
 ## Plot raw data (whisker plot)
-def plotRawData(Ages,ageList,Dsps,dspList,maxAge,maxDsp,outName=None):
+def plotRawData(Ages,ageList,Dsps,dspList,maxAge,maxDsp,label,outName):
+    '''
+        Plot raw data as whisker plot. Whiskers represent 95 % intervals.
+        No MC analyses are done at this point.
+    '''
     # Parameters
-    m=len(ageList)
+    m = len(ageList)
 
-    # Plot
-    Fig=plt.figure()
-    ax=Fig.add_subplot(111)
+    # Establish figure
+    Fig = plt.figure()
+    ax = Fig.add_subplot(111)
+
+    # Plot data
     for i in range(m):
         x_mid=Ages[ageList[i]].median
         x_err=np.array([[x_mid-Ages[ageList[i]].lowerLimit],
@@ -192,24 +249,37 @@ def plotRawData(Ages,ageList,Dsps,dspList,maxAge,maxDsp,outName=None):
             [Dsps[dspList[i]].upperLimit-y_mid]])
         ax.errorbar(x_mid,y_mid,xerr=x_err,yerr=y_err,
             color=(0.3,0.3,0.6),marker='o')
+
+        # Label if requested
+        if label == True:
+            ax.text(x_mid+0.01*maxAge, y_mid+0.01*maxDsp, dspList[i])
+
+    # Format figure
     ax.set_xlim([0,1.1*maxAge]) # x-limits
     ax.set_ylim([0,1.1*maxDsp]) # y-limits
     ax.set_xlabel('age'); ax.set_ylabel('displacement')
-    ax.set_title('Raw data (95 % limits)')
-    if outName:
-        Fig.savefig('{}_Fig1_RawData.png'.format(outName),dpi=600)
-        Fig.savefig('{}_Fig1_RawData.pdf'.format(outName),type='pdf')
+    ax.set_title('Raw data (95 %% limits)')
+    Fig.tight_layout()
+
+    # Save figure
+    Fig.savefig('{}_Fig1_RawData.pdf'.format(outName),type='pdf')
+
+    # Return values
     return Fig, ax
 
 
 ## Plot rectangles
 def plotRectangles(Ages,ageList,Dsps,dspList):
+    '''
+        Draw rectangular patches representing the 95 % confidence intervals.
+    '''
+
     # Parameters
-    m=len(ageList) # number of measurements
+    m = len(ageList) # number of measurements
 
     # Establish plot
-    Fig=plt.figure()
-    ax=Fig.add_subplot(111)
+    Fig = plt.figure()
+    ax = Fig.add_subplot(111)
 
     # Plot rectangles
     for i in range(m):
@@ -220,21 +290,27 @@ def plotRectangles(Ages,ageList,Dsps,dspList):
         ax.add_patch(Rectangle((ageLower,dspLower), # LL corner
             boxWidth,boxHeight, # dimensions
             edgecolor=(0.3,0.3,0.6),fill=False,zorder=3))
+
     return Fig, ax
 
 
 ## Plot MC results
 def plotMCresults(Ages,ageList,Dsps,dspList,AgePicks,DspPicks, \
-    xMax,yMax,maxPicks,outName=None):
+    xMax,yMax,maxPicks,outName):
+    '''
+        Plot valid MC picks in displacement-time space. Draw rectangles representing the 95 %
+         confidence bounds using the plotRectangles function.
+    '''
+
     # Parameters
-    m=len(ageList) # number of measurements
-    n=AgePicks.shape[1] # number of picks
+    m = len(ageList) # number of measurements
+    n = AgePicks.shape[1] # number of picks
 
     # Plot rectangles
-    Fig,ax=plotRectangles(Ages,ageList,Dsps,dspList)
+    Fig, ax = plotRectangles(Ages, ageList, Dsps, dspList)
 
     # Plot picks
-    if n<=maxPicks:
+    if n <= maxPicks:
         ax.plot(AgePicks,DspPicks,color=(0,0,0),alpha=0.1,zorder=1)
         ax.plot(AgePicks,DspPicks,color=(0,0,1),marker='.',linewidth=0,alpha=0.5,zorder=2)
     else:
@@ -242,22 +318,27 @@ def plotMCresults(Ages,ageList,Dsps,dspList,AgePicks,DspPicks, \
             color=(0,0,0),alpha=0.1,zorder=1)
         ax.plot(AgePicks[:,:maxPicks],DspPicks[:,:maxPicks],
             color=(0,0,1),marker='.',linewidth=0,alpha=0.4,zorder=2)
+
+    # Format figure
     ax.set_xlim([0,1.1*xMax]); ax.set_ylim([0,1.1*yMax])
     ax.set_xlabel('age'); ax.set_ylabel('displacement')
     ax.set_title('MC Picks (N = {})'.format(n))
-    if outName:
-        Fig.savefig('{}_Fig2_MCpicks.png'.format(outName),dpi=600)
-        Fig.savefig('{}_Fig2_MCpicks.pdf'.format(outName),type='pdf')
-    return Fig,ax
+    Fig.tight_layout()
+
+    # Save figure
+    Fig.savefig('{}_Fig2_MCpicks.pdf'.format(outName),type='pdf')
+
+    # Return values
+    return Fig, ax
 
 
 ## Plot incremental slip rate results
-def plotIncSlipRates(Rates,intervalList,analysis_method,plot_max=None,outName=None):
+def plotIncSlipRates(Rates,intervalList,analysis_method,outName,plot_max=None):
     # Analysis method is IQR or HPD
 
     # Setup figure
-    F=plt.figure('IncrementalRates')
-    ax=F.add_subplot(111)
+    Fig=plt.figure('IncrementalRates')
+    ax=Fig.add_subplot(111)
     intvl_labels=[]; k=0
     # Loop through each rate
     for i in intervalList:
@@ -283,6 +364,8 @@ def plotIncSlipRates(Rates,intervalList,analysis_method,plot_max=None,outName=No
         intvl_name='{}-\n{}'.format(i.split('-')[0],i.split('-')[1])
         intvl_labels.append(intvl_name)
         k+=1
+
+    # Format plot
     ax.set_yticks(np.arange(0.5,m-1))
     ax.set_yticklabels(intvl_labels,rotation='vertical')
     ax.set_ylim([0,m-1])
@@ -290,9 +373,10 @@ def plotIncSlipRates(Rates,intervalList,analysis_method,plot_max=None,outName=No
         ax.set_xlim([0,plot_max])
     ax.set_xlabel('slip rate')
     ax.set_title('Incremental slip rates')
-    if outName:
-        F.savefig('{}_Fig3_Incremental_slip_rates.png'.format(outName),dpi=600)
-        F.savefig('{}_Fig3_Incremental_slip_rates.pdf'.format(outName),type='pdf')
+    Fig.tight_layout()
+
+    # Save figure
+    Fig.savefig('{}_Fig3_Incremental_slip_rates.pdf'.format(outName),type='pdf')
 
 
 
@@ -300,7 +384,11 @@ def plotIncSlipRates(Rates,intervalList,analysis_method,plot_max=None,outName=No
 if __name__ == '__main__':
     inps = cmdParser()
 
+
     ## Load files
+    # Check output directory exists
+    inps.outName = confirmOutputDir(inps.outName)
+
     # Read age file
     Ages,ageList,maxAge=loadAges(inps.ageListFile,inps.verbose,inps.plotInputs)
 
@@ -318,30 +406,31 @@ if __name__ == '__main__':
     ## Plot raw data
     plotRawData(Ages,ageList,Dsps,dspList,
         maxAge,maxDsp,
-        outName=inps.outName)
+        inps.labelMarkers,
+        inps.outName)
 
 
     ## Monte Carlo resamping
     AgePicks,DspPicks,RatePicks=MCMC_resample(inps.Nsamples,
-        Ages,ageList,Dsps,dspList,
+        Ages, ageList, Dsps, dspList,
         condition='standard',maxRate=inps.maxRate,
         seed_value=inps.seed,
-        verbose=inps.verbose,outName=None)
+        verbose=inps.verbose,outName=inps.outName)
 
     # Save picks to npz file
-    if inps.outName:
-        savename='{}_Picks'.format(inps.outName)
-        np.savez(savename,AgePicks=AgePicks,DspPicks=DspPicks,RatePicks=RatePicks)
+    savename='{}_Picks'.format(inps.outName)
+    np.savez(savename,AgePicks=AgePicks,DspPicks=DspPicks,RatePicks=RatePicks)
 
 
     ## Plot MC results
-    plotMCresults(Ages,ageList,Dsps,dspList,
+    plotMCresults(Ages, ageList, Dsps, dspList,
         AgePicks, DspPicks,
-        maxAge,maxDsp,inps.maxPicks,
-        outName=inps.outName)
+        maxAge, maxDsp,
+        inps.maxPicks,
+        inps.outName)
 
     # Save to file as script progresses
-    TXTout=open('{}_slip_rate_report.txt'.format(inps.outName),'w')
+    TXTout = open('{}_slip_rate_report.txt'.format(inps.outName),'w')
 
     # Raw statistics
     percentiles=[50-68.27/2, 50, 50+68.27/2]
@@ -440,12 +529,12 @@ Raw slip rates: (Interval: median values and 68% confidence)'''.format(inps.Nsam
                 print(cluster_range_report); TXTout.write('\n{}'.format(cluster_range_report))
 
     # Plot incremental slip rates on same plot
-    plotIncSlipRates(Rates,intervalList,inps.pdfAnalysis,plot_max=inps.maxRate2plot,outName=inps.outName)
+    plotIncSlipRates(Rates,intervalList,inps.pdfAnalysis,inps.outName,plot_max=inps.maxRate2plot)
 
 
     ## Close saved file
     TXTout.close()
 
 
-    if inps.plotInputs or inps.plotOutputs:
+    if inps.plotOutputs == True:
         plt.show()
