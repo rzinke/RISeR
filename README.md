@@ -12,12 +12,14 @@ If you use these scripts, please cite:
 
 SETUP:
 These scripts have been tested for Linux, Mac, and Windows systems.
-To use these scripts, clone the GitHub repository to a location of your choice, which will be referred to as ```MCMC_HOME```. 
+To use these scripts, clone the GitHub repository to a location of your choice, which will be referred to as ```RISeR_HOME```. 
 Once cloned, add the following paths to your ```~/.bash_rc``` file for a Linux system or ```~/.bash_profile``` for a Mac system:
 
 ```
-export PATH="${PATH}:${MCMC_HOME}:${MCMC_HOME}/SupportFunctions"
-export PYTHONPATH="${PYTHONPATH}:${MCMC_HOME}:${MCMC_HOME}/SupportFunctions"
+RISeR_HOME=<path to repo>
+
+export PATH="${PATH}:${RISeR_HOME}:${RISeR_HOME}/SupportFunctions"
+export PYTHONPATH="${PYTHONPATH}:${RISeR_HOME}:${RISeR_HOME}/SupportFunctions"
 ```
 
 If you are using Windows, it is recommended you set additional environmental variables. 
