@@ -32,7 +32,7 @@ class ageDatum:
 
     # Format for use in slip rate analysis
     def format(self,verbose=False,plot=False):
-        if verbose is True:
+        if verbose == True:
             print('Formatting {} for slip rate analysis'.format(self.name))
 
         # Sum to CDF
@@ -46,7 +46,7 @@ class ageDatum:
         self.probs=self.probs[uniqueNdx] # unique age probs
         self.probs=self.probs/np.trapz(self.probs,self.ages) # re-norm area
         self.cdf=cumtrapz(self.probs,self.ages,initial=0) # re-calc CDF
-        if verbose is True:
+        if verbose == True:
             print('\t...limiting to unique values')
             print('\t...final CDF value: {}'.format(self.cdf[-1]))
 
@@ -54,16 +54,16 @@ class ageDatum:
         #    use cdf as "x" value for inverse interpolation
         #    leave kind as linear to avoid values < 0 or > 1
         self.InvCDF=interp1d(self.cdf,self.ages,kind='linear')
-        if verbose is True:
+        if verbose == True:
             print('\t...built inverse interpolation function')
 
         # Basic statistics
         self.lowerLimit,self.median,self.upperLimit=self.InvCDF([0.025,0.5,0.975])
-        if verbose is True:
+        if verbose == True:
             print('\t95.45 % limits: {0:.5f}; {1:.5f}'.format(self.lowerLimit,self.upperLimit))
 
         # Plot if requested
-        if plot is True:
+        if plot == True:
             F=plt.figure()
             ax=F.add_subplot(111)
             ax.plot(self.ages,0.8*self.probs/self.probs.max(),color=(0.3,0.3,0.6),label='PDF')
@@ -93,7 +93,7 @@ class dspDatum:
 
     # Format for use in slip rate analysis
     def format(self,verbose=False,plot=False):
-        if verbose is True:
+        if verbose == True:
             print('Formatting {} for slip rate analysis'.format(self.name))
 
         # Sum to CDF
@@ -107,7 +107,7 @@ class dspDatum:
         self.probs=self.probs[uniqueNdx] # unique displacement probs
         self.probs=self.probs/np.trapz(self.probs,self.dsps) # re-norm area
         self.cdf=cumtrapz(self.probs,self.dsps,initial=0) # re-calc CDF
-        if verbose is True:
+        if verbose == True:
             print('\t...limiting to unique values')
             print('\t...final CDF value: {}'.format(self.cdf[-1]))
 
@@ -115,16 +115,16 @@ class dspDatum:
         #    use cdf as "x" value for inverse interpolation
         #    leave kind as linear to avoid values < 0 or > 1
         self.InvCDF=interp1d(self.cdf,self.dsps,kind='linear')
-        if verbose is True:
+        if verbose == True:
             print('\t...built inverse interpolation function')
 
         # Basic stats
         self.lowerLimit,self.median,self.upperLimit=self.InvCDF([0.025,0.5,0.975])
-        if verbose is True:
+        if verbose == True:
             print('\t95.45 % limits: {0:.5f}; {1:.5f}'.format(self.lowerLimit,self.upperLimit))
 
         # Plot if requested
-        if plot is True:
+        if plot == True:
             F=plt.figure()
             ax=F.add_subplot(111)
             ax.plot(self.dsps,0.8*self.probs/self.probs.max(),color=(0.3,0.3,0.6),label='PDF')

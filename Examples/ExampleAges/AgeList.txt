@@ -1,0 +1,7 @@
+Silt:Sample5:Sample5_age.txt
+Sand:Sample4:Sample4_age.txt
+Gravel:Sample3:Sample3_age.txt
+BoldLine:Strat Boundary
+Age:Sample2:Sample2_age.txt
+Age:Sample1:Sample1_age.txt
+PhaseAge:Sample (1+2):Sample1-2_age_union.txt

@@ -8,6 +8,7 @@
 
 ### IMPORT MODULES ---
 import os
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import interpolate as intrp
@@ -32,7 +33,6 @@ makePDF.py -d trap -v 4.99 5.0 6.0 6.01 -o PDFx3 -p
 '''
 
 def createParser():
-    import argparse
     parser = argparse.ArgumentParser(description=Description,
         formatter_class=argparse.RawTextHelpFormatter, epilog=Examples)
     parser.add_argument('-d', '--distribution', dest='dstrb', type=str, required=True,
