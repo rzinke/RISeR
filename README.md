@@ -10,7 +10,7 @@ If you use these scripts, please cite:
 
 
 
-## SETUP:
+## SETUP
 These scripts have been tested for Linux, Mac, and Windows systems.
 To use these scripts, clone the GitHub repository to a location of your choice, which will be referred to as ```RISeR_HOME```. 
 Once cloned, add the following paths to your ```~/.bash_rc``` file for a Linux system or ```~/.bash_profile``` for a Mac system:
@@ -26,8 +26,8 @@ If you are using Windows, it is recommended you set additional environmental var
 
 
 
-## CONTENTS:
-### Executable functions:
+## CONTENTS
+### Executable functions
 * makePDF.py - Use this to create a probability density function (PDF) as a text file. A distribution is specified, as well as the "parameters" or specific points in that distribution: For a gaussian distribution, two numbers are required 'mean stddev'; for a triangular distribution, three numbers are required 'min preferred max'; for a trapezoidal function, four numbers are required 'min shoulder1 shoulder2 max'. Supported types currently are Gaussian, tringular, and trapezoidal shapes. Gaussian distributions are printed out to 4-sigma. Uniform (boxcar) sampling distributions are specified using the trapezoidal function, with steeply sloping sides (e.g., closely approximates a boxcar). Users should run this function as a command, e.g., ```makePDF.py -d triangular -v 3 5 6.5 -o Offset_5m```
 
 * calyr2age.py - This function converts calendar ages in C.E./B.C.E. to years before "physics" (i.e., 1950 per radiocarbon convention) or years before some given calendar year (e.g., 2019). This is especially useful outputs from age calibration programs such as OxCal, which report ages in calendar years, whereas the slip rate calculator here requires age data be expressed as functions increasing in age from the present. Optional arguments include the "reference date", which defaults to 1950 C.E., and can be set to the current year, e.g., 2019. An age factor is also available, and used to scale the numbers to the desired age unit of choice (e.g., an age factor of 1000 scales the units from years to kilo-years). One may also wish to smooth their data, especially if the probability function were computed from binned values of a Monte Carlo resampling method (e.g., OxCal). Example calendar year-formatted ages can be found in the folder /Examples/ExampleAges/SampleX_Cal_Yr.txt. They can be converted into the kybp (ka) sample ages using the command ```calyr2age.py Sample1_CalYr.txt -o Sample1_age -r 2019 -f 1000 -s 3 -p```
@@ -43,15 +43,15 @@ If you are using Windows, it is recommended you set additional environmental var
 * calcSlipRates.py - This is the main function for calculating incremental slip rates based on previously developed inputs. Users should run this function as a command, e.g., calcSlipRates.py -a List-of-ages.txt -d List-of-displacements.txt. This function requires two lists of filenames, as described in the INPUTS section below. This function calculates the incremental slip rates by sampling the input data (priors) and rejecting samples based on the condition that no slip rates should be negative at any point in their history. There are many optional parameters for the calcSlipRates function. Use ```calcSlipRates.py -h``` for help.
 
 
-### Support scripts:
+### Support scripts
 * SlipRateObjects.py - Contains the classes for age and displacement PDFs, as well as an empty class for slip rate PDFs. The age and displacement PDFs carry subroutines for computing basic statistics, and an interpolation function for inverse transform sampling.
 * MCresampling.py - Used for sampling the input data and calculating the slip rates by enforcing the no-negative-rates condition. Other conditions can be specified and applied, though this is not recommended. Additionally, a maximum physically reasonable slip rate to be considered can be specified based on the user's judgement to avoid statistically implausible calculations.
 * array2pdf.py - Converts an unordered array of sample picks into a continuous PDF. Two options are available. Kernel density estimation (KDE) gives a weight to data points using an automatic bandwidth determination scheme-- this tends to overweight slow slip rates and overweight fast slip rates due to inherently uneven sampling. A most reliable, alternative method is to bin the samples in a histogram using the 'hist' option. If sampling is uneven, this may lead to artificially spiky, poorly conditioned results. To overcome this limitation, smoothing methods are available. All these parameters can be specified in the calcSlipRates call.
 * PDFanalysis.py - The range of possible slip rates can be quite large; it is often useful to report a range representing the most probable slip rates based on the data. To do this, two functions are provided within PDFanalysis: IQR reports the requested inter-quantile range of the PDF. This is more stable than HPD, but can be skewed, especially toward larger values. HPD reports the highest posterior density (most probable values) of a PDF. This method can give more meaningful results than IQR, but can result in anomalous values in spiky, non-smooth functions. For HPD, multiple value ranges are reported, depending on the continuity of probable values in the PDF.
 
 
-## INPUTS:
-The calcSlipRates.py function requires two text files: (1) A list of age filenames, written out from youngest at the top, to oldest at the bottom; and (2) a list of displacement names, similarly written out from yougest (least offset) at the top, to oldest (most offset) at the bottom. Note that these lists do not contain any data; they simply list the files in which the data are contained.
+## INPUTS
+The ```calcSlipRates.py``` function requires two text files: (1) A list of age filenames, written out from youngest at the top, to oldest at the bottom; and (2) a list of displacement names, similarly written out from yougest (least offset) at the top, to oldest (most offset) at the bottom. Note that these lists do not contain any data; they simply list the files in which the data are contained.
 
 Each "data file" consists of a two-column list describing a single measurement of displacement or age. In each, the first column is the value measured (i.e., age or displacement), and the second column is the relative probability of that value. If a measurement can be described as parametric function, a properly formatted PDF can be generated using makePDF.py, described above. Any arbitrary, pseudo-continuous PDF can be used as an input. 
 
