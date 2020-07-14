@@ -22,7 +22,12 @@ export PATH="${PATH}:${RISeR_HOME}:${RISeR_HOME}/SupportFunctions"
 export PYTHONPATH="${PYTHONPATH}:${RISeR_HOME}:${RISeR_HOME}/SupportFunctions"
 ```
 
-If you are using Windows, it is recommended you set additional environmental variables. 
+If you are using Windows, it is recommended you set additional environmental variables.
+
+
+
+## EXAMPLES
+Example data sets and launch scripts can be found in the ./Examples folder. An example age data set and a formatted plot are in the ExampleAges folder. An example displacement data set and corresponding plot are in the ExampleDisplacements folder. A simple example for incremental slip rate calculation (i.e., no age or displacement inversions) is found in the SimpleExample folder. A more complex example, with overlapping ages and displacement measurements is found in the ComplexExample folder.
 
 
 
