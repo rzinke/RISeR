@@ -79,6 +79,7 @@ class PDFcombo:
     def __init__(self, PDFs, method = 'union', verbose=False):
         '''
             Combine PDFs.
+            PDFs are given as a dictionary with n x 2 arrays.
         '''
         # Initialize
         self.PDFs = PDFs
