@@ -38,7 +38,8 @@ def createParser():
     parser.add_argument('-d', '--distribution', dest='dstrb', type=str, required=True,
         help='Distribution type [\'gauss\'/\'triangle\'/\'trapezoid\']]')
     parser.add_argument('-v', '--values', dest='values', type=float, nargs='+', required=True,
-        help='Values to specify distribution, separated by spaces.\nTwo values for gaussian ([mean] +/- [1 std dev])\nThree values for triangle ([min], [pref], [max])\nFour values for trapezoid.')    parser.add_argument('-o', '--output', dest='outName', type=str, required=True,
+        help='Values to specify distribution, separated by spaces.\nTwo values for gaussian ([mean] +/- [1 std dev])\nThree values for triangle ([min], [pref], [max])\nFour values for trapezoid.')
+    parser.add_argument('-o', '--output', dest='outName', type=str, required=True,
         help='Output file path/name')
     parser.add_argument('-n', '--nDataPts', dest='nDataPts', type=int, default=100,
         help='Number of data points. Default = 100')
