@@ -18,7 +18,10 @@ from scipy.interpolate import interp1d
 ### PARSER ---
 Description = '''Find the difference between two PDFs.'''
 
-Examples='''EXAMPLES'''
+Examples='''EXAMPLES
+# Subtract Sample1_age from Sampl2_age
+differencePDFs.py Sample2_age.txt Sample1_age.txt -o Sample12_ageDiff -v -p
+'''
 
 def createParser():
     parser = argparse.ArgumentParser(description=Description,

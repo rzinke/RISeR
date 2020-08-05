@@ -44,7 +44,7 @@ Note: More than one entry must be present to calculate incremental slip rates.
 Examples = '''EXAMPLES
 From the Examples/SimpleExample folder
 
-calcSlipRates.py -a AgeList.txt -d DspList.txt
+calcSlipRates.py DspAgeData.yaml
 '''
 
 def createParser():
@@ -261,7 +261,7 @@ if __name__ == '__main__':
     txtName = startTXTfile(inps.outName,inps.Nsamples)
 
     # Load data from YAML file
-    DspAgeData = loadInputs(inps.dataFile,
+    DspAgeData = loadDspAgeInputs(inps.dataFile,
         verbose = inps.verbose,
         plotInputs = inps.plotInputs)
 

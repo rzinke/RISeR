@@ -18,7 +18,9 @@ from scipy.interpolate import interp1d
 ### PARSER ---
 Description = '''Find the quotient of two PDFs.'''
 
-Examples='''EXAMPLES'''
+Examples='''EXAMPLES
+# Divide Marker1 displacement by Marker1 age
+dividePDFs.py Marker1_dsp.txt Marker1_age -o Marker1_slipRate -v -p'''
 
 def createParser():
     parser = argparse.ArgumentParser(description=Description,
@@ -29,6 +31,8 @@ def createParser():
         help='PDF to be used as the denominator')
     parser.add_argument('-o', '--output', dest='outName', type=str, required=True,
         help='Output file path/name')
+    parser.add_argument('-n', '--number-points', dest='nPts', type=int, default=1000,
+        help='Number of data points in quotient function')
     parser.add_argument('-v','--verbose', dest='verbose', action='store_true',
         help='Print outputs to command line')
     parser.add_argument('-p', '--plot', dest='plot', action='store_true',
@@ -46,7 +50,7 @@ class PDFquotient:
     '''
         Find analytically the quotient of two quantities described by two PDFs.
     '''
-    def __init__(self,Xnumer,pXnumer,Xdenom,pXdenom,verbose=False):
+    def __init__(self,Xnumer,pXnumer,Xdenom,pXdenom,n=1000,verbose=False):
         # Record data
         self.verbose = verbose
 
@@ -55,7 +59,7 @@ class PDFquotient:
         self.Xdenom, self.pXdenom = self.__formatPDF__(Xdenom,pXdenom)
 
         # Compute quotient
-        self.__dividePDFs__()
+        self.__dividePDFs__(n=n)
 
     def __formatPDF__(self,X,pX):
         '''
@@ -64,17 +68,26 @@ class PDFquotient:
         # Normalize area to 1.0
         pX = pX/np.trapz(pX,X)
 
+        # Ensure no zero values
+        w = (X > 0)
+        X = X[w]
+        pX = pX[w]
+
+        # Toss out zero probability values
+        w = (pX > 0)
+        X = X[w]
+        pX = pX[w]
+
         return X, pX
 
-    def __dividePDFs__(self):
+    def __dividePDFs__(self,n):
         '''
             Compute quotient Q, as probability function pQ.
         '''
         # Establish quotient axis, Q
         minQ = self.Xnumer.min()/self.Xdenom.max()
         maxQ = self.Xnumer.max()/self.Xdenom.min()
-        lenQ = np.min([len(self.Xnumer),len(self.Xdenom)])
-        self.Q = np.linspace(minQ, maxQ, lenQ)
+        self.Q = np.linspace(minQ, maxQ, n)
 
         # Establish interpolation function for numerator
         Inumer = interp1d(self.Xnumer,self.pXnumer,
@@ -146,7 +159,9 @@ if __name__ == '__main__':
 
 
     # Difference PDFs
-    quot = PDFquotient(Xnumer,pXnumer,Xdenom,pXdenom,verbose=inps.verbose)
+    quot = PDFquotient(Xnumer,pXnumer,Xdenom,pXdenom,
+        n=inps.nPts,
+        verbose=inps.verbose)
 
     # Save to file
     if inps.outName:
