@@ -158,10 +158,18 @@ class dspPlot:
                 # Shift
                 pxDsp += k
 
-                # Plot data using color from color table
-                self.ax.fill(pxDsp, xDsp,
-                    color = self.colors[dtype],
-                    alpha = self.alphas[dtype])
+                # Plot data
+                if 'color' not in properties:
+                    color = self.colors[dtype]
+                else:
+                    color = datum['color']
+
+                if 'alpha' not in properties:
+                    alpha = self.alphas[dtype]
+                else:
+                    alpha = datum['alpha']
+
+                self.ax.fill(xDsp, pxDsp, color=color, alpha=alpha)
 
 
             k += 1 # update counter
