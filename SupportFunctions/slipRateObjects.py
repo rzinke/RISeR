@@ -10,6 +10,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import cumtrapz
 from PDFanalysis import *
+from array2pdf import arrayHist, arrayKDE
+from PDFanalysis import IQRpdf, HPDpdf
 
 
 
@@ -137,9 +139,59 @@ class dspDatum:
 
 
 ## Slip rate object
-class rateObj:
+class incrSlipRate:
+    '''
+        Incremental slip rate object, with options to convert sample picks into
+         pseudo-continuous PDFs.
+    '''
     def __init__(self,name):
+        self.name = name
+
+    # Convert picks to PDF
+    def picks2PDF(self,RatePicks,method,stepsize,
+            smoothingKernel=None,kernelWidth=2,verbose=False,plot=False):
         '''
-            Instantiate slip rate object. Add parameters as needed.
+            Convert slip rate picks to PDF using arrayHist or arrayKDE methods.
         '''
-        self.name=name
+        # Use histogram method
+        if method.lower() in ['hist','histogram']:
+            self.rates, self.probs = arrayHist(RatePicks,stepsize,
+                smoothingKernel,kernelWidth,verbose,plot)
+        # Use kernel density method
+        elif method.lower() in ['kde','kernel']:
+            self.rates, self.probs = arrayKDE(RatePicks,stepsize,
+                smoothingKernel,kernelWidth,verbose,plot)
+        else:
+            print('Choose PDF conversion method: \'histogram\'/\'kde\'')
+            exit()
+
+    # Analyze PDF
+    def analyzePDF(self,method='IQR',confidence=68.27):
+        '''
+            Analyze the slip rate PDF to retrieve values using interquantile
+             range (IQR) or highest posterior density (HPD).
+        '''
+        self.analysisMethod = method
+
+        if method.upper() in ['IQR']:
+            PDF = IQRpdf(self.rates, self.probs, confidence=confidence)
+
+            # Translate results
+            self.median=PDF.median
+            self.xIQR=PDF.xIQR
+            self.pxIQR=PDF.pxIQR
+            self.lowerValue=PDF.lowerValue # record lower value
+            self.upperValue=PDF.upperValue # record upper value
+        elif method.upper() in ['HPD']:
+            PDF = HPDpdf(self.rates, self.probs, confidence=confidence)
+
+            # Translate results
+            self.mode=PDF.mode # peak value
+            self.x_clusters=PDF.x_clusters # record cluster values
+            self.px_clusters=PDF.px_clusters # record cluster probs
+            self.Nclusters=len(PDF.x_clusters) # number of clusters
+            self.lowerValue=PDF.lowestValue # record lower value
+            self.upperValue=PDF.highestValue # record upper value
+        else:
+            print('Choose PDF analysis method: \'IQR\'/\'HPD\'')
+            exit()

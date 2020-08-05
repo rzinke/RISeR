@@ -5,9 +5,12 @@
     Rob Zinke 2019, 2020
 '''
 
+### IMPORT MODULES ---
 import numpy as np
 
-def MCMC_resample(Nsamples,Ages,ageList,Dsps,dspList,condition='standard',maxRate=None,seed_value=0,verbose=False,outName=None):
+
+### RESAMPLING FUNCTION ---
+def MCMCresample(DspAgeData,Nsamples,condition='standard',maxRate=None,seed_value=0,verbose=False,outName=None):
     '''
         This method uses the inverse transform sampling method (see Zinke et al., 2017; 2019) to
          randomly sample the PDFs of age and displacement measurements provided. A Bayesian
@@ -18,11 +21,9 @@ def MCMC_resample(Nsamples,Ages,ageList,Dsps,dspList,condition='standard',maxRat
         Typically, this function is called by the calcSlipRates wrapper.
 
         INPUTS
+            DspAgeData is a dictionary with one entry per displacement-age datum.
+             Each entry has an "Age" entry (ageDatum) and "Dsp" entry (dspDatum).
             Nsamples is the number of picks or successful sample runs to complete
-            Ages is a dictionary of ageDatum objects (see calcSlipRates and slipRateObjects)
-            ageList is a list of age measurement names ordered youngest-oldest (see calcSlipRates)
-            Dsps is a dictionary like Ages but for displacement measurements
-            dspList is a list like ageList with displacement names ordered smallest-largest
         OUTPUTS
             AgePicks is an (m x n) matrix of valid age sample values
             DspPicks is an (m x n) matrix of valid displacement sample values
@@ -30,6 +31,7 @@ def MCMC_resample(Nsamples,Ages,ageList,Dsps,dspList,condition='standard',maxRat
 
     ## Setup
     if verbose == True:
+        print('*******************************')
         print('Initializing Monte Carlo sampling')
 
     # Bayesian condition
@@ -46,7 +48,7 @@ def MCMC_resample(Nsamples,Ages,ageList,Dsps,dspList,condition='standard',maxRat
     np.random.seed(seed_value) # seed random number generator for consistency
 
     # Arrays to fill in
-    m=len(ageList) # number of measurements
+    m=len(DspAgeData.keys()) # number of measurements
     randAges=np.zeros(m)
     randDsps=np.zeros(m)
     AgePicks=np.zeros((m,Nsamples))
@@ -63,9 +65,13 @@ def MCMC_resample(Nsamples,Ages,ageList,Dsps,dspList,condition='standard',maxRat
         d_rand=np.random.uniform(0,1,(m)) # random uniform numbers for disps
 
         # Interpolate CDF to get random age or disp
-        for j in range(m):
-            randAges[j]=Ages[ageList[j]].InvCDF(a_rand[j])
-            randDsps[j]=Dsps[dspList[j]].InvCDF(d_rand[j])
+        for j,datumName in enumerate(DspAgeData.keys()):
+            # Age and displacement objects for each datum
+            Age = DspAgeData[datumName]['Age']
+            Dsp = DspAgeData[datumName]['Dsp']
+            # Random samples
+            randAges[j]=Age.InvCDF(a_rand[j])
+            randDsps[j]=Dsp.InvCDF(d_rand[j])
 
         # Differences
         ageDiffs=np.diff(randAges)
@@ -95,8 +101,10 @@ def MCMC_resample(Nsamples,Ages,ageList,Dsps,dspList,condition='standard',maxRat
     # Save to file
     if outName:
         # Save picks
-        np.save('{}_AgePicks.npy'.format(outName),AgePicks)
-        np.save('{}_DspPicks.npy'.format(outName),DspPicks)
-        np.save('{}_RatePicks.npy'.format(outName),RatePicks)
+        savename = '{}_Picks'.format(outName)
+        np.savez(savename,
+            AgePicks=AgePicks,
+            DspPicks=DspPicks,
+            RatePicks=RatePicks)
 
     return AgePicks, DspPicks, RatePicks

@@ -12,7 +12,7 @@ If you use these scripts, please cite:
 
 ## SETUP
 These scripts have been tested for Linux, Mac, and Windows systems.
-To use these scripts, clone the GitHub repository to a location of your choice, which will be referred to as ```RISeR_HOME```. 
+To use these scripts, clone the GitHub repository to a location of your choice, which will be referred to as ```RISeR_HOME```.
 Once cloned, add the following paths to your ```~/.bash_rc``` file for a Linux system or ```~/.bash_profile``` for a Mac system:
 
 ```
@@ -45,7 +45,7 @@ Example data sets and launch scripts can be found in the ./Examples folder. An e
 
 * quickPlotSlipHistory.py - Show the dated displacement history of the fault (offset as a function of age) without computing the incremental slip rates between markers. It is recommended to use this step once the displacement and age PDFs have been established, and before slip rate computation. That way the user can get a "feel" for whether the inputs make sense in the context of this pipeline. For example, from the Examples/SimpleExample folder, try ```quickPlotSlipHistory.py -a AgeList.txt -d DspList.txt -pt rectangle```
 
-* calcSlipRates.py - This is the main function for calculating incremental slip rates based on previously developed inputs. Users should run this function as a command, e.g., calcSlipRates.py -a List-of-ages.txt -d List-of-displacements.txt. This function requires two lists of filenames, as described in the INPUTS section below. This function calculates the incremental slip rates by sampling the input data (priors) and rejecting samples based on the condition that no slip rates should be negative at any point in their history. There are many optional parameters for the calcSlipRates function. Use ```calcSlipRates.py -h``` for help.
+* calcSlipRates.py - This is the main function for calculating incremental slip rates based on previously developed inputs. Users should run this function as a command, e.g., calcSlipRates.py Data.yaml. This function requires a list of dated displacement markers encoded in YAML format, as described in the INPUTS section below. This function calculates the incremental slip rates by sampling the input data (priors) and rejecting samples based on the condition that no slip rates should be negative at any point in their history. There are many optional parameters for the calcSlipRates function. Use ```calcSlipRates.py -h``` for help.
 
 
 ### Support routines
@@ -56,11 +56,11 @@ Example data sets and launch scripts can be found in the ./Examples folder. An e
 
 
 ## INPUTS
-The ```calcSlipRates.py``` function requires two text files: (1) A list of age filenames, written out from youngest at the top, to oldest at the bottom; and (2) a list of displacement names, similarly written out from yougest (least offset) at the top, to oldest (most offset) at the bottom. Note that these lists do not contain any data; they simply list the files in which the data are contained.
+The ```calcSlipRates.py``` routine requires that the user first define a probability density function (PDF) describing the displacement and age of each marker. Each "data file" consists of a two-column list describing a single measurement of displacement or age. In each, the first column is the value measured (i.e., age or displacement), and the second column is the relative probability of that value. If a measurement can be described as parametric function, a properly formatted PDF can be generated using makePDF.py, described above. Any arbitrary, pseudo-continuous PDF can be used as an input.
 
-Each "data file" consists of a two-column list describing a single measurement of displacement or age. In each, the first column is the value measured (i.e., age or displacement), and the second column is the relative probability of that value. If a measurement can be described as parametric function, a properly formatted PDF can be generated using makePDF.py, described above. Any arbitrary, pseudo-continuous PDF can be used as an input. 
+Input data are specified to the ```calcSlipRates.py``` function using a YAML (.yaml) file, which lists each dated displacement marker
+in order from youngest and least-offset, to oldest and most-offset. Each entry gives themarker name, followed by a dictionary-like entry specifying the path to the age PDF file, and the path to the displacement PDF file. Note that the .yaml file does not contain any data; it simply lists the feature name and files in which the data are contained.
 
-Two examples are provided. The data files are named, e.g., T1T2age.txt, T3T4dsp.txt, etc.
 
 **Note!** for OxCal outputs or any file in CE/BCE (AD/BC) format must be converted to years before present or years before physics. This can be done using the ```calyr2age.py``` function listed above.
 

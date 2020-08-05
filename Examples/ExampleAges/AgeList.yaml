@@ -1,0 +1,7 @@
+Sample 5: {"file": "Sample5_age.txt", "dtype": "silt"}
+Sample 4: {"file": "Sample4_age.txt", "dtype": "sand"}
+Sample 3: {"file": "Sample3_age.txt", "dtype": "gravel"}
+Strat Boundary: {"dtype": "Bold Line"}
+Sample 2: {"file": "Sample2_age.txt", "dtype": "age"}
+Sample 1: {"file": "Sample1_age.txt", "dtype": "age"}
+Sample (1+2): {"file": "Sample1-2_age_union.txt", "dtype": "phase age"}

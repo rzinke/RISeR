@@ -8,6 +8,10 @@
 
 ### IMPORT MODULES ---
 import argparse
+try:
+    import yaml
+except:
+    print('Please install pyyaml'); exit()
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -18,10 +22,10 @@ will not affect the slip rate calculations.
 
 This script accepts a list of ages, encoded with the sample type, sample label, and path to file,
 separated by colons. I.e.,
-DatumType:[SampleName]:[FilePath]
+Sample Name: {\"property\": \"value\", ...}
 
 For example:
-Age:Sample1:Sample1_age.txt
+Sample 1: {"file": "Sample1_age.txt", "dtype": "age"}
 
 shows that the sample is an Age datum, labelled Sample1, and the path to file Sample1_age.txt is
 provided. The age sample type can be color coded by one of several statistical or stratigraphic
@@ -40,24 +44,24 @@ options.
 
 Other plot elements are also available, including line separators for ease of visualization:
 * Line
-* DashedLine
-* BoldLine
+* Dashed Line
+* Bold Line
 
 The line elements do not require file specification. For example:
-Line:Strat Boundary
+Strat Boundary: {\"dtype\": \"bold line\"}
 '''
 
 Examples = '''EXAMPLES
 
 # Plot ages from age list
-plotAges.py AgeList.txt -x 'ages (ka)' -t 'Sample Examples' -r 10 -o AgePlotExample
+plotAges.py AgeList.yaml -x 'ages (ka)' -t 'Sample Examples' -r 10 -o AgePlotExample
 '''
 
 def createParser():
     parser = argparse.ArgumentParser(description=Description,
         formatter_class=argparse.RawTextHelpFormatter, epilog=Examples)
-    parser.add_argument(dest='agesList', type=str,
-        help='Text document with list of age files. See above for example.')
+    parser.add_argument(dest='ageList', type=str,
+        help='YAML document with list of age files. See above for example.')
     parser.add_argument('-r','--label-rotation', dest='labelRotation', default=0, type=float,
         help='Label rotation')
     parser.add_argument('-t','--title', dest='title', default=None, type=str,
@@ -84,18 +88,18 @@ def cmdParser(inpt_args=None):
 ### PLOT AGES ---
 class agePlot:
     '''
-        Plot provided ages on a single figure
+        Plot provided ages on a single figure.
     '''
-    def __init__(self, agesList):
+    def __init__(self, ageList):
         '''
-            Establish figure and plot data. See examples for "agesList".
+            Establish figure and plot data. See examples for "ageList".
         '''
-
-        # Read and parse data
-        self.__readData__(agesList)
 
         # Initialize figure
         self.__setupFig__()
+
+        # Read and parse data
+        self.__loadData__(ageList)
 
 
     def __setupFig__(self):
@@ -105,20 +109,18 @@ class agePlot:
         self.Fig = plt.figure(figsize=(10,10))
         self.ax = self.Fig.add_subplot(111)
 
-        self.labelList = [] # keep track of labels
 
-
-    def __readData__(self,agesList):
+    def __loadData__(self,ageList):
         '''
-            Open list of age files, gather inputs as "data".
+            Load age data files specifed in YAML format.
+            Each entry gives the datum name and optional parameters.
+            For use with the plotAges function.
         '''
-        # Read data from file
-        with open(agesList,'r') as ageListFile:
-            self.data = ageListFile.readlines()
-            ageListFile.close()
+        with open(ageList,'r') as ageFile:
+            # Parse data within file
+            self.ageData = yaml.load(ageFile, Loader=yaml.FullLoader)
 
-        # Flip so top line is at the chart top
-        self.data = self.data[::-1]
+            self.dataNames = list(self.ageData.keys())[::-1]
 
 
     def plotData(self, pdfScale=1.0, genericColor='k', genericAlpha=1.0):
@@ -132,58 +134,62 @@ class agePlot:
         # Plot data one by one
         k = 0 # start counter
 
-        for datum in self.data:
-            # Format and parse datum type
-            datum = datum.strip('\n') # remove trailing new line
-            datum = datum.split(':')
+        for key in self.dataNames:
+            datum = self.ageData[key]
+            properties = list(datum.keys())
+            properties = [property.lower() for property in properties]
 
-            # Update label list; leave blank if label not provided
-            try:
-                self.labelList.append(datum[1])
-            except:
-                self.labelList.append('')
-
-            # Base action on datum type
-            datumType = datum[0]
+            # Determine datum type
+            if not 'dtype' in properties:
+                # Default data type = age
+                dtype = 'age'
+            else:
+                dtype = datum['dtype'].lower().replace(' ','')
 
             ## Plot line breaks
             # Plot simple line
-            if datumType.lower() == 'line':
+            if dtype == 'line':
                 self.ax.axhline(k, color = (0.7,0.75,0.8))
 
             # Plot dashed line
-            elif datumType.lower() == 'dashedline':
+            elif dtype == 'dashedline':
                 self.ax.axhline(k, color = (0.7,0.75,0.8), linestyle = '--')
 
             # Plot thicker line
-            elif datumType.lower() == 'boldline':
+            elif dtype == 'boldline':
                 self.ax.axhline(k, color = (0.3,0.35,0.35))
 
             ## Assume age PDF
             else:
                 # Load and format age datum
-                xAge, pxAge = self.__formatAge__(datum, pdfScale)
+                xAge, pxAge = self.__formatAge__(datum['file'], pdfScale)
 
                 # Shift
                 pxAge += k
 
-                # Plot data using color from color table
-                self.ax.fill(xAge, pxAge,
-                    color = self.colors[datumType.lower()],
-                    alpha = self.alphas[datumType.lower()])
+                # Plot data
+                if 'color' not in properties:
+                    color = self.colors[dtype]
+                else:
+                    color = datum['color']
+
+                if 'alpha' not in properties:
+                    alpha = self.alphas[dtype]
+                else:
+                    alpha = datum['alpha']
+
+                self.ax.fill(xAge, pxAge, color=color, alpha=alpha)
 
 
             k += 1 # update counter
 
 
-    def __formatAge__(self, datum, pdfScale):
+    def __formatAge__(self, fname, pdfScale):
         '''
             Load and format age data.
         '''
         # Load data from file
-        assert len(datum) == 3, 'Cannot plot age. Type, label, and filepath must be specified.'
-        ageFile = datum[2]
-        ageData = np.loadtxt(ageFile)
+        ageData = np.loadtxt(fname)
         xAge = ageData[:,0]
         pxAge = ageData[:,1]
 
@@ -240,9 +246,9 @@ class agePlot:
             Finalize figure.
         '''
         # Y-labels
-        ticks = np.arange(len(self.labelList))
+        ticks = np.arange(len(self.ageData))
         self.ax.set_yticks(ticks)
-        self.ax.set_yticklabels(self.labelList, rotation=labelRotation)
+        self.ax.set_yticklabels(self.dataNames, rotation=labelRotation)
 
         # X-labels
         self.ax.set_xlabel(xlabel)
@@ -255,8 +261,8 @@ class agePlot:
 
         # Save to file
         if outName:
-            savename = '{}.png'.format(outName)
-            self.Fig.savefig(savename, dpi=600)
+            savename = '{}.pdf'.format(outName)
+            self.Fig.savefig(savename, type='pdf')
             print('Saved to: {}'.format(savename))
 
 
@@ -268,7 +274,7 @@ if __name__ == '__main__':
     inps = cmdParser()
 
     # Plot ages
-    ages = agePlot(agesList = inps.agesList)
+    ages = agePlot(inps.ageList)
 
     ages.plotData(pdfScale = inps.pdfScale,
         genericColor = inps.genericColor, genericAlpha = inps.genericAlpha)
