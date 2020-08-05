@@ -17,10 +17,46 @@ except:
 from slipRateObjects import ageDatum, dspDatum
 
 
+### ANCILLARY FUNCTIONS ---
+## Check Python version
+def checkVersion():
+    '''
+        Confirm Python v3.6+ is used due to the necessity of orderered
+         dictionary keys.
+    '''
+    Vs = sys.version_info
+    VsMajor = Vs[0]
+    VsMinor = Vs[1]
+    Vs = float('{}.{}'.format(VsMajor,VsMinor))
+    if Vs < 3.6:
+        print('Python version must be 3.6+ to use loadInputs function due to \
+the necessity of ordered dictionary keys. Please upgrade to v. 3.6 or higher.')
+        exit()
+
+
+## Confirm output directory
+def confirmOutputDir(outName,verbose=False):
+    '''
+        Confirm the existence of the output directory. If it does not exist, create it.
+    '''
+    # Convert outName to aboslute path
+    outName = os.path.abspath(outName)
+
+    # Get directory name
+    dirName = os.path.dirname(outName)
+
+    # Create directory if it does not exist
+    if not os.path.exists(dirName):
+        os.mkdir(dirName)
+
+    # Return outName as absolute path
+    return outName
+
+
 
 ### LOADING FUNCTIONS ---
-## Load from YAML file
-def loadInputs(fname,verbose=False,plotInputs=False):
+## Load displacement-age inputs from YAML file for slip rate analysis
+def loadDspAgeInputs(fname,verbose=False,plotInputs=False):
     '''
         Load age and displacement data based on YAML inputs.
         Inputs should be specified as one input per line.
@@ -35,14 +71,7 @@ def loadInputs(fname,verbose=False,plotInputs=False):
          due to the necessity of ordered dictionary keys.
     '''
     # Check Python version
-    Vs = sys.version_info
-    VsMajor = Vs[0]
-    VsMinor = Vs[1]
-    Vs = float('{}.{}'.format(VsMajor,VsMinor))
-    if Vs < 3.6:
-        print('Python version must be 3.6+ to use loadInputs function due to \
-the necessity of ordered dictionary keys. Please upgrade to v. 3.6 or higher.')
-        exit()
+    checkVersion()
 
     # Report if requested
     if verbose == True: print('Loading displacement-age data')

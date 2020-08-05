@@ -1,0 +1,6 @@
+Offset 4: {"file": "Offset4.txt", "dtype": "Displacement"}
+Offset 3: {"file": "Offset3.txt", "dtype": "Displacement"}
+Offsets 3-4: {"file": "Offsets3-4_union.txt", "dtype": "Generic"}
+'': {"dtype": "Bold Line"}
+Offset 2: {"file": "Offset2.txt", "dtype": "Displacement"}
+Offset 1: {"file": "Offset1.txt", "dtype": "Displacement"}

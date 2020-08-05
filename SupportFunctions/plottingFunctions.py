@@ -11,57 +11,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
 
-### PLOTTING FUNCTIONS ---
-## Plot raw data (whisker plot)
-def plotRawData(DspAgeData,label=False,outName=None):
-    '''
-        Plot raw data as whisker plot. Whiskers represent 95 % intervals.
-        No MC analyses are done at this point.
-    '''
-    # Establish figure
-    Fig = plt.figure()
-    ax = Fig.add_subplot(111)
-
-    # Plot data
-    maxAge = 0
-    maxDsp = 0
-    for datumName in DspAgeData:
-        datum = DspAgeData[datumName]
-        Age = datum['Age']
-        Dsp = datum['Dsp']
-
-        # Datum whiskers
-        ageMid = Age.median
-        ageErr = np.array([[ageMid-Age.lowerLimit],
-            [Age.upperLimit-ageMid]])
-        dspMid = Dsp.median
-        dspErr = np.array([[dspMid-Dsp.lowerLimit],
-            [Dsp.upperLimit-dspMid]])
-
-        # Plot datum
-        ax.errorbar(ageMid, dspMid, xerr=ageErr,yerr=dspErr,
-            color=(0.3,0.3,0.6),marker='o')
-
-        # Label if requested
-        if label == True:
-            ax.text(ageMid+0.01*maxAge, dspMid+0.01*maxDsp, datumName)
-
-    # Figure formatting
-    maxAge,maxDsp = findPlotLimits(DspAgeData)
-    ax.set_xlim([0,1.1*maxAge]) # x-limits
-    ax.set_ylim([0,1.1*maxDsp]) # y-limits
-    ax.set_xlabel('age'); ax.set_ylabel('displacement')
-    ax.set_title('Raw data (95 %% limits)')
-    Fig.tight_layout()
-
-    # Save figure
-    if outName:
-        Fig.savefig('{}_Fig1_RawData.pdf'.format(outName),type='pdf')
-
-    # Return values
-    return Fig, ax
-
-
+### STATISTICS ---
 ## Find outer limits of data for plotting
 def findPlotLimits(DspAgeData):
     '''
@@ -81,6 +31,93 @@ def findPlotLimits(DspAgeData):
         if Dsp.dsps.max() > maxDsp: maxDsp = Dsp.dsps.max()
 
     return maxAge, maxDsp
+
+
+### PLOTTING FUNCTIONS ---
+## Whisker plot
+def plotWhiskers(DspAgeData,label=False):
+    '''
+        Plot data as points and whiskers representing the 95 % confidence
+         intervals.
+    '''
+    # Establish plot
+    Fig = plt.figure()
+    ax = Fig.add_subplot(111)
+
+    # Plot whiskers
+    for datumName in DspAgeData:
+        datum = DspAgeData[datumName]
+        Age = datum['Age']
+        Dsp = datum['Dsp']
+
+        # Datum whiskers
+        ageMid = Age.median
+        ageErr = np.array([[ageMid-Age.lowerLimit],
+            [Age.upperLimit-ageMid]])
+        dspMid = Dsp.median
+        dspErr = np.array([[dspMid-Dsp.lowerLimit],
+            [Dsp.upperLimit-dspMid]])
+
+        # Plot datum
+        ax.errorbar(ageMid, dspMid, xerr=ageErr,yerr=dspErr,
+            color=(0.3,0.3,0.6),marker='o')
+
+        # Label if requested
+        if label == True:
+            ax.text(ageMid*1.01, dspMid*1.01, datumName)
+
+    return Fig, ax
+
+
+## Plot rectangles
+def plotRectangles(DspAgeData,label=False):
+    '''
+        Draw rectangular patches representing the 95 % confidence intervals.
+    '''
+    # Establish plot
+    Fig = plt.figure()
+    ax = Fig.add_subplot(111)
+
+    # Plot rectangles
+    for datumName in DspAgeData:
+        datum = DspAgeData[datumName]
+        Age = datum['Age']
+        Dsp = datum['Dsp']
+
+        # Plot
+        ageLower=Age.lowerLimit # load bottom
+        dspLower=Dsp.lowerLimit # load left
+        boxWidth=Age.upperLimit-ageLower
+        boxHeight=Dsp.upperLimit-dspLower
+        ax.add_patch(Rectangle((ageLower,dspLower), # LL corner
+            boxWidth,boxHeight, # dimensions
+            edgecolor=(0.3,0.3,0.6),fill=False,zorder=3))
+
+    return Fig, ax
+
+
+## Plot raw data (whisker plot)
+def plotRawData(DspAgeData,label=False,outName=None):
+    '''
+        Plot raw data as whisker plot. Whiskers represent 95 % intervals.
+    '''
+    # Establish figure
+    Fig, ax = plotWhiskers(DspAgeData,label=label)
+
+    # Format figure
+    maxAge,maxDsp = findPlotLimits(DspAgeData)
+    ax.set_xlim([0,1.1*maxAge]) # x-limits
+    ax.set_ylim([0,1.1*maxDsp]) # y-limits
+    ax.set_xlabel('age'); ax.set_ylabel('displacement')
+    ax.set_title('Raw data (95 %% limits)')
+    Fig.tight_layout()
+
+    # Save figure
+    if outName:
+        Fig.savefig('{}_Fig1_RawData.pdf'.format(outName),type='pdf')
+
+    # Return values
+    return Fig, ax
 
 
 ## Plot MC results
@@ -118,33 +155,6 @@ def plotMCresults(DspAgeData,AgePicks,DspPicks,maxPicks=500,outName=None):
         Fig.savefig('{}_Fig2_MCpicks.pdf'.format(outName),type='pdf')
 
     # Return values
-    return Fig, ax
-
-
-## Plot rectangles
-def plotRectangles(DspAgeData):
-    '''
-        Draw rectangular patches representing the 95 % confidence intervals.
-    '''
-    # Establish plot
-    Fig = plt.figure()
-    ax = Fig.add_subplot(111)
-
-    # Plot rectangles
-    for datumName in DspAgeData.keys():
-        datum = DspAgeData[datumName]
-        Age = datum['Age']
-        Dsp = datum['Dsp']
-
-        # Plot
-        ageLower=Age.lowerLimit # load bottom
-        dspLower=Dsp.lowerLimit # load left
-        boxWidth=Age.upperLimit-ageLower
-        boxHeight=Dsp.upperLimit-dspLower
-        ax.add_patch(Rectangle((ageLower,dspLower), # LL corner
-            boxWidth,boxHeight, # dimensions
-            edgecolor=(0.3,0.3,0.6),fill=False,zorder=3))
-
     return Fig, ax
 
 

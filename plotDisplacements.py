@@ -8,6 +8,10 @@
 
 ### IMPORT MODULES ---
 import argparse
+try:
+    import yaml
+except:
+    print('Please install pyyaml'); exit()
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -21,7 +25,7 @@ separated by colons. I.e.,
 DatumType:[SampleName]:[FilePath]
 
 For example:
-Displacement:Offset1:Offset1.txt
+Offset 1: {"file": "Offset1.txt", "dtype": "displacement"}
 
 shows that the sample is a Displacement datum, labelled Offset1, and the path to file Offset1.txt is
 provided. The displacement sample type can be color coded by type or user specification:
@@ -33,24 +37,24 @@ options.
 
 Other plot elements are also available, including line separators for ease of visualization:
 * Line
-* DashedLine
-* BoldLine
+* Dashed Line
+* Bold Line
 
 The line elements do not require file specification. For example:
-Line:Strat Boundary
+Strat Boundary: {\"dtype\": \"bold line\"}
 '''
 
 Examples = '''EXAMPLES
 
 # Plot displacements from displacement list
-plotDisplacements.py DspList.txt -y 'displacements (m)' -t 'Measurement Examples' -r 80 -o DspPlotExample --generic-color b
+plotDisplacements.py DspList.yaml -y 'displacements (m)' -t 'Measurement Examples' -r 80 -o DspPlotExample --generic-color b
 '''
 
 def createParser():
     parser = argparse.ArgumentParser(description=Description,
         formatter_class=argparse.RawTextHelpFormatter, epilog=Examples)
-    parser.add_argument(dest='dspsList', type=str,
-        help='Text document with list of displacement files. See above for example.')
+    parser.add_argument(dest='dspList', type=str,
+        help='YAML document with list of displacement files. See above for example.')
     parser.add_argument('-r','--label-rotation', dest='labelRotation', default=0, type=float,
         help='Label rotation')
     parser.add_argument('-t','--title', dest='title', default=None, type=str,
@@ -79,16 +83,16 @@ class dspPlot:
     '''
         Plot provided displacements on a single figure
     '''
-    def __init__(self, dspsList):
+    def __init__(self, dspList):
         '''
             Establish figure and plot data. See examples for "dspsList".
         '''
 
-        # Read and parse data
-        self.__readData__(dspsList)
-
         # Initialize figure
         self.__setupFig__()
+
+        # Read and parse data
+        self.__loadData__(dspList)
 
 
     def __setupFig__(self):
@@ -98,20 +102,15 @@ class dspPlot:
         self.Fig = plt.figure(figsize=(10,10))
         self.ax = self.Fig.add_subplot(111)
 
-        self.labelList = [] # keep track of labels
 
-
-    def __readData__(self,dspsList):
+    def __loadData__(self,dspList):
         '''
             Open list of displacement files, gather inputs as "data".
         '''
         # Read data from file
-        with open(dspsList,'r') as dspListFile:
-            self.data = dspListFile.readlines()
-            dspListFile.close()
-
-        # Flip so top line is at the chart top
-        self.data = self.data[::-1]
+        with open(dspList,'r') as dspFile:
+            # Parse data within file
+            self.dspData = yaml.load(dspFile, Loader=yaml.FullLoader)
 
 
     def plotData(self, pdfScale=1.0, genericColor='k', genericAlpha=1.0):
@@ -122,60 +121,57 @@ class dspPlot:
         # Initialize colors
         self.__initColors__(genericColor, genericAlpha)
 
+        self.labels = list(self.dspData.keys())[::-1]
+
         # Plot data one by one
         k = 0 # start counter
+        for key in self.labels:
+            datum = self.dspData[key]
+            properties = list(datum.keys())
+            properties = [property.lower() for property in properties]
 
-        for datum in self.data:
-            # Format and parse datum type
-            datum = datum.strip('\n') # remove trailing new line
-            datum = datum.split(':')
-
-            # Update label list; leave blank if label not provided
-            try:
-                self.labelList.append(datum[1])
-            except:
-                self.labelList.append('')
-
-            # Base action on datum type
-            datumType = datum[0]
+            # Determine datum type
+            if not 'dtype' in properties:
+                # Default data type = age
+                dtype = 'generic'
+            else:
+                dtype = datum['dtype'].lower().replace(' ','')
 
             ## Plot line breaks
             # Plot simple line
-            if datumType.lower() == 'line':
+            if dtype == 'line':
                 self.ax.axvline(k, color = (0.7,0.75,0.8))
 
             # Plot dashed line
-            elif datumType.lower() == 'dashedline':
+            elif dtype == 'dashedline':
                 self.ax.axvline(k, color = (0.7,0.75,0.8), linestyle = '--')
 
             # Plot thicker line
-            elif datumType.lower() == 'boldline':
+            elif dtype == 'boldline':
                 self.ax.axvline(k, color = (0.3,0.35,0.35))
 
             ## Assume displacement PDF
             else:
                 # Load and format displacement datum
-                xDsp, pxDsp = self.__formatDsp__(datum, pdfScale)
+                xDsp, pxDsp = self.__formatDsp__(datum['file'], pdfScale)
 
                 # Shift
                 pxDsp += k
 
                 # Plot data using color from color table
                 self.ax.fill(pxDsp, xDsp,
-                    color = self.colors[datumType.lower()],
-                    alpha = self.alphas[datumType.lower()])
+                    color = self.colors[dtype],
+                    alpha = self.alphas[dtype])
 
 
             k += 1 # update counter
 
 
-    def __formatDsp__(self, datum, pdfScale):
+    def __formatDsp__(self, dspFile, pdfScale):
         '''
             Load and format displacement data.
         '''
         # Load data from file
-        assert len(datum) == 3, 'Cannot plot displacement. Type, label, and filepath must be specified.'
-        dspFile = datum[2]
         dspData = np.loadtxt(dspFile)
         xDsp = dspData[:,0]
         pxDsp = dspData[:,1]
@@ -210,9 +206,9 @@ class dspPlot:
             Finalize figure.
         '''
         # X-labels
-        ticks = np.arange(len(self.labelList))
+        ticks = np.arange(len(self.dspData))
         self.ax.set_xticks(ticks)
-        self.ax.set_xticklabels(self.labelList, rotation=labelRotation)
+        self.ax.set_xticklabels(self.labels, rotation=labelRotation)
 
         # Y-labels
         self.ax.set_ylabel(ylabel)
@@ -225,8 +221,8 @@ class dspPlot:
 
         # Save to file
         if outName:
-            savename = '{}.png'.format(outName)
-            self.Fig.savefig(savename, dpi=600)
+            savename = '{}.pdf'.format(outName)
+            self.Fig.savefig(savename, type='pdf')
             print('Saved to: {}'.format(savename))
 
 
@@ -238,7 +234,7 @@ if __name__ == '__main__':
     inps = cmdParser()
 
     # Plot displacements
-    displacements = dspPlot(dspsList = inps.dspsList)
+    displacements = dspPlot(inps.dspList)
 
     displacements.plotData(pdfScale = inps.pdfScale,
         genericColor = inps.genericColor, genericAlpha = inps.genericAlpha)

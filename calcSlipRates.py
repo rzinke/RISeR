@@ -13,12 +13,10 @@ import os
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from dataLoading import loadInputs
+from dataLoading import confirmOutputDir, loadDspAgeInputs
 from slipRateObjects import incrSlipRate
-from plottingFunctions import *
+from plottingFunctions import plotRawData, plotMCresults, plotIncSlipRates
 from MCresampling import MCMCresample
-from array2pdf import *
-from PDFanalysis import *
 
 
 ### PARSER ---
@@ -27,11 +25,20 @@ are provided as probability density functions (PDFs) representing the age and di
 marker. From those PDFs, random samples are drawn, and samples resulting in negative slip rates
 are discarded. From the n valid random draws, incremental slip rates are calculated.
 
-REQUIRED INPUTS
-* age-list is a list of file paths to the PDFs representing marker ages--youngest markers at the
-    top of the list
-* dsp-list is a list of file paths to the PDFs representing marker displacement measurements--youngest
-    markers at the top of the list
+REQUIRED INPUT
+This routine requires a YAML file (e.g., data.yaml) which lists each dated displacement marker
+in order from youngest and least-offset, to oldest and most-offset. Each entry gives the
+marker name, followed by a dictionary-like entry specifying the path to the age PDF file, and
+the path to the displacement PDF file.
+
+For example: The file data.yaml might contain
+# Commented description of data scheme
+T2/T3 riser: {\"ageFile\": \"T2T3age.txt\", \"dspFile\": \"T2T3dsp.txt\"}
+T1/T2 riser: {\"ageFile\": \"T1T2age.txt\", \"dspFile\": \"T1T2dsp.txt\"}
+
+Where T2/T3 is younger and less-offset than T1/T2. Change the .txt filenames to the relative
+or absolute paths to the PDF files, accordingly.
+Note: More than one entry must be present to calculate incremental slip rates.
 '''
 
 Examples = '''EXAMPLES
@@ -47,7 +54,9 @@ def createParser():
     # Required
     requiredArgs = parser.add_argument_group('ESSENTIAL ARGUMENTS')
     requiredArgs.add_argument(dest='dataFile', type=str,
-        help='Data file.')
+        help='Data file in YAML format. Each entry provides a unique marker \
+name, with ageFile and dspFile specified. Youngest, least offset features at \
+the top; oldest, most-offset features at the bottom.')
     requiredArgs.add_argument('-n','--Nsamples', dest='Nsamples', type=int, default=10000,
         help='Number of samples picked in MC run (default 1000; more is often better).')
     requiredArgs.add_argument('-o','--outName', dest='outName', type=str, default='Out',
@@ -98,26 +107,7 @@ def cmdParser(inps_args=None):
 
 
 
-### DATA LOADING AND OUTPUT FUNCTIONS ---
-## Confirm output directory
-def confirmOutputDir(outName,verbose=False):
-    '''
-        Confirm the existence of the output directory. If it does not exist, create it.
-    '''
-    # Convert outName to aboslute path
-    outName = os.path.abspath(outName)
-
-    # Get directory name
-    dirName = os.path.dirname(outName)
-
-    # Create directory if it does not exist
-    if not os.path.exists(dirName):
-        os.mkdir(dirName)
-
-    # Return outName as absolute path
-    return outName
-
-
+### FORMATTING FUNCTIONS ---
 ## Output text file
 def startTXTfile(outName,Nsamples):
     '''

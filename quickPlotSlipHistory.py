@@ -3,14 +3,15 @@
     ** MCMC Incremental Slip Rate Calculator **
     Quickly plot displacement and age data before calculating
      slip rates by MC sampling.
-    This script relies heavily on functions from calcSlipRates.py
+    This script relies definitions plottingFunctions.py
 
     Rob Zinke 2019, 2020
 '''
 
 ### IMPORT MODULES ---
 import argparse
-from calcSlipRates import *
+from dataLoading import loadDspAgeInputs
+from plottingFunctions import *
 
 
 ### PARSER ---
@@ -22,28 +23,28 @@ Examples = '''EXAMPLES
 Try these with the SimpleExample data set.
 
 # Whisker plot of raw data
-quickPlotSlipHistory.py -a AgeList.txt -d DspList.txt
+quickPlotSlipHistory.py DspAgeList.yaml
 
 # Labeled plot
-quickPlotSlipHistory.py -a AgeList.txt -d DspList.txt -l
+quickPlotSlipHistory.py DspAgeList.yaml -l
 
 # Rectangle plot of raw data
-quickPlotSlipHistory.py -a AgeList.txt -d DspList.txt -pt rectangle
+quickPlotSlipHistory.py DspAgeList.yaml -pt rectangle
 '''
 
 def createParser():
     parser = argparse.ArgumentParser(description=Description,
         formatter_class=argparse.RawTextHelpFormatter, epilog=Examples)
     # Required
-    parser.add_argument('-a','--age-list', dest='ageListFile', type=str, required=True,
-        help='Text file with one age file per line, list in order from youngest (top line) to oldest (bottom).')
-    parser.add_argument('-d','--dsp-list', dest='dspListFile', type=str, required=True,
-        help='Text file with one displacement file per line, list in order from smallest (top line) to largest (bottom).')
+    parser.add_argument(dest='dataFile', type=str,
+        help='Data file in YAML format. Each entry provides a unique marker \
+name, with ageFile and dspFile specified. Youngest, least offset features at \
+the top; oldest, most-offset features at the bottom.')
     parser.add_argument('-o','--out-name', dest='outName', type=str, default='Out',
         help='Head name for outputs (no extension)')
     # Recommended
     parser.add_argument('-pt','--plot-type', dest='plotType', type=str, default='whisker',
-        help='Plot marker type [\'wkisker\',\'rectangle\']')
+        help='Plot marker type [\'whisker\',\'rectangle\']')
     parser.add_argument('-t','--title', dest='title', type=str, default='Raw data',
         help='Plot title')
     parser.add_argument('-x','--xlabel', dest='xlabel', type=str, default='age',
@@ -64,81 +65,24 @@ def cmdParser(inpt_args=None):
 
 
 
-### PLOTTING FUNCTIONS ---
-def whiskerPlot(ax,Ages,ageList,maxAge,Dsps,dspList,maxDsp,labels=False):
-    '''
-        Plot uncertainties as error bars.
-    '''
-    m = len(ageList)
-    for i in range(m):
-        # Format age data
-        x_mid = Ages[ageList[i]].median
-        x_err = np.array([[x_mid-Ages[ageList[i]].lowerLimit],
-            [Ages[ageList[i]].upperLimit-x_mid]])
-        # Format disp data
-        y_mid = Dsps[dspList[i]].median
-        y_err = np.array([[y_mid-Dsps[dspList[i]].lowerLimit],
-            [Dsps[dspList[i]].upperLimit-y_mid]])
-        # Plot data
-        ax.errorbar(x_mid, y_mid,
-            xerr=x_err, yerr=y_err,
-            color=(0.3,0.3,0.6), marker='o')
-        # Labels
-        if labels == True:
-            ax.text(x_mid+0.01*maxAge, y_mid+0.01*maxDsp, dspList[i])
-
-
-def rectanglePlot(ax,Ages,ageList,maxAge,Dsps,dspList,maxDsp,labels=False):
-    '''
-        Plot uncertainties as rectangles.
-    '''
-    m = len(ageList)
-    for i in range(m):
-        # Rectangle parameters
-        ageLower = Ages[ageList[i]].lowerLimit # load bottom
-        dspLower = Dsps[dspList[i]].lowerLimit # load left
-        boxWidth = Ages[ageList[i]].upperLimit-ageLower
-        boxHeight = Dsps[dspList[i]].upperLimit-dspLower
-        # Plot data
-        ax.add_patch(Rectangle((ageLower,dspLower), # LL corner
-            boxWidth,boxHeight, # dimensions
-            edgecolor=(0.3,0.3,0.6), fill=False, zorder=3))
-        # Labels
-        if labels == True:
-            ax.text((ageLower+boxWidth)+0.01*maxAge,
-                dspLower+0.01*maxDsp, dspList[i])
-
-
 ### MAIN ---
 if __name__ == '__main__':
     inps = cmdParser()
 
-    ## Load files
-    # Read age file
-    Ages,ageList,maxAge=loadAges(inps.ageListFile,inps.verbose,inps.plotInputs)
+    # Load data from YAML file
+    DspAgeData = loadInputs(inps.dataFile,
+        verbose = inps.verbose,
+        plotInputs = inps.plotInputs)
 
-    # Read disp file
-    Dsps,dspList,maxDsp=loadDsps(inps.dspListFile,inps.verbose,inps.plotInputs)
-
-    # Check input files have same number of lines
-    checkInputs(ageList,dspList,verbose = inps.verbose)
-
-    # Formulate interval names
-    intervalList = intervalsFromDspList(dspList)
-
+    # Establish plot maxima
+    maxAge, maxDsp = findPlotLimits(DspAgeData)
 
     ## Plot data
-    # Establish figure
-    Fig = plt.figure()
-    ax = Fig.add_subplot(111)
-
     # Plot data
-    if inps.plotType == 'whisker':
-        whiskerPlot(ax,Ages,ageList,maxAge,Dsps,dspList,maxDsp,
-            labels = inps.labelFeatures)
-    elif inps.plotType == 'rectangle':
-        rectanglePlot(ax,Ages,ageList,maxAge,Dsps,dspList,maxDsp,
-            labels = inps.labelFeatures)
+    if inps.plotType.lower() in ['w', 'whisker']:
+        Fig,ax = plotWhiskers(DspAgeData,label=inps.labelFeatures)
+    elif inps.plotType.lower() in ['r', 'rectangle']:
+        Fig,ax = plotRectangles(DspAgeData,label=inps.labelFeatures)
 
 
     ## Finish plot
@@ -157,7 +101,8 @@ if __name__ == '__main__':
 
     ## Save if requested
     if inps.outName:
-        Fig.savefig(inps.outName)
+        savename = '{}.pdf'.format(inps.outName)
+        Fig.savefig(savename,type='pdf')
 
 
     plt.show()
