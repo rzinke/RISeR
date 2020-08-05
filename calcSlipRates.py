@@ -261,7 +261,7 @@ if __name__ == '__main__':
     txtName = startTXTfile(inps.outName,inps.Nsamples)
 
     # Load data from YAML file
-    DspAgeData = loadInputs(inps.dataFile,
+    DspAgeData = loadDspAgeInputs(inps.dataFile,
         verbose = inps.verbose,
         plotInputs = inps.plotInputs)
 
