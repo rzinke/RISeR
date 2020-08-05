@@ -75,15 +75,17 @@ def arrayHist(V,stepsize,smoothingKernel=None,kernelWidth=2,verbose=False,plot=F
     Area=np.trapz(H,Hcntrs) # find area
     H/=Area # normalize area
 
-    PDF=np.hstack([Hcntrs.reshape(-1,1),H.reshape(-1,1)])
+    # Format outputs
+    x = Hcntrs
+    px = H
 
     # Plot if requested
     if plot == True:
         F=plt.figure()
         ax=F.add_subplot(111)
-        ax.plot(PDF[:,0],PDF[:,1],'k',linewidth=1)
+        ax.plot(x,px,'k',linewidth=1)
 
-    return PDF
+    return x, px
 
 
 ## KDE method
@@ -146,12 +148,14 @@ def arrayKDE(V,stepsize,smoothingKernel=None,kernelWidth=2,verbose=False,plot=Fa
     Area=np.trapz(Kde,x) # find area
     Kde/=Area # normalize area
 
-    PDF=np.hstack([x.reshape(-1,1),Kde.reshape(-1,1)])
+    # Format outputs
+    x = x
+    px = Kde
 
     # Plot if requested
     if plot == True:
         F=plt.figure()
         ax=F.add_subplot(111)
-        ax.plot(PDF[:,0],PDF[:,1],'k',linewidth=1)
+        ax.plot(x,px,'k',linewidth=1)
 
-    return PDF
+    return x, px

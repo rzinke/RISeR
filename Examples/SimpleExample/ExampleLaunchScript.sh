@@ -4,4 +4,4 @@
 #  samples will be drawn from the PDFs described in AgeList.txt and DspList.txt.
 #  Options for verbose mode and live plotting are selected.
 
-calcSlipRates.py -a AgeList.txt -d DspList.txt -o outputs/run1 -n 100000 -v -p -l
+calcSlipRates.py DspAgeList.yaml -o outputs/run1 -n 100000 --pdf-analysis HPD -v -p -l

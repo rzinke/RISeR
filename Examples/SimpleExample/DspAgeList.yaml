@@ -1,0 +1,9 @@
+T3/T4 riser: {
+    "ageFile": "T3T4age.txt",
+    "dspFile": "T3T4dsp.txt"}
+T2/T3 riser: {
+    "ageFile": "T2T3age.txt",
+    "dspFile": "T2T3dsp.txt"}
+T1/T2 riser: {
+    "ageFile": "T1T2age.txt",
+    "dspFile": "T1T2dsp.txt"}
