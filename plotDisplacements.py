@@ -112,6 +112,8 @@ class dspPlot:
             # Parse data within file
             self.dspData = yaml.load(dspFile, Loader=yaml.FullLoader)
 
+        self.dataNames = list(self.dspData.keys())[::-1]
+
 
     def plotData(self, pdfScale=1.0, genericColor='k', genericAlpha=1.0):
         '''
@@ -121,11 +123,9 @@ class dspPlot:
         # Initialize colors
         self.__initColors__(genericColor, genericAlpha)
 
-        self.labels = list(self.dspData.keys())[::-1]
-
         # Plot data one by one
         k = 0 # start counter
-        for key in self.labels:
+        for key in self.dataNames:
             datum = self.dspData[key]
             properties = list(datum.keys())
             properties = [property.lower() for property in properties]
@@ -179,7 +179,6 @@ class dspPlot:
         # Zero-pad
         xDsp = np.pad(xDsp,(1,1),'edge')
         pxDsp = np.pad(pxDsp,(1,1),'constant')
-        # print(xDsp); exit()
 
         # Scale probability to 1.0 * scale factor
         pxDsp = pdfScale*pxDsp/pxDsp.max()
@@ -208,7 +207,7 @@ class dspPlot:
         # X-labels
         ticks = np.arange(len(self.dspData))
         self.ax.set_xticks(ticks)
-        self.ax.set_xticklabels(self.labels, rotation=labelRotation)
+        self.ax.set_xticklabels(self.dataNames, rotation=labelRotation)
 
         # Y-labels
         self.ax.set_ylabel(ylabel)

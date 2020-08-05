@@ -109,8 +109,6 @@ class agePlot:
         self.Fig = plt.figure(figsize=(10,10))
         self.ax = self.Fig.add_subplot(111)
 
-        self.labelList = [] # keep track of labels
-
 
     def __loadData__(self,ageList):
         '''
@@ -121,6 +119,8 @@ class agePlot:
         with open(ageList,'r') as ageFile:
             # Parse data within file
             self.ageData = yaml.load(ageFile, Loader=yaml.FullLoader)
+
+            self.dataNames = list(self.ageData.keys())[::-1]
 
 
     def plotData(self, pdfScale=1.0, genericColor='k', genericAlpha=1.0):
@@ -134,7 +134,7 @@ class agePlot:
         # Plot data one by one
         k = 0 # start counter
 
-        for key in self.ageData:
+        for key in self.dataNames:
             datum = self.ageData[key]
             properties = list(datum.keys())
             properties = [property.lower() for property in properties]
@@ -240,7 +240,7 @@ class agePlot:
         # Y-labels
         ticks = np.arange(len(self.ageData))
         self.ax.set_yticks(ticks)
-        self.ax.set_yticklabels(self.ageData.keys(), rotation=labelRotation)
+        self.ax.set_yticklabels(self.dataNames, rotation=labelRotation)
 
         # X-labels
         self.ax.set_xlabel(xlabel)
