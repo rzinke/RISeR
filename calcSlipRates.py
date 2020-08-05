@@ -13,11 +13,10 @@ import os
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-from slipRateObjects import *
-from MCresampling import *
-from array2pdf import *
-from PDFanalysis import *
+from dataLoading import confirmOutputDir, loadDspAgeInputs
+from slipRateObjects import incrSlipRate
+from plottingFunctions import plotRawData, plotMCresults, plotIncSlipRates
+from MCresampling import MCMCresample
 
 
 ### PARSER ---
@@ -26,11 +25,20 @@ are provided as probability density functions (PDFs) representing the age and di
 marker. From those PDFs, random samples are drawn, and samples resulting in negative slip rates
 are discarded. From the n valid random draws, incremental slip rates are calculated.
 
-REQUIRED INPUTS
-* age-list is a list of file paths to the PDFs representing marker ages--youngest markers at the
-    top of the list
-* dsp-list is a list of file paths to the PDFs representing marker displacement measurements--youngest
-    markers at the top of the list
+REQUIRED INPUT
+This routine requires a YAML file (e.g., data.yaml) which lists each dated displacement marker
+in order from youngest and least-offset, to oldest and most-offset. Each entry gives the
+marker name, followed by a dictionary-like entry specifying the path to the age PDF file, and
+the path to the displacement PDF file.
+
+For example: The file data.yaml might contain
+# Commented description of data scheme
+T2/T3 riser: {\"ageFile\": \"T2T3age.txt\", \"dspFile\": \"T2T3dsp.txt\"}
+T1/T2 riser: {\"ageFile\": \"T1T2age.txt\", \"dspFile\": \"T1T2dsp.txt\"}
+
+Where T2/T3 is younger and less-offset than T1/T2. Change the .txt filenames to the relative
+or absolute paths to the PDF files, accordingly.
+Note: More than one entry must be present to calculate incremental slip rates.
 '''
 
 Examples = '''EXAMPLES
@@ -45,10 +53,10 @@ def createParser():
 
     # Required
     requiredArgs = parser.add_argument_group('ESSENTIAL ARGUMENTS')
-    requiredArgs.add_argument('-a','--age-list', dest='ageListFile', type=str, required=True,
-        help='Text file with one age file per line, list in order from youngest (top line) to oldest (bottom).')
-    requiredArgs.add_argument('-d','--dsp-list', dest='dspListFile', type=str, required=True,
-        help='Text file with one displacement file per line, list in order from smallest (top line) to largest (bottom).')
+    requiredArgs.add_argument(dest='dataFile', type=str,
+        help='Data file in YAML format. Each entry provides a unique marker \
+name, with ageFile and dspFile specified. Youngest, least offset features at \
+the top; oldest, most-offset features at the bottom.')
     requiredArgs.add_argument('-n','--Nsamples', dest='Nsamples', type=int, default=10000,
         help='Number of samples picked in MC run (default 1000; more is often better).')
     requiredArgs.add_argument('-o','--outName', dest='outName', type=str, default='Out',
@@ -99,284 +107,144 @@ def cmdParser(inps_args=None):
 
 
 
-### DATA LOADING FUNCTIONS ---
-## Confirm output directory
-def confirmOutputDir(outName,verbose=False):
+### FORMATTING FUNCTIONS ---
+## Output text file
+def startTXTfile(outName,Nsamples):
     '''
-        Confirm the existence of the output directory. If it does not exist, create it.
+        Ascribe the basic parameters to an output text file.
     '''
-    # Convert outName to aboslute path
-    outName = os.path.abspath(outName)
+    # Construct filename
+    txtName = '{}_Slip_Rate_Report.txt'.format(outName)
 
-    # Get directory name
-    dirName = os.path.dirname(outName)
+    # Output string
+    openingReport='Incremental slip rates based on {} samples\n'.format(Nsamples)
 
-    # Create directory if it does not exist
-    if not os.path.exists(dirName):
-        os.mkdir(dirName)
+    # Establish file
+    with open(txtName,'w') as TXTout:
+        TXTout.write(openingReport)
 
-    # Return outName as absolute path
-    return outName
-
-
-## Load age PDFs
-def loadAges(ageListFile,verbose=False,plot=False):
-    # Load ages into dictionary
-    with open(ageListFile,'r') as agesIn:
-        ageLines=agesIn.readlines() # read lines and save to variable
-        agesIn.close()
-
-    Ages={}; ageList=[]; maxAge=0.
-    for ageLine in ageLines:
-        '''
-            Record one dictionary entry per age file. Each entry in an
-             instance of a "ageDatum" object. Append age name (path and
-             suffix removed) to list for later.
-        '''
-
-        # Isolate basename
-        ageLine = ageLine.strip('\n') # remove extraneous newline
-        ageName = os.path.basename(ageLine)
-        ageName = ageName.split('.')[0] # remove file extension
-        ageList.append(ageName) # append to list
-
-        # Spawn age object and record to dictionary
-        Ages[ageName] = ageDatum(ageName)
-        Ages[ageName].readFromFile(ageLine) # load data to object
-
-        # Format for slip rate analysis
-        #    builds inverse interpolation function
-        Ages[ageName].format(verbose=verbose,plot=plot)
-
-        # Set global limit for plotting
-        if Ages[ageName].upperLimit>maxAge:
-            maxAge = Ages[ageName].upperLimit
-
-    return Ages, ageList, maxAge
+    return txtName
 
 
-## Load dsp PDFs
-def loadDsps(dspListFile,verbose=False,plot=False):
-    # Load displacements into dictionary
-    with open(dspListFile,'r') as dspsIn:
-        dspLines=dspsIn.readlines() # read lines and save to variable
-        dspsIn.close()
 
-    Dsps={}; dspList=[]; maxDsp=0.
-    for dspLine in dspLines:
-        '''
-            Record one dictionary entry per displacement file. Each entry is an
-             instance of a "dspDatum" object. Append displacement name (path and
-             suffix removed) to list for later.
-        '''
-
-        # Isolate basename
-        dspLine = dspLine.strip('\n') # remove extraneous newline
-        dspName = os.path.basename(dspLine)
-        dspName = dspName.split('.')[0] # remove file extension
-        dspList.append(dspName) # append to list
-
-        # Spawn age object and record to dictionary
-        Dsps[dspName]=  dspDatum(dspName)
-        Dsps[dspName].readFromFile(dspLine) # load data to object
-
-        # Format for slip rate analysis
-        #    builds inverse interpolation function
-        Dsps[dspName].format(verbose=verbose,plot=plot)
-
-        # Set global limit for plotting
-        if Dsps[dspName].upperLimit>maxDsp:
-            maxDsp = Dsps[dspName].upperLimit
-
-    return Dsps, dspList, maxDsp
-
-
-## Check inputs
-def checkInputs(ageList, dspList, verbose = False):
+### STATISTICAL FUNCTIONS ---
+## Percentiles from raw picks
+def rawPercentiles(DspAgeData,RatePicks,txtName=None):
     '''
-        Check that the same number of inputs are provided for age and displacement.
+        Compute the percentiles of slip rate picks.
     '''
-    # Check
-    nAges = len(ageList); nDsps=len(dspList)
-    assert nAges == nDsps, 'MUST HAVE SAME NUMBER OF AGE AND DISPLACEMENT MEASUREMENTS'
-    m = nAges # assign number of measurements
+    # Parameters
+    dataNames = list(DspAgeData.keys())
+    m = RatePicks.shape[0] # nb incremental rates
+    Nsamples = RatePicks.shape[1]
+    percentiles=[50-68.27/2, 50, 50+68.27/2]
 
-    # Report if requested
+    print('Slip rate statistics from {} samples:'.format(Nsamples))
+    print('Raw slip rates: (Interval: median values and 68% confidence)')
+    if txtName:
+        with open(txtName,'a') as TXTout:
+            TXTout.write('\nIncremental slip rates based on percentiles of slip \
+rate picks:\n')
+
+    for i in range(m):
+        # Formulate interval name
+        intvl = '{}-{}'.format(dataNames[i],dataNames[i+1])
+
+        # Calculate percentile
+        pct = np.percentile(RatePicks[i,:],percentiles)
+        median=pct[1]
+        high_err=pct[2]-pct[1]
+        low_err=pct[1]-pct[0]
+        rawStats = '{0}: {1:.2f} +{2:.2f} -{3:.2f}'.format(intvl,
+            median,high_err,low_err)
+        print(rawStats)
+
+        # Update text file if requested
+        if txtName:
+            with open(txtName,'a') as TXTout:
+                TXTout.write(rawStats+'\n')
+
+
+## Convert to PDF
+def convert2PDF(DspAgeData, RatePicks, method, stepsize,
+    smoothingKernel=None, kernelWidth=2,
+    verbose=False):
+    '''
+        Convert rate picks to a probability function using the specified
+         method.
+    '''
+    # Parameters
+    dataNames = list(DspAgeData.keys())
+    m = RatePicks.shape[0]
+
     if verbose == True:
-        print('Detected m = {} age and displacement measurements'.format(nAges))
-        # Confirm pairing
-        print('Pairing (youngest at top):')
-        for i in range(nAges):
-            print('\t{} - {}'.format(ageList[i],dspList[i]))
+        print('*******************************')
+        print('Converting slip rate picks to PDFs using {} method'.\
+            format(method))
 
-
-## Formulate interval names
-def intervalsFromDspList(dspList):
-    '''
-        List of intervals between one offset marker and another.
-    '''
-    intervalList=[]
-    m = len(dspList)
-    for i in range(m-1):
-        interval_name='{}-{}'.format(dspList[i],dspList[i+1])
-        intervalList.append(interval_name)
-
-    return intervalList
-
-
-
-### PLOTTING FUNCTIONS ---
-## Plot raw data (whisker plot)
-def plotRawData(Ages,ageList,Dsps,dspList,maxAge,maxDsp,label,outName):
-    '''
-        Plot raw data as whisker plot. Whiskers represent 95 % intervals.
-        No MC analyses are done at this point.
-    '''
-    # Parameters
-    m = len(ageList)
-
-    # Establish figure
-    Fig = plt.figure()
-    ax = Fig.add_subplot(111)
-
-    # Plot data
+    intervals = []
+    Rates = {} # dictionary of object instances
     for i in range(m):
-        x_mid=Ages[ageList[i]].median
-        x_err=np.array([[x_mid-Ages[ageList[i]].lowerLimit],
-            [Ages[ageList[i]].upperLimit-x_mid]])
-        y_mid=Dsps[dspList[i]].median
-        y_err=np.array([[y_mid-Dsps[dspList[i]].lowerLimit],
-            [Dsps[dspList[i]].upperLimit-y_mid]])
-        ax.errorbar(x_mid,y_mid,xerr=x_err,yerr=y_err,
-            color=(0.3,0.3,0.6),marker='o')
+        # Formulate interval name
+        intvl = '{}-{}'.format(dataNames[i],dataNames[i+1])
+        intervals.append(intvl)
 
-        # Label if requested
-        if label == True:
-            ax.text(x_mid+0.01*maxAge, y_mid+0.01*maxDsp, dspList[i])
+        # Create slip rate object
+        Rates[intvl] = incrSlipRate(name=intvl)
 
-    # Format figure
-    ax.set_xlim([0,1.1*maxAge]) # x-limits
-    ax.set_ylim([0,1.1*maxDsp]) # y-limits
-    ax.set_xlabel('age'); ax.set_ylabel('displacement')
-    ax.set_title('Raw data (95 %% limits)')
-    Fig.tight_layout()
+        # Convert picks to PDF
+        Rates[intvl].picks2PDF(RatePicks[i,:],method,stepsize,
+            smoothingKernel,kernelWidth)
 
-    # Save figure
-    Fig.savefig('{}_Fig1_RawData.pdf'.format(outName),type='pdf')
-
-    # Return values
-    return Fig, ax
+    return Rates
 
 
-## Plot rectangles
-def plotRectangles(Ages,ageList,Dsps,dspList):
+## Analyze PDFs
+def analyzePDFs(Rates,method,verbose=False):
     '''
-        Draw rectangular patches representing the 95 % confidence intervals.
+        Loop through slip rate PDFs to retrieve values using interquantile range
+         (IQR) or highest posterior density (HPD).
     '''
+    if verbose == True:
+        print('*******************************')
+        print('Extracting slip rate values from PDFs using {} method'.\
+            format(method))
 
-    # Parameters
-    m = len(ageList) # number of measurements
-
-    # Establish plot
-    Fig = plt.figure()
-    ax = Fig.add_subplot(111)
-
-    # Plot rectangles
-    for i in range(m):
-        ageLower=Ages[ageList[i]].lowerLimit # load bottom
-        dspLower=Dsps[dspList[i]].lowerLimit # load left
-        boxWidth=Ages[ageList[i]].upperLimit-ageLower
-        boxHeight=Dsps[dspList[i]].upperLimit-dspLower
-        ax.add_patch(Rectangle((ageLower,dspLower), # LL corner
-            boxWidth,boxHeight, # dimensions
-            edgecolor=(0.3,0.3,0.6),fill=False,zorder=3))
-
-    return Fig, ax
+    for intvl in Rates.keys():
+        Rates[intvl].analyzePDF(method=method)
 
 
-## Plot MC results
-def plotMCresults(Ages,ageList,Dsps,dspList,AgePicks,DspPicks, \
-    xMax,yMax,maxPicks,outName):
+## Print incremental slip rate stats to text file
+def printIncSlipRates(Rates,analysisMethod,txtName):
     '''
-        Plot valid MC picks in displacement-time space. Draw rectangles representing the 95 %
-         confidence bounds using the plotRectangles function.
+        Append incremental slip rate statistics to the text file.
     '''
+    with open(txtName,'a') as TXTout:
+        intervalNames = list(Rates.keys())
+        TXTout.write('\nIncremental slip rates based on PDF analysis\n')
 
-    # Parameters
-    m = len(ageList) # number of measurements
-    n = AgePicks.shape[1] # number of picks
+        # Text string
+        txtStr = '{0}: {1:.2f} +{2:.2f} -{3:.2f}\n'
 
-    # Plot rectangles
-    Fig, ax = plotRectangles(Ages, ageList, Dsps, dspList)
-
-    # Plot picks
-    if n <= maxPicks:
-        ax.plot(AgePicks,DspPicks,color=(0,0,0),alpha=0.1,zorder=1)
-        ax.plot(AgePicks,DspPicks,color=(0,0,1),marker='.',linewidth=0,alpha=0.5,zorder=2)
-    else:
-        ax.plot(AgePicks[:,:maxPicks],DspPicks[:,:maxPicks],
-            color=(0,0,0),alpha=0.1,zorder=1)
-        ax.plot(AgePicks[:,:maxPicks],DspPicks[:,:maxPicks],
-            color=(0,0,1),marker='.',linewidth=0,alpha=0.4,zorder=2)
-
-    # Format figure
-    ax.set_xlim([0,1.1*xMax]); ax.set_ylim([0,1.1*yMax])
-    ax.set_xlabel('age'); ax.set_ylabel('displacement')
-    ax.set_title('MC Picks (N = {})'.format(n))
-    Fig.tight_layout()
-
-    # Save figure
-    Fig.savefig('{}_Fig2_MCpicks.pdf'.format(outName),type='pdf')
-
-    # Return values
-    return Fig, ax
-
-
-## Plot incremental slip rate results
-def plotIncSlipRates(Rates,intervalList,analysis_method,outName,plot_max=None):
-    # Analysis method is IQR or HPD
-
-    # Setup figure
-    Fig=plt.figure('IncrementalRates')
-    ax=Fig.add_subplot(111)
-    intvl_labels=[]; k=0
-    # Loop through each rate
-    for i in intervalList:
-        # Plot full PDF
-        scale_value=Rates[i].probs.max()
-        ax.fill(Rates[i].rate,
-            0.9*Rates[i].probs/scale_value+k,
-            color=(0.4,0.4,0.4),zorder=2)
-        # Plot confidence bounds
-        if analysis_method=='IQR':
-            ax.fill(Rates[i].xIQR,
-                0.9*Rates[i].pxIQR/scale_value+k,
-                color=(0.3,0.3,0.6),zorder=3)
-        elif inps.pdfAnalysis=='HPD':
-            for j in range(Rates[i].Nclusters):
-                xHPD=Rates[i].x_clusters[j]
-                xHPD=np.pad(xHPD,(1,1),'edge')
-                pxHPD=Rates[i].px_clusters[j]
-                pxHPD=np.pad(pxHPD,(1,1),'constant')
-                ax.fill(xHPD,0.9*pxHPD/scale_value+k,
-                    color=(0.3,0.3,0.6),zorder=3)
-        # Format axis labels
-        intvl_name='{}-\n{}'.format(i.split('-')[0],i.split('-')[1])
-        intvl_labels.append(intvl_name)
-        k+=1
-
-    # Format plot
-    ax.set_yticks(np.arange(0.5,m-1))
-    ax.set_yticklabels(intvl_labels,rotation='vertical')
-    ax.set_ylim([0,m-1])
-    if plot_max:
-        ax.set_xlim([0,plot_max])
-    ax.set_xlabel('slip rate')
-    ax.set_title('Incremental slip rates')
-    Fig.tight_layout()
-
-    # Save figure
-    Fig.savefig('{}_Fig3_Incremental_slip_rates.pdf'.format(outName),type='pdf')
+        # Loop through intervals
+        for intvl in intervalNames:
+            Rate = Rates[intvl]
+            # IQR method
+            if analysisMethod == 'IQR':
+                # Record confidence range
+                TXTout.write(txtStr.format(intvl,Rate.median,
+                    Rate.upperValue-Rate.median,Rate.median-Rate.lowerValue))
+            # HPD method
+            elif analysisMethod == 'HPD':
+                # Record overall confidence range
+                TXTout.write(txtStr.format(intvl,Rate.mode,
+                    Rate.upperValue-Rate.mode,Rate.mode-Rate.lowerValue))
+                # Record clusters
+                TXTout.write('\tRanges:\n')
+                rangeStr = '\t{0:.2f} to {1:.2f}\n'
+                for i in range(Rate.Nclusters):
+                    TXTout.write(rangeStr.format(Rate.x_clusters[i].min(),
+                        Rate.x_clusters[i].max()))
 
 
 
@@ -389,151 +257,53 @@ if __name__ == '__main__':
     # Check output directory exists
     inps.outName = confirmOutputDir(inps.outName)
 
-    # Read age file
-    Ages,ageList,maxAge=loadAges(inps.ageListFile,inps.verbose,inps.plotInputs)
+    # Start text file for results
+    txtName = startTXTfile(inps.outName,inps.Nsamples)
 
-    # Read disp file
-    Dsps,dspList,maxDsp=loadDsps(inps.dspListFile,inps.verbose,inps.plotInputs)
+    # Load data from YAML file
+    DspAgeData = loadInputs(inps.dataFile,
+        verbose = inps.verbose,
+        plotInputs = inps.plotInputs)
 
-    # Check input files have same number of lines
-    checkInputs(ageList,dspList,verbose = inps.verbose)
-    m = len(ageList) # record number of dated displacement measurements
-
-    # Formulate interval names
-    intervalList = intervalsFromDspList(dspList)
-
-
-    ## Plot raw data
-    plotRawData(Ages,ageList,Dsps,dspList,
-        maxAge,maxDsp,
-        inps.labelMarkers,
-        inps.outName)
+    # Plot raw data
+    plotRawData(DspAgeData,
+        label = inps.labelMarkers,
+        outName = inps.outName)
 
 
     ## Monte Carlo resamping
-    AgePicks,DspPicks,RatePicks=MCMC_resample(inps.Nsamples,
-        Ages, ageList, Dsps, dspList,
+    AgePicks,DspPicks,RatePicks=MCMCresample(DspAgeData,inps.Nsamples,
         condition='standard',maxRate=inps.maxRate,
         seed_value=inps.seed,
-        verbose=inps.verbose,outName=inps.outName)
+        verbose=inps.verbose,
+        outName=inps.outName)
 
-    # Save picks to npz file
-    savename='{}_Picks'.format(inps.outName)
-    np.savez(savename,AgePicks=AgePicks,DspPicks=DspPicks,RatePicks=RatePicks)
+    # Plot MC results
+    plotMCresults(DspAgeData, AgePicks, DspPicks, maxPicks=inps.maxPicks,
+        outName=inps.outName)
 
-
-    ## Plot MC results
-    plotMCresults(Ages, ageList, Dsps, dspList,
-        AgePicks, DspPicks,
-        maxAge, maxDsp,
-        inps.maxPicks,
-        inps.outName)
-
-    # Save to file as script progresses
-    TXTout = open('{}_slip_rate_report.txt'.format(inps.outName),'w')
-
-    # Raw statistics
-    percentiles=[50-68.27/2, 50, 50+68.27/2]
-    pct_report='''Slip rate statistics from {} samples:
-Raw slip rates: (Interval: median values and 68% confidence)'''.format(inps.Nsamples)
-    print(pct_report)
-    TXTout.write(pct_report)
-
-    for i in range(m-1):
-        # Calculate percentile
-        pct=np.percentile(RatePicks[i,:],percentiles)
-        median=pct[1]
-        high_err=pct[2]-pct[1]
-        low_err=pct[1]-pct[0]
-        raw_stats_report='{0}: {1:.2f} +{2:.2f} -{3:.2f}'.format(intervalList[i],median,high_err,low_err)
-        print(raw_stats_report); TXTout.write('\n{}'.format(raw_stats_report))
+    # Compute statistics based on picks and save to file
+    rawPercentiles(DspAgeData, RatePicks, txtName=txtName)
 
 
     ## Convert MC results to PDFs
-    Rates={} # dictionary of object instances similar to Ages, Dsps
-    for i in range(m-1):
-        # Convert points to temporary (px2) array
-        if inps.pdfMethod.lower() in ['hist','histogram']:
-            R=arrayHist(RatePicks[i,:],inps.rateStep,
-                smoothingKernel=inps.smoothingKernel,
-                kernelWidth=inps.kernelWidth,
-                verbose=inps.verbose,plot=False)
-        elif inps.pdfMethod.lower() in ['kde','kernel']:
-            R=arrayKDE(RatePicks[i,:],inps.rateStep,
-                smoothingKernel=inps.smoothingKernel,
-                kernelWidth=inps.kernelWidth,
-                verbose=inps.verbose,plot=False)
-
-        # Ascribe to object
-        Rates[intervalList[i]]=rateObj(intervalList[i])
-        Rates[intervalList[i]].rate=R[:,0] # rate values
-        Rates[intervalList[i]].probs=R[:,1] # corresponding probabilities
+    Rates=convert2PDF(DspAgeData,RatePicks,method=inps.pdfMethod,
+        stepsize=inps.rateStep,
+        smoothingKernel=inps.smoothingKernel,kernelWidth=inps.kernelWidth,
+        verbose=inps.verbose)
 
 
     ## Analyze PDFs
-    pdf_report='PDF-based statistics ({0}% confidence) calculated using {1}.'.format(inps.rateConfidence,inps.pdfAnalysis)
-    print(pdf_report); TXTout.write('\n\n{}'.format(pdf_report))
-    for i in range(m-1):
-
-        # Interquantile range
-        if inps.pdfAnalysis in ['IQR','quantiles','quantile']:
-            '''
-                More stable option, but slightly skewed toward larger values
-            '''
-            inps.pdfAnalysis='IQR' # confirm code for later
-            PDF=IQRpdf(Rates[intervalList[i]].rate,
-                Rates[intervalList[i]].probs,
-                inps.rateConfidence,verbose=False)
-            Rates[intervalList[i]].median=PDF.median
-            Rates[intervalList[i]].xIQR=PDF.xIQR
-            Rates[intervalList[i]].pxIQR=PDF.pxIQR
-            Rates[intervalList[i]].lowerValue=PDF.lowerValue # record lower value
-            Rates[intervalList[i]].upperValue=PDF.upperValue # record upper value
-
-            # Report relevant stats
-            median=PDF.median
-            low_err=median-PDF.lowerValue
-            high_err=PDF.upperValue-median
-
-            incr_slip_rate_report='{0}: {1:.2f} +{2:.2f} -{3:.2f}'.format(intervalList[i],median,high_err,low_err)
-            print(incr_slip_rate_report); TXTout.write('\n{}'.format(incr_slip_rate_report))
-
-        # Highest posterior density
-        elif inps.pdfAnalysis in ['HPD','density']:
-            '''
-                More representative of probable values
-            '''
-            inps.pdfAnalysis='HPD' # confirm code for later
-            PDF=HPDpdf(Rates[intervalList[i]].rate,
-                Rates[intervalList[i]].probs,
-                inps.rateConfidence,verbose=False)
-            Rates[intervalList[i]].mode=PDF.mode # peak value
-            Rates[intervalList[i]].x_clusters=PDF.x_clusters # record cluster values
-            Rates[intervalList[i]].px_clusters=PDF.px_clusters # record cluster probs
-            Rates[intervalList[i]].Nclusters=len(PDF.x_clusters) # number of clusters
-            Rates[intervalList[i]].lowerValue=PDF.lowestValue # record lower value
-            Rates[intervalList[i]].upperValue=PDF.highestValue # record upper value
-
-            # Report relevant stats
-            peak=PDF.mode
-            high_err=PDF.highestValue-peak
-            low_err=peak-PDF.lowestValue
-
-            incr_slip_rate_report='{0}: {1:.2f} +{2:.2f} -{3:.2f}'.format(intervalList[i],peak,high_err,low_err)
-            print(incr_slip_rate_report); TXTout.write('\n{}'.format(incr_slip_rate_report))
-            TXTout.write('\n\tRanges:')
-            for i in range(PDF.nClusters):
-                cluster_low_value=PDF.x_clusters[i].min()
-                cluster_hi_value=PDF.x_clusters[i].max()
-                cluster_range_report='\t\t({0:.2f} to {1:.2f})'.format(cluster_low_value,cluster_hi_value)
-                print(cluster_range_report); TXTout.write('\n{}'.format(cluster_range_report))
+    # Compute statistics based on PDFs
+    analyzePDFs(Rates,method=inps.pdfAnalysis,verbose=inps.verbose)
 
     # Plot incremental slip rates on same plot
-    plotIncSlipRates(Rates,intervalList,inps.pdfAnalysis,inps.outName,plot_max=inps.maxRate2plot)
+    plotIncSlipRates(Rates,inps.pdfAnalysis,
+        plotMax=inps.maxRate2plot,
+        outName=inps.outName)
 
-
-    ## Close saved file
-    TXTout.close()
+    # Print intervals to file
+    printIncSlipRates(Rates,inps.pdfAnalysis,txtName)
 
 
     if inps.plotOutputs == True:

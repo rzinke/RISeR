@@ -49,7 +49,7 @@ class pdfStats:
         Px=cumtrapz(px,x,initial=0)
 
         # Interpolate percentiles
-        Icdf=interp1d(Px,x,kind='linear')
+        Icdf=interp1d(Px,x,kind='linear',bounds_error=False,fill_value=np.nan)
 
         # Find percentiles
         confidenceInterval=95.45

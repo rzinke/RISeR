@@ -54,12 +54,9 @@ class IQRpdf:
         self.x=x; self.px=px # PDF
         self.Px=Px # CDF
         self.Icdf=Icdf # interpolation function
-        self.lower=lower # lower confidence percentile
-        self.upper=upper # upper confidence percentile
         self.median=median
         self.lowerValue=lowerValue
         self.upperValue=upperValue
-        self.median=Icdf(0.5) # median value
         self.xIQR=xIQR # x values within confidence range
         self.pxIQR=pxIQR # px values within confidence range
 
@@ -106,7 +103,7 @@ class HPDpdf:
             px is an array of probabilities at those values
             confidence is the confidence interval, in percent (e.g., 95, 68)
     '''
-    def __init__(self,x,px,confidence,outName=None,verbose=False):
+    def __init__(self,x,px,confidence,step_tolerance=1.05,outName=None,verbose=False):
         if verbose is True:
             print('Calculating highest posterior density at {}% confidence'.format(confidence))
 
@@ -121,7 +118,6 @@ class HPDpdf:
         # Check conditioning - points must be spaced approximately evenly
         xsteps=np.diff(x) # spacing between sample points
         avestep=np.mean(xsteps) # average spacing between sample points
-        step_tolerance=1.01 # factor of average step above which assumptions are invalid
         if np.sum(xsteps>step_tolerance*avestep)>0:
             print('WARNING: Sample spacing must be approximately equal for HPD calculation')
 
