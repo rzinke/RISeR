@@ -135,6 +135,7 @@ class agePlot:
         k = 0 # start counter
 
         for key in self.dataNames:
+            ## Gather and format data
             datum = self.ageData[key]
             properties = list(datum.keys())
             properties = [property.lower() for property in properties]
@@ -145,6 +146,7 @@ class agePlot:
                 dtype = 'age'
             else:
                 dtype = datum['dtype'].lower().replace(' ','')
+
 
             ## Plot line breaks
             # Plot simple line
@@ -159,15 +161,18 @@ class agePlot:
             elif dtype == 'boldline':
                 self.ax.axhline(k, color = (0.3,0.35,0.35))
 
+
             ## Assume age PDF
             else:
-                # Load and format age datum
-                xAge, pxAge = self.__formatAge__(datum['file'], pdfScale)
+                # Plot prior if listed
+                if 'prior' in properties:
+                    self.__plotAge__(k,
+                        fname = datum['prior'],
+                        pdfScale = pdfScale,
+                        color = self.colors['prior'],
+                        alpha = self.alphas['prior'])
 
-                # Shift
-                pxAge += k
-
-                # Plot data
+                # Plot age datum
                 if 'color' not in properties:
                     color = self.colors[dtype]
                 else:
@@ -178,10 +183,29 @@ class agePlot:
                 else:
                     alpha = datum['alpha']
 
-                self.ax.fill(xAge, pxAge, color=color, alpha=alpha)
+                self.__plotAge__(k = k,
+                    fname = datum['file'],
+                    pdfScale = pdfScale,
+                    color = color,
+                    alpha = alpha)
 
 
-            k += 1 # update counter
+            ## Update counter
+            k += 1
+
+
+    def __plotAge__(self,k,fname,pdfScale,color,alpha):
+        '''
+            Plot age datum as filled PDF.
+        '''
+        # Load and format age datum
+        xAge, pxAge = self.__formatAge__(fname, pdfScale)
+
+        # Shift
+        pxAge += k
+
+        # Plot datum
+        self.ax.fill(xAge, pxAge, color=color, alpha=alpha)
 
 
     def __formatAge__(self, fname, pdfScale):

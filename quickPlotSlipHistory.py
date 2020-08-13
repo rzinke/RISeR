@@ -70,7 +70,7 @@ if __name__ == '__main__':
     inps = cmdParser()
 
     # Load data from YAML file
-    DspAgeData = loadInputs(inps.dataFile,
+    DspAgeData = loadDspAgeInputs(inps.dataFile,
         verbose = inps.verbose,
         plotInputs = inps.plotInputs)
 
