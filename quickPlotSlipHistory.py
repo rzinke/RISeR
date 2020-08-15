@@ -10,7 +10,7 @@
 
 ### IMPORT MODULES ---
 import argparse
-from dataLoading import loadDspAgeInputs
+from dataLoading import confirmOutputDir, loadDspAgeInputs
 from plottingFunctions import *
 
 
@@ -68,6 +68,9 @@ def cmdParser(inpt_args=None):
 ### MAIN ---
 if __name__ == '__main__':
     inps = cmdParser()
+
+    # Check output directory exists
+    inps.outName = confirmOutputDir(inps.outName)
 
     # Load data from YAML file
     DspAgeData = loadDspAgeInputs(inps.dataFile,
