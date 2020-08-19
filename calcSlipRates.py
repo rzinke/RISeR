@@ -129,7 +129,7 @@ def startTXTfile(outName,Nsamples):
 
 ### STATISTICAL FUNCTIONS ---
 ## Percentiles from raw picks
-def rawPercentiles(DspAgeData,RatePicks,txtName=None):
+def rawPercentiles(DspAgeData,RatePicks,confidence,txtName):
     '''
         Compute the percentiles of slip rate picks.
     '''
@@ -137,14 +137,15 @@ def rawPercentiles(DspAgeData,RatePicks,txtName=None):
     dataNames = list(DspAgeData.keys())
     m = RatePicks.shape[0] # nb incremental rates
     Nsamples = RatePicks.shape[1]
-    percentiles=[50-68.27/2, 50, 50+68.27/2]
+    percentiles=[50-confidence/2, 50, 50+confidence/2]
 
     print('Slip rate statistics from {} samples:'.format(Nsamples))
-    print('Raw slip rates: (Interval: median values and 68% confidence)')
+    print('Raw slip rates: (Interval: median values and {}% confidence)'.\
+        format(confidence))
     if txtName:
         with open(txtName,'a') as TXTout:
             TXTout.write('\nIncremental slip rates based on percentiles of slip \
-rate picks:\n')
+rate picks ({}% confidence):\n'.format(confidence))
 
     for i in range(m):
         # Formulate interval name
@@ -159,10 +160,9 @@ rate picks:\n')
             median,high_err,low_err)
         print(rawStats)
 
-        # Update text file if requested
-        if txtName:
-            with open(txtName,'a') as TXTout:
-                TXTout.write(rawStats+'\n')
+        # Update text file
+        with open(txtName,'a') as TXTout:
+            TXTout.write(rawStats+'\n')
 
 
 ## Convert to PDF
@@ -200,7 +200,7 @@ def convert2PDF(DspAgeData, RatePicks, method, stepsize,
 
 
 ## Analyze PDFs
-def analyzePDFs(Rates,method,verbose=False):
+def analyzePDFs(Rates,method,confidence,verbose=False):
     '''
         Loop through slip rate PDFs to retrieve values using interquantile range
          (IQR) or highest posterior density (HPD).
@@ -211,17 +211,18 @@ def analyzePDFs(Rates,method,verbose=False):
             format(method))
 
     for intvl in Rates.keys():
-        Rates[intvl].analyzePDF(method=method)
+        Rates[intvl].analyzePDF(method=method,confidence=confidence)
 
 
 ## Print incremental slip rate stats to text file
-def printIncSlipRates(Rates,analysisMethod,txtName):
+def printIncSlipRates(Rates,analysisMethod,confidence,txtName):
     '''
         Append incremental slip rate statistics to the text file.
     '''
     with open(txtName,'a') as TXTout:
         intervalNames = list(Rates.keys())
-        TXTout.write('\nIncremental slip rates based on PDF analysis\n')
+        TXTout.write('\nIncremental slip rates based on PDF analysis \
+({}% confidence)\n'.format(confidence))
 
         # Text string
         txtStr = '{0}: {1:.2f} +{2:.2f} -{3:.2f}\n'
@@ -283,7 +284,7 @@ if __name__ == '__main__':
         outName=inps.outName)
 
     # Compute statistics based on picks and save to file
-    rawPercentiles(DspAgeData, RatePicks, txtName=txtName)
+    rawPercentiles(DspAgeData, RatePicks, inps.rateConfidence, txtName)
 
 
     ## Convert MC results to PDFs
@@ -295,7 +296,8 @@ if __name__ == '__main__':
 
     ## Analyze PDFs
     # Compute statistics based on PDFs
-    analyzePDFs(Rates,method=inps.pdfAnalysis,verbose=inps.verbose)
+    analyzePDFs(Rates,method=inps.pdfAnalysis,confidence=inps.rateConfidence,
+        verbose=inps.verbose)
 
     # Plot incremental slip rates on same plot
     plotIncSlipRates(Rates,inps.pdfAnalysis,
@@ -303,8 +305,8 @@ if __name__ == '__main__':
         outName=inps.outName)
 
     # Print intervals to file
-    printIncSlipRates(Rates,inps.pdfAnalysis,txtName)
+    printIncSlipRates(Rates,inps.pdfAnalysis,inps.rateConfidence,txtName)
 
 
-    if inps.plotOutputs == True:
+    if inps.plotOutputs == True or inps.plotInputs == True:
         plt.show()

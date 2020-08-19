@@ -41,15 +41,15 @@ def arrayHist(V,stepsize,smoothingKernel=None,kernelWidth=2,verbose=False,plot=F
         print('\tmin: {0:.3f}; max: {1:.3f}'.format(V.min(),V.max()))
 
     # Histogram bin edges/independent axis
-    bins=np.arange(V.min(),V.max()+stepsize,stepsize)
+    bins = np.arange(V.min(),V.max()+stepsize,stepsize)
 
     # Compute histogram
-    H,Hedges=np.histogram(V,bins=bins)
-    Hcntrs=(Hedges[:-1]+Hedges[1:])/2 # centers of bins
+    H,Hedges = np.histogram(V,bins=bins)
+    Hcntrs = (Hedges[:-1]+Hedges[1:])/2 # centers of bins
 
     # Taper histogram edges
-    Hcntrs=np.pad(Hcntrs,(1,1),'constant',constant_values=(Hedges[0],Hedges[-1]))
-    H=np.pad(H,(1,1),'constant')
+    Hcntrs = np.pad(Hcntrs,(1,1),'constant',constant_values=(Hedges[0],Hedges[-1]))
+    H = np.pad(H,(1,1),'constant')
 
     # Smooth if requested
     if smoothingKernel:
@@ -72,8 +72,8 @@ def arrayHist(V,stepsize,smoothingKernel=None,kernelWidth=2,verbose=False,plot=F
             H[0]=0; H[-1]=0
 
     # Normalize area to 1.0
-    Area=np.trapz(H,Hcntrs) # find area
-    H/=Area # normalize area
+    Area = np.trapz(H,Hcntrs) # find area
+    H = H/Area # normalize area
 
     # Format outputs
     x = Hcntrs
@@ -115,11 +115,11 @@ def arrayKDE(V,stepsize,smoothingKernel=None,kernelWidth=2,verbose=False,plot=Fa
         print('\tmin: {0:.3f}; max: {1:.3f}'.format(V.min(),V.max()))
 
     # Independent axis
-    x=np.arange(V.min(),V.max()+stepsize,stepsize)
+    x = np.arange(V.min(),V.max()+stepsize,stepsize)
 
     # Compute KDE
-    Fkde=gaussian_kde(V) # compute kde function
-    Kde=Fkde(x) # evaluate at axis values
+    Fkde = gaussian_kde(V) # compute kde function
+    Kde = Fkde(x) # evaluate at axis values
 
     # Set to zero at edges
     Kde[0]=0; Kde[-1]=0
@@ -145,8 +145,8 @@ def arrayKDE(V,stepsize,smoothingKernel=None,kernelWidth=2,verbose=False,plot=Fa
             Kde[0]=0; Kde[-1]=0
 
     # Normalize area to 1.0
-    Area=np.trapz(Kde,x) # find area
-    Kde/=Area # normalize area
+    Area = np.trapz(Kde,x) # find area
+    Kde = Kde/Area # normalize area
 
     # Format outputs
     x = x
