@@ -93,6 +93,12 @@ def plotRectangles(DspAgeData,label=False):
             boxWidth,boxHeight, # dimensions
             edgecolor=(0.3,0.3,0.6),fill=False,zorder=3))
 
+        # Label if requested
+        if label == True:
+            ax.text((ageLower+boxWidth)*1.01,
+                (dspLower+boxHeight)*1.01,
+                datumName)
+
     return Fig, ax
 
 
