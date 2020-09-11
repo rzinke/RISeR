@@ -59,8 +59,8 @@ def createParser():
         help='Label rotation')
     parser.add_argument('-t','--title', dest='title', default=None, type=str,
         help='Base for graph title.')
-    parser.add_argument('-y','--ylabel', dest='ylabel', default='Displacement', type=str,
-        help='Y-axis label')
+    parser.add_argument('-x','--xlabel', dest='xlabel', default='Displacement', type=str,
+        help='X-axis label')
     parser.add_argument('-o','--outName', dest='outName', default=None, type=str,
         help='Base for graph title')
     parser.add_argument('--pdf-scale', dest='pdfScale', default=1.0, type=float,
@@ -140,15 +140,15 @@ class dspPlot:
             ## Plot line breaks
             # Plot simple line
             if dtype == 'line':
-                self.ax.axvline(k, color = (0.7,0.75,0.8))
+                self.ax.axhline(k, color = (0.7,0.75,0.8))
 
             # Plot dashed line
             elif dtype == 'dashedline':
-                self.ax.axvline(k, color = (0.7,0.75,0.8), linestyle = '--')
+                self.ax.axhline(k, color = (0.7,0.75,0.8), linestyle = '--')
 
             # Plot thicker line
             elif dtype == 'boldline':
-                self.ax.axvline(k, color = (0.3,0.35,0.35))
+                self.ax.axhline(k, color = (0.3,0.35,0.35))
 
             ## Assume displacement PDF
             else:
@@ -208,17 +208,17 @@ class dspPlot:
         self.alphas['generic'] = genericAlpha
 
 
-    def finalizeFig(self, title=None, ylabel='Displacement', labelRotation=0, outName=None):
+    def finalizeFig(self, title=None, xlabel='Displacement', labelRotation=0, outName=None):
         '''
             Finalize figure.
         '''
         # X-labels
         ticks = np.arange(len(self.dspData))
-        self.ax.set_xticks(ticks)
-        self.ax.set_xticklabels(self.dataNames, rotation=labelRotation)
+        self.ax.set_yticks(ticks)
+        self.ax.set_yticklabels(self.dataNames, rotation=labelRotation)
 
         # Y-labels
-        self.ax.set_ylabel(ylabel)
+        self.ax.set_xlabel(xlabel)
 
         # Title
         if title: self.ax.set_title(title)
@@ -247,7 +247,7 @@ if __name__ == '__main__':
         genericColor = inps.genericColor, genericAlpha = inps.genericAlpha)
 
     displacements.finalizeFig(title = inps.title,
-        ylabel = inps.ylabel,
+        xlabel = inps.xlabel,
         labelRotation = inps.labelRotation,
         outName = inps.outName)
 
