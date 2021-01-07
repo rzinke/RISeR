@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 '''
-    ** MCMC Incremental Slip Rate Calculator **
-    Convert calendar years to years before present
+** MCMC Incremental Slip Rate Calculator **
+Convert calendar years to years before present
 
-    Rob Zinke 2019, 2020
+Rob Zinke 2019, 2020
 '''
 
 ### IMPORT MODULES ---
@@ -53,7 +53,7 @@ def createParser():
     return parser
 
 def cmdParser(inpt_args = None):
-    parser=createParser()
+    parser = createParser()
     return parser.parse_args(inpt_args)
 
 
@@ -61,20 +61,20 @@ def cmdParser(inpt_args = None):
 ### ANCILLARY FUNCTIONS ---
 def loadDates(datefile, verbose=False):
     '''
-        Load data from two column file in the form of OxCal posterior.
+    Load data from two column file in the form of OxCal posterior.
     '''
     datePDF = np.loadtxt(datefile)
-    xDate = datePDF[:,0] # dates
-    pxDate = datePDF[:,1] # probabilities
+    xDate = datePDF[:,0]  # dates
+    pxDate = datePDF[:,1]  # probabilities
 
-    if verbose == True: print('Loaded: {}'.format(datefile))
+    if verbose == True: print('Loaded: {:s}'.format(datefile))
 
     return xDate, pxDate
 
 
 def date2age(xDate, pxDate, refDate=1950, ageFactor=1, verbose=False):
     '''
-        Convert calendar date to age before specified date. Scale by age factor.
+    Convert calendar date to age before specified date. Scale by age factor.
     '''
 
     # Shift relative to age
@@ -88,7 +88,7 @@ def date2age(xDate, pxDate, refDate=1950, ageFactor=1, verbose=False):
     xAge /= ageFactor
 
     # Normalize area to 1.0
-    P = np.trapz(pxAge,xAge)
+    P = np.trapz(pxAge, xAge)
     pxAge /= P
 
     if verbose == True:
@@ -99,16 +99,16 @@ def date2age(xDate, pxDate, refDate=1950, ageFactor=1, verbose=False):
     return xAge, pxAge
 
 
-def saveOutputs(x, px, outName, verbose = False):
+def saveOutputs(x, px, outName, verbose=False):
     '''
-        Save outputs to text file.
+    Save outputs to text file.
     '''
 
     fname = outName+'.txt'
-    with open(fname,'w') as outFile:
+    with open(fname, 'w') as outFile:
         outFile.write('# Value,\tProbability\n')
         for i in range(len(x)):
-            outFile.write('{0:f}\t{1:f}\n'.format(x[i],px[i]))
+            outFile.write('{0:f}\t{1:f}\n'.format(x[i], px[i]))
         outFile.close()
 
     if verbose == True:
@@ -117,28 +117,28 @@ def saveOutputs(x, px, outName, verbose = False):
 
 def plotPDF(xDate, pxDate, xAge, pxAge, refDate, ageFactor):
     '''
-        Plot date and equivalent age PDFs.
+    Plot date and equivalent age PDFs.
     '''
 
     # Calculate CDF
-    PxAge=cumtrapz(pxAge,xAge,initial=0)
+    PxAge=cumtrapz(pxAge, xAge, initial=0)
 
     # Set up figure
-    Fig = plt.figure()
+    fig = plt.figure()
 
     # Plot date
-    axDate = Fig.add_subplot(211)
-    axDate.plot(xDate,pxDate,'k')
+    axDate = fig.add_subplot(211)
+    axDate.plot(xDate, pxDate,'k')
     axDate.invert_xaxis()
     axDate.set_yticks([])
     axDate.set_ylabel('Cal date CE/BCE')
 
     # Plot age
-    axAge=Fig.add_subplot(212)
-    axAge.plot(xAge,pxAge/pxAge.max(),'k',linewidth=2,zorder=2,label='PDF')
-    axAge.plot(xAge,PxAge,'b',linewidth=2,zorder=1,label='CDF')
+    axAge = fig.add_subplot(212)
+    axAge.plot(xAge, pxAge/pxAge.max(), 'k', linewidth=2, zorder=2, label='PDF')
+    axAge.plot(xAge, PxAge, 'b', linewidth=2, zorder=1, label='CDF')
     axAge.set_yticks([])
-    axAge.set_ylabel('Age ({:1.1e} yr)\nbefore {:.0f}'.format(ageFactor,refDate))
+    axAge.set_ylabel('Age ({:1.1e} yr)\nbefore {:.0f}'.format(ageFactor, refDate))
     axAge.legend()
 
 
@@ -151,16 +151,15 @@ if __name__ == '__main__':
     xDate, pxDate = loadDates(inps.datefile, verbose=inps.verbose)
 
     # Convert date to age
-    xAge, pxAge = date2age(xDate, pxDate, refDate=inps.refDate, ageFactor=inps.ageFactor,
-        verbose=inps.verbose)
+    xAge, pxAge = date2age(xDate, pxDate, refDate=inps.refDate, ageFactor=inps.ageFactor, verbose=inps.verbose)
 
     # Smooth if requested
     if inps.smoothing:
-        pxAge = smoothPDF(xAge, pxAge, ktype = inps.smoothingKernel, kwidth = inps.smoothing)
+        pxAge = smoothPDF(xAge, pxAge, ktype=inps.smoothingKernel, kwidth=inps.smoothing)
         if inps.verbose == True: print('Smoothed function')
 
     # Save to text file
-    saveOutputs(xAge, pxAge, inps.outName, verbose = inps.verbose)
+    saveOutputs(xAge, pxAge, inps.outName, verbose=inps.verbose)
 
     # Plot if requested
     if inps.plot:

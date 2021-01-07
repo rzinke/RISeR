@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 '''
-    ** MCMC Incremental Slip Rate Calculator **
-    These functions are designed to load and parse properly
-     formatted data.
+** MCMC Incremental Slip Rate Calculator **
+These functions are designed to load and parse properly
+ formatted data.
 
-    Rob Zinke 2019, 2020
+Rob Zinke 2019, 2020
 '''
 
 ### IMPORT MODULES ---
@@ -21,13 +21,13 @@ from slipRateObjects import ageDatum, dspDatum
 ## Check Python version
 def checkVersion():
     '''
-        Confirm Python v3.6+ is used due to the necessity of orderered
-         dictionary keys.
+    Confirm Python v3.6+ is used due to the necessity of orderered
+     dictionary keys.
     '''
     Vs = sys.version_info
     VsMajor = Vs[0]
     VsMinor = Vs[1]
-    Vs = float('{}.{}'.format(VsMajor,VsMinor))
+    Vs = float('{}.{}'.format(VsMajor, VsMinor))
     if Vs < 3.6:
         print('Python version must be 3.6+ to use loadInputs function due to \
 the necessity of ordered dictionary keys. Please upgrade to v. 3.6 or higher.')
@@ -35,9 +35,9 @@ the necessity of ordered dictionary keys. Please upgrade to v. 3.6 or higher.')
 
 
 ## Confirm output directory
-def confirmOutputDir(outName,verbose=False):
+def confirmOutputDir(outName, verbose=False):
     '''
-        Confirm the existence of the output directory. If it does not exist, create it.
+    Confirm the existence of the output directory. If it does not exist, create it.
     '''
     # Convert outName to aboslute path
     outName = os.path.abspath(outName)
@@ -56,19 +56,19 @@ def confirmOutputDir(outName,verbose=False):
 
 ### LOADING FUNCTIONS ---
 ## Load displacement-age inputs from YAML file for slip rate analysis
-def loadDspAgeInputs(fname,verbose=False,plotInputs=False):
+def loadDspAgeInputs(fname, verbose=False, plotInputs=False):
     '''
-        Load age and displacement data based on YAML inputs.
-        Inputs should be specified as one input per line.
-         The name of the data point is given, followed by a dictionary-like
-         entry specifying the age file and displacement file. E.g.,
-          T1/T2 riser: {"ageFile": "T2age.txt", "dspFile": "T1T2dsp.txt"}
-        Returns a dictionary of displacement-age markers, where each marker has
-         an associated age PDF ("Age") and displacement PDF ("Dsp"). The PDFs
-         are loaded as ageDatum and dspDatum objects, respectively.
+    Load age and displacement data based on YAML inputs.
+    Inputs should be specified as one input per line.
+     The name of the data point is given, followed by a dictionary-like
+     entry specifying the age file and displacement file. E.g.,
+      T1/T2 riser: {"ageFile": "T2age.txt", "dspFile": "T1T2dsp.txt"}
+    Returns a dictionary of displacement-age markers, where each marker has
+     an associated age PDF ("Age") and displacement PDF ("Dsp"). The PDFs
+     are loaded as ageDatum and dspDatum objects, respectively.
 
-        NOTE: This function should only be used with Python v.s 3.6 or higher
-         due to the necessity of ordered dictionary keys.
+    NOTE: This function should only be used with Python v.s 3.6 or higher
+     due to the necessity of ordered dictionary keys.
     '''
     # Check Python version
     checkVersion()
@@ -83,8 +83,7 @@ def loadDspAgeInputs(fname,verbose=False,plotInputs=False):
 
         # Check there are two or more markers given
         if len(DspAgeData) < 2:
-            print('More than one marker must be specified for incremental slip \
-rate calculation.')
+            print('More than one marker must be specified for incremental slip rate calculation.')
             exit()
 
         # Loop through each displacement-age datum to load data
@@ -101,9 +100,9 @@ rate calculation.')
             # Report if requested
             if verbose == True:
                 print('*******************************')
-                print('Datum name: {}'.format(datumName))
-                print('\tAge file: {}'.format(os.path.basename(ageFile)))
-                print('\tDisp file: {}'.format(os.path.basename(dspFile)))
+                print('Datum name: {:s}'.format(datumName))
+                print('\tAge file: {:s}'.format(os.path.basename(ageFile)))
+                print('\tDisp file: {:s}'.format(os.path.basename(dspFile)))
 
             # Load age PDF
             datum['Age'] = ageDatum(name = ageName)

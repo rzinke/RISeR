@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 '''
-    ** MCMC Incremental Slip Rate Calculator **
-    This function will compute the incremental slip rates of a data
-     set consisting of offsets and age markers described as
-     probability density functions (PDFs).
+** MCMC Incremental Slip Rate Calculator **
+This function will compute the incremental slip rates of a data
+ set consisting of offsets and age markers described as
+ probability density functions (PDFs).
 
-    Rob Zinke 2019, 2020
+Rob Zinke 2019, 2020
 '''
 
 ### IMPORT MODULES ---
@@ -98,32 +98,32 @@ def cmdParser(inps_args=None):
 ## Output text file
 def startTXTfile(outName):
     '''
-        Ascribe the basic parameters to an output text file.
+    Ascribe the basic parameters to an output text file.
     '''
     # Construct filename
-    txtName = '{}_Slip_Rate_Report.txt'.format(outName)
+    txtName = '{:s}_Slip_Rate_Report.txt'.format(outName)
 
     # Output string
-    openingReport='Incremental slip rates based on analytical method\n'
+    openingRepor = 'Incremental slip rates based on analytical method\n'
 
     # Establish file
-    with open(txtName,'w') as TXTout:
+    with open(txtName, 'w') as TXTout:
         TXTout.write(openingReport)
 
     return txtName
 
 
 ## Print incremental slip rate stats to text file
-def printIncSlipRates(Rates,analysisMethod,txtName):
+def printIncSlipRates(Rates, analysisMethod, txtName):
     '''
-        Append incremental slip rate statistics to the text file.
+    Append incremental slip rate statistics to the text file.
     '''
-    with open(txtName,'a') as TXTout:
+    with open(txtName, 'a') as TXTout:
         intervalNames = list(Rates.keys())
         TXTout.write('\nIncremental slip rates based on PDF analysis\n')
 
         # Text string
-        txtStr = '{0}: {1:.2f} +{2:.2f} -{3:.2f}\n'
+        txtStr = '{0:s}: {1:.2f} +{2:.2f} -{3:.2f}\n'
 
         # Loop through intervals
         for intvl in intervalNames:
@@ -131,26 +131,24 @@ def printIncSlipRates(Rates,analysisMethod,txtName):
             # IQR method
             if analysisMethod == 'IQR':
                 # Record confidence range
-                TXTout.write(txtStr.format(intvl,Rate.median,
-                    Rate.upperValue-Rate.median,Rate.median-Rate.lowerValue))
+                TXTout.write(txtStr.format(intvl, Rate.median,
+                    Rate.upperValue-Rate.median, Rate.median-Rate.lowerValue))
             # HPD method
             elif analysisMethod == 'HPD':
                 # Record overall confidence range
-                TXTout.write(txtStr.format(intvl,Rate.mode,
-                    Rate.upperValue-Rate.mode,Rate.mode-Rate.lowerValue))
+                TXTout.write(txtStr.format(intvl, Rate.mode,
+                    Rate.upperValue-Rate.mode, Rate.mode-Rate.lowerValue))
                 # Record clusters
                 TXTout.write('\tRanges:\n')
                 rangeStr = '\t{0:.2f} to {1:.2f}\n'
                 for i in range(Rate.Nclusters):
-                    TXTout.write(rangeStr.format(Rate.x_clusters[i].min(),
-                        Rate.x_clusters[i].max()))
+                    TXTout.write(rangeStr.format(Rate.x_clusters[i].min(), Rate.x_clusters[i].max()))
 
 
 
 ### MAIN ---
 if __name__ == '__main__':
     inps = cmdParser()
-
 
     ## Load files
     # Check output directory exists
@@ -160,14 +158,10 @@ if __name__ == '__main__':
     txtName = startTXTfile(inps.outName)
 
     # Load data from YAML file
-    DspAgeData = loadDspAgeInputs(inps.dataFile,
-        verbose = inps.verbose,
-        plotInputs = inps.plotInputs)
+    DspAgeData = loadDspAgeInputs(inps.dataFile, verbose=inps.verbose, plotInputs=inps.plotInputs)
 
     # Plot raw data
-    plotRawData(DspAgeData,
-        label = inps.labelMarkers,
-        outName = inps.outName)
+    plotRawData(DspAgeData, label=inps.labelMarkers, outName=inps.outName)
 
 
     ## Differences between data points
@@ -184,14 +178,13 @@ if __name__ == '__main__':
     for i in range(m-1):
         youngerName = list(DspAgeData.keys())[i]
         olderName = list(DspAgeData.keys())[i+1]
-        intvl = '{}-{}'.format(youngerName,olderName)
+        intvl = '{}-{}'.format(youngerName, olderName)
         if inps.verbose == True: print(intvl)
 
         # Difference ages
         youngerPDF = DspAgeData[youngerName]
         olderPDF = DspAgeData[olderName]
-        deltaAge = PDFdiff(olderPDF['Age'].ages,olderPDF['Age'].probs,
-            youngerPDF['Age'].ages,youngerPDF['Age'].probs,
+        deltaAge = PDFdiff(olderPDF['Age'].ages, olderPDF['Age'].probs, youngerPDF['Age'].ages, youngerPDF['Age'].probs,
             verbose=inps.verbose)
 
         # Remove points with zero probability
@@ -206,8 +199,7 @@ if __name__ == '__main__':
 
 
         # Difference displacements
-        deltaDsp = PDFdiff(olderPDF['Dsp'].dsps,olderPDF['Dsp'].probs,
-            youngerPDF['Dsp'].dsps,youngerPDF['Dsp'].probs,
+        deltaDsp = PDFdiff(olderPDF['Dsp'].dsps, olderPDF['Dsp'].probs, youngerPDF['Dsp'].dsps, youngerPDF['Dsp'].probs,
             verbose=inps.verbose)
 
         # Plot displacement differences if requested
@@ -217,9 +209,7 @@ if __name__ == '__main__':
 
 
         # Compute incremental slip rates
-        slipRate = PDFquotient(deltaDsp.D,deltaDsp.pD,
-            deltaAge.D,deltaAge.pD,
-            n=inps.nPts)
+        slipRate = PDFquotient(deltaDsp.D, deltaDsp.pD, deltaAge.D, deltaAge.pD, n=inps.nPts)
 
         # Record to dictionary
         Rates[intvl] = incrSlipRate(intvl)
@@ -232,9 +222,7 @@ if __name__ == '__main__':
 
 
     ## Plot incremental slip rates
-    plotIncSlipRates(Rates,inps.pdfAnalysis,
-        plotMax=inps.maxRate2plot,
-        outName=inps.outName)
+    plotIncSlipRates(Rates, inps.pdfAnalysis, plotMax=inps.maxRate2plot, outName=inps.outName)
 
 
     if inps.plotOutputs == True:

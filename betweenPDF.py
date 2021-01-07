@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 '''
-    ** MCMC Incremental Slip Rate Calculator **
-    Use this to create a probability density function (PDF) representing the
-     likeliness of a value between two PDFs.
+** MCMC Incremental Slip Rate Calculator **
+Use this to create a probability density function (PDF) representing the
+ likeliness of a value between two PDFs.
 
-    Rob Zinke 2019, 2020
+Rob Zinke 2019, 2020
 '''
 
 ### IMPORT MODULES ---
@@ -46,10 +46,10 @@ def cmdParser(inpt_args=None):
 
 
 ### ANCILLARY FUNCTIONS ---
-def loadPDF(pdfName,verbose=False):
+def loadPDF(pdfName, verbose=False):
     '''
-        Load PDF from file. File should have two columns:
-         value, probability
+    Load PDF from file. File should have two columns:
+     value, probability
     '''
     if verbose == True: print('Loading: {:s}'.format(pdfName))
 
@@ -60,14 +60,14 @@ def loadPDF(pdfName,verbose=False):
     return x, px
 
 
-def resampleCommon(x1,px1,x2,px2,verbose=False):
+def resampleCommon(x1, px1, x2, px2, verbose=False):
     '''
-        Resample two PDFs onto a common axis.
-        INPUTS
-            x1, px1 are the values and probabilities of the smaller PDF
-            x2, px2 are the values and probabilities of the larger PDF
-        OUTPUTS
-            x, px1, px2 are the PDFs resampled onto the same axis
+    Resample two PDFs onto a common axis.
+    INPUTS
+        x1, px1 are the values and probabilities of the smaller PDF
+        x2, px2 are the values and probabilities of the larger PDF
+    OUTPUTS
+        x, px1, px2 are the PDFs resampled onto the same axis
     '''
     # Find resampling values
     xmin = x1.min()
@@ -78,37 +78,37 @@ def resampleCommon(x1,px1,x2,px2,verbose=False):
     dx = np.min([dx1, dx2])
 
     # Formulate common axis
-    x = np.arange(xmin,xmax+dx,dx)
+    x = np.arange(xmin, xmax+dx, dx)
 
     # Resample onto common axis
-    I1 = intrp.interp1d(x1,px1,bounds_error=False,fill_value=0)
+    I1 = intrp.interp1d(x1, px1, bounds_error=False, fill_value=0)
     px1 = I1(x)
 
-    I2 = intrp.interp1d(x2,px2,bounds_error=False,fill_value=0)
+    I2 = intrp.interp1d(x2, px2, bounds_error=False, fill_value=0)
     px2 = I2(x)
 
     # Report if requested
     if verbose == True:
         print('Resampling to common axis')
-        print('\tmin: {:f}; max: {:f}; dx: {:f}'.format(xmin,xmax,dx))
+        print('\tmin: {:f}; max: {:f}; dx: {:f}'.format(xmin, xmax, dx))
         print('\tlen: {:d}'.format(len(x)))
 
     return x, px1, px2
 
 
-def plotBetween(x1,px1,x2,px2,x,pxB):
+def plotBetween(x1, px1, x2, px2, x, pxB):
     '''
-        Plot inputs and between PDF.
+    Plot inputs and between PDF.
     '''
     # Spawn figure
     Fig, [axInputs, axBetween] = plt.subplots(nrows=2)
 
     # Plot inputs
-    axInputs.plot(x1,px1,color='b',label='PDF 1')
-    axInputs.plot(x2,px2,color='g',label='PDF 2')
+    axInputs.plot(x1, px1, color='b', label='PDF 1')
+    axInputs.plot(x2, px2, color='g', label='PDF 2')
 
     # Plot between PDF
-    axBetween.plot(x,pxB,color='k',label='Between PDF')
+    axBetween.plot(x, pxB, color='k', label='Between PDF')
 
     # Format plot
     axInputs.legend()
@@ -118,16 +118,16 @@ def plotBetween(x1,px1,x2,px2,x,pxB):
     axBetween.set_ylabel('Between')
 
 
-def saveOutputs(x,px,outName,verbose=False):
+def saveOutputs(x, px, outName, verbose=False):
     '''
-        Save between PDF to file, with first column representing values, 
-         second column representing probabilities.
+    Save between PDF to file, with first column representing values, 
+     second column representing probabilities.
     '''
     fname = outName+'.txt'
     with open(fname,'w') as outFile:
         outFile.write('# Value,\tProbability\n')
         for i in range(len(x)):
-            outFile.write('{0:f}\t{1:f}\n'.format(x[i],px[i]))
+            outFile.write('{0:f}\t{1:f}\n'.format(x[i], px[i]))
         outFile.close()
 
     if verbose == True:
@@ -136,10 +136,9 @@ def saveOutputs(x,px,outName,verbose=False):
 
 
 ### BETWEEN PDF ---
-def betweenPDF(x,px1,px2,verbose=False):
+def betweenPDF(x, px1, px2, verbose=False):
     '''
-        Given two pdfs sampled on the same axis, compute the "between" 
-         probability.
+    Given two pdfs sampled on the same axis, compute the "between" probability.
     '''
     # Parameters
     nx = len(x)
@@ -167,19 +166,19 @@ if __name__ == '__main__':
     inps = cmdParser()
 
     # Load input data
-    x1,px1 = loadPDF(inps.pdf1, verbose=inps.verbose)
-    x2,px2 = loadPDF(inps.pdf2, verbose=inps.verbose)
+    x1, px1 = loadPDF(inps.pdf1, verbose=inps.verbose)
+    x2, px2 = loadPDF(inps.pdf2, verbose=inps.verbose)
 
     # Resample onto common axis
-    x, px1r, px2r = resampleCommon(x1,px1,x2,px2,verbose=inps.verbose)
+    x, px1r, px2r = resampleCommon(x1, px1, x2, px2, verbose=inps.verbose)
 
     # Compute "between" PDF
-    x, pxB = betweenPDF(x,px1r,px2r,verbose=inps.verbose)
+    x, pxB = betweenPDF(x, px1r, px2r, verbose=inps.verbose)
 
     # Save outputs
-    saveOutputs(x,pxB,inps.outName,verbose=inps.verbose)
+    saveOutputs(x, pxB, inps.outName, verbose=inps.verbose)
 
     # Plot if requested
     if inps.plot == True:
-        plotBetween(x1,px1,x2,px2,x,pxB)
+        plotBetween(x1, px1, x2, px2, x, pxB)
         plt.show()

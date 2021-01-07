@@ -80,7 +80,7 @@ def createParser():
     return parser
 
 def cmdParser(inpt_args=None):
-    parser=createParser()
+    parser = createParser()
     return parser.parse_args(inpt_args)
 
 
@@ -88,11 +88,11 @@ def cmdParser(inpt_args=None):
 ### PLOT AGES ---
 class agePlot:
     '''
-        Plot provided ages on a single figure.
+    Plot provided ages on a single figure.
     '''
     def __init__(self, ageList):
         '''
-            Establish figure and plot data. See examples for "ageList".
+        Establish figure and plot data. See examples for "ageList".
         '''
 
         # Initialize figure
@@ -104,19 +104,19 @@ class agePlot:
 
     def __setupFig__(self):
         '''
-            Setup initial figure.
+        Setup initial figure.
         '''
         self.Fig = plt.figure(figsize=(10,10))
         self.ax = self.Fig.add_subplot(111)
 
 
-    def __loadData__(self,ageList):
+    def __loadData__(self, ageList):
         '''
-            Load age data files specifed in YAML format.
-            Each entry gives the datum name and optional parameters.
-            For use with the plotAges function.
+        Load age data files specifed in YAML format.
+        Each entry gives the datum name and optional parameters.
+        For use with the plotAges function.
         '''
-        with open(ageList,'r') as ageFile:
+        with open(ageList, 'r') as ageFile:
             # Parse data within file
             self.ageData = yaml.load(ageFile, Loader=yaml.FullLoader)
 
@@ -125,7 +125,7 @@ class agePlot:
 
     def plotData(self, pdfScale=1.0, genericColor='k', genericAlpha=1.0):
         '''
-            Work line by line to plot data based on datum type.
+        Work line by line to plot data based on datum type.
         '''
 
         # Initialize colors
@@ -145,21 +145,21 @@ class agePlot:
                 # Default data type = age
                 dtype = 'age'
             else:
-                dtype = datum['dtype'].lower().replace(' ','')
+                dtype = datum['dtype'].lower().replace(' ', '')
 
 
             ## Plot line breaks
             # Plot simple line
             if dtype == 'line':
-                self.ax.axhline(k, color = (0.7,0.75,0.8))
+                self.ax.axhline(k, color=(0.7,0.75,0.8))
 
             # Plot dashed line
             elif dtype == 'dashedline':
-                self.ax.axhline(k, color = (0.7,0.75,0.8), linestyle = '--')
+                self.ax.axhline(k, color=(0.7,0.75,0.8), linestyle='--')
 
             # Plot thicker line
             elif dtype == 'boldline':
-                self.ax.axhline(k, color = (0.3,0.35,0.35))
+                self.ax.axhline(k, color=(0.3,0.35,0.35))
 
 
             ## Assume age PDF
@@ -194,9 +194,9 @@ class agePlot:
             k += 1
 
 
-    def __plotAge__(self,k,fname,pdfScale,color,alpha):
+    def __plotAge__(self, k, fname, pdfScale, color, alpha):
         '''
-            Plot age datum as filled PDF.
+        Plot age datum as filled PDF.
         '''
         # Load and format age datum
         xAge, pxAge = self.__formatAge__(fname, pdfScale)
@@ -210,7 +210,7 @@ class agePlot:
 
     def __formatAge__(self, fname, pdfScale):
         '''
-            Load and format age data.
+        Load and format age data.
         '''
         # Load data from file
         ageData = np.loadtxt(fname)
@@ -218,8 +218,8 @@ class agePlot:
         pxAge = ageData[:,1]
 
         # Zero-pad
-        xAge = np.pad(xAge,(1,1),'edge')
-        pxAge = np.pad(pxAge,(1,1),'constant')
+        xAge = np.pad(xAge, (1,1), 'edge')
+        pxAge = np.pad(pxAge, (1,1), 'constant')
 
         # Scale probability to 1.0 * scale factor
         pxAge = pdfScale*pxAge/pxAge.max()
@@ -229,7 +229,7 @@ class agePlot:
 
     def __initColors__(self, genericColor, genericAlpha):
         '''
-            Color lookup table.
+        Color lookup table.
         '''
         self.colors = {}
         self.alphas = {}
@@ -267,7 +267,7 @@ class agePlot:
 
     def finalizeFig(self, title=None, xlabel='Age', labelRotation=0, outName=None):
         '''
-            Finalize figure.
+        Finalize figure.
         '''
         # Y-labels
         ticks = np.arange(len(self.ageData))
@@ -285,9 +285,9 @@ class agePlot:
 
         # Save to file
         if outName:
-            savename = '{}.pdf'.format(outName)
+            savename = '{:s}.pdf'.format(outName)
             self.Fig.savefig(savename, type='pdf')
-            print('Saved to: {}'.format(savename))
+            print('Saved to: {:s}'.format(savename))
 
 
 

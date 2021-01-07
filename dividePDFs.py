@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 '''
-    ** MCMC Incremental Slip Rate Calculator **
-    This function applies a form convolution to analytically find the
-     quotient two PDFs.
+** MCMC Incremental Slip Rate Calculator **
+This function applies a form convolution to analytically find the
+ quotient two PDFs.
 
-    Rob Zinke 2019, 2020
+Rob Zinke 2019, 2020
 '''
 
 ### IMPORT MODULES ---
@@ -48,22 +48,22 @@ def cmdParser(inpt_args=None):
 ### PDF DIFFERENCE CLASS ---
 class PDFquotient:
     '''
-        Find analytically the quotient of two quantities described by two PDFs.
+    Find analytically the quotient of two quantities described by two PDFs.
     '''
-    def __init__(self,Xnumer,pXnumer,Xdenom,pXdenom,n=1000,verbose=False):
+    def __init__(self, Xnumer, pXnumer, Xdenom, pXdenom, n=1000, verbose=False):
         # Record data
         self.verbose = verbose
 
         # Format data
-        self.Xnumer, self.pXnumer = self.__formatPDF__(Xnumer,pXnumer)
-        self.Xdenom, self.pXdenom = self.__formatPDF__(Xdenom,pXdenom)
+        self.Xnumer, self.pXnumer = self.__formatPDF__(Xnumer, pXnumer)
+        self.Xdenom, self.pXdenom = self.__formatPDF__(Xdenom, pXdenom)
 
         # Compute quotient
         self.__dividePDFs__(n=n)
 
-    def __formatPDF__(self,X,pX):
+    def __formatPDF__(self, X, pX):
         '''
-            Format an n x 2 array into separate parts and ensure unit mass.
+        Format an n x 2 array into separate parts and ensure unit mass.
         '''
         # Normalize area to 1.0
         pX = pX/np.trapz(pX,X)
@@ -80,9 +80,9 @@ class PDFquotient:
 
         return X, pX
 
-    def __dividePDFs__(self,n):
+    def __dividePDFs__(self, n):
         '''
-            Compute quotient Q, as probability function pQ.
+        Compute quotient Q, as probability function pQ.
         '''
         # Establish quotient axis, Q
         minQ = self.Xnumer.min()/self.Xdenom.max()
@@ -90,8 +90,7 @@ class PDFquotient:
         self.Q = np.linspace(minQ, maxQ, n)
 
         # Establish interpolation function for numerator
-        Inumer = interp1d(self.Xnumer,self.pXnumer,
-            kind='linear',bounds_error=False,fill_value=0)
+        Inumer = interp1d(self.Xnumer, self.pXnumer, kind='linear', bounds_error=False, fill_value=0)
 
         # Compute convolution\
         self.pQ = []
@@ -103,45 +102,41 @@ class PDFquotient:
         self.pQ = np.array(self.pQ)
 
         # Normalize area to unit mass
-        self.pQ = self.pQ/np.trapz(self.pQ,self.Q)
+        self.pQ = self.pQ/np.trapz(self.pQ, self.Q)
 
-    def plot(self,title=None):
+    def plot(self, title=None):
         '''
-            Plot raw data and difference PDF.
+        Plot raw data and difference PDF.
         '''
         # Establish figure
-        self.Fig = plt.figure()
+        self.fig = plt.figure()
 
         # Plot raw data
-        self.axNumer = self.Fig.add_subplot(311)
-        self.axNumer.plot(self.Xnumer,self.pXnumer,
-            color='b', linewidth=2, label='Numerator PDF')
+        self.axNumer = self.fig.add_subplot(311)
+        self.axNumer.plot(self.Xnumer, self.pXnumer, color='b', linewidth=2, label='Numerator PDF')
         self.axNumer.legend()
 
-        self.axDenom = self.Fig.add_subplot(312)
-        self.axDenom.plot(self.Xdenom,self.pXdenom,
-            color='g', linewidth=2, label='Denominator PDF')
+        self.axDenom = self.fig.add_subplot(312)
+        self.axDenom.plot(self.Xdenom, self.pXdenom, color='g', linewidth=2, label='Denominator PDF')
         self.axDenom.legend()
 
         # Plot quotient
-        self.axQuot = self.Fig.add_subplot(313)
-        self.axQuot.plot(self.Q,self.pQ,
-            color = 'k', linewidth=3, label = 'Quotient')
+        self.axQuot = self.fig.add_subplot(313)
+        self.axQuot.plot(self.Q, self.pQ, color = 'k', linewidth=3, label='Quotient')
         self.axQuot.legend()
 
         # Format plot
-        if title:
-            self.Fig.suptitle(title)
+        if title: self.fig.suptitle(title)
 
-    def savePDF(self,outName):
+    def savePDF(self, outName):
         '''
-            Save to file as n x 2 array.
+        Save to file as n x 2 array.
         '''
         outName += '.txt'
-        with open(outName,'w') as outFile:
+        with open(outName, 'w') as outFile:
             outFile.write('# Value,\tProbability\n')
             for i in range(len(self.Q)):
-                outFile.write('{0:f}\t{1:f}\n'.format(self.Q[i],self.pQ[i]))
+                outFile.write('{0:f}\t{1:f}\n'.format(self.Q[i], self.pQ[i]))
             outFile.close()
 
 
@@ -159,9 +154,7 @@ if __name__ == '__main__':
 
 
     # Difference PDFs
-    quot = PDFquotient(Xnumer,pXnumer,Xdenom,pXdenom,
-        n=inps.nPts,
-        verbose=inps.verbose)
+    quot = PDFquotient(Xnumer, pXnumer, Xdenom, pXdenom, n=inps.nPts, verbose=inps.verbose)
 
     # Save to file
     if inps.outName:
