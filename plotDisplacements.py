@@ -73,7 +73,7 @@ def createParser():
     return parser
 
 def cmdParser(inpt_args=None):
-    parser=createParser()
+    parser = createParser()
     return parser.parse_args(inpt_args)
 
 
@@ -81,11 +81,11 @@ def cmdParser(inpt_args=None):
 ### PLOT DISPLACEMENTS ---
 class dspPlot:
     '''
-        Plot provided displacements on a single figure
+    Plot provided displacements on a single figure
     '''
     def __init__(self, dspList):
         '''
-            Establish figure and plot data. See examples for "dspsList".
+        Establish figure and plot data. See examples for "dspsList".
         '''
 
         # Initialize figure
@@ -97,15 +97,15 @@ class dspPlot:
 
     def __setupFig__(self):
         '''
-            Setup initial figure.
+        Setup initial figure.
         '''
         self.Fig = plt.figure(figsize=(10,10))
         self.ax = self.Fig.add_subplot(111)
 
 
-    def __loadData__(self,dspList):
+    def __loadData__(self, dspList):
         '''
-            Open list of displacement files, gather inputs as "data".
+        Open list of displacement files, gather inputs as "data".
         '''
         # Read data from file
         with open(dspList,'r') as dspFile:
@@ -117,7 +117,7 @@ class dspPlot:
 
     def plotData(self, pdfScale=1.0, genericColor='k', genericAlpha=1.0):
         '''
-            Work line by line to plot data based on datum type.
+        Work line by line to plot data based on datum type.
         '''
 
         # Initialize colors
@@ -135,20 +135,20 @@ class dspPlot:
                 # Default data type = age
                 dtype = 'generic'
             else:
-                dtype = datum['dtype'].lower().replace(' ','')
+                dtype = datum['dtype'].lower().replace(' ', '')
 
             ## Plot line breaks
             # Plot simple line
             if dtype == 'line':
-                self.ax.axhline(k, color = (0.7,0.75,0.8))
+                self.ax.axhline(k, color=(0.7,0.75,0.8))
 
             # Plot dashed line
             elif dtype == 'dashedline':
-                self.ax.axhline(k, color = (0.7,0.75,0.8), linestyle = '--')
+                self.ax.axhline(k, color=(0.7,0.75,0.8), linestyle='--')
 
             # Plot thicker line
             elif dtype == 'boldline':
-                self.ax.axhline(k, color = (0.3,0.35,0.35))
+                self.ax.axhline(k, color=(0.3,0.35,0.35))
 
             ## Assume displacement PDF
             else:
@@ -177,7 +177,7 @@ class dspPlot:
 
     def __formatDsp__(self, dspFile, pdfScale):
         '''
-            Load and format displacement data.
+        Load and format displacement data.
         '''
         # Load data from file
         dspData = np.loadtxt(dspFile)
@@ -185,8 +185,8 @@ class dspPlot:
         pxDsp = dspData[:,1]
 
         # Zero-pad
-        xDsp = np.pad(xDsp,(1,1),'edge')
-        pxDsp = np.pad(pxDsp,(1,1),'constant')
+        xDsp = np.pad(xDsp, (1,1), 'edge')
+        pxDsp = np.pad(pxDsp, (1,1), 'constant')
 
         # Scale probability to 1.0 * scale factor
         pxDsp = pdfScale*pxDsp/pxDsp.max()
@@ -196,7 +196,7 @@ class dspPlot:
 
     def __initColors__(self, genericColor, genericAlpha):
         '''
-            Color lookup table.
+        Color lookup table.
         '''
         self.colors = {}
         self.alphas = {}
@@ -210,7 +210,7 @@ class dspPlot:
 
     def finalizeFig(self, title=None, xlabel='Displacement', labelRotation=0, outName=None):
         '''
-            Finalize figure.
+        Finalize figure.
         '''
         # X-labels
         ticks = np.arange(len(self.dspData))
@@ -228,9 +228,9 @@ class dspPlot:
 
         # Save to file
         if outName:
-            savename = '{}.pdf'.format(outName)
+            savename = '{:s}.pdf'.format(outName)
             self.Fig.savefig(savename, type='pdf')
-            print('Saved to: {}'.format(savename))
+            print('Saved to: {:s}'.format(savename))
 
 
 

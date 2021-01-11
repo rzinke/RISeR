@@ -73,9 +73,7 @@ if __name__ == '__main__':
     inps.outName = confirmOutputDir(inps.outName)
 
     # Load data from YAML file
-    DspAgeData = loadDspAgeInputs(inps.dataFile,
-        verbose = inps.verbose,
-        plotInputs = inps.plotInputs)
+    DspAgeData = loadDspAgeInputs(inps.dataFile, verbose=inps.verbose, plotInputs=inps.plotInputs)
 
     # Establish plot maxima
     maxAge, maxDsp = findPlotLimits(DspAgeData)
@@ -83,9 +81,9 @@ if __name__ == '__main__':
     ## Plot data
     # Plot data
     if inps.plotType.lower() in ['w', 'whisker']:
-        Fig,ax = plotWhiskers(DspAgeData,label=inps.labelFeatures)
+        fig,ax = plotWhiskers(DspAgeData, label=inps.labelFeatures)
     elif inps.plotType.lower() in ['r', 'rectangle']:
-        Fig,ax = plotRectangles(DspAgeData,label=inps.labelFeatures)
+        fig,ax = plotRectangles(DspAgeData, label=inps.labelFeatures)
 
 
     ## Finish plot
@@ -99,13 +97,13 @@ if __name__ == '__main__':
 
     # Figure
     ax.set_title(inps.title)
-    Fig.tight_layout()
+    fig.tight_layout()
 
 
     ## Save if requested
     if inps.outName:
         savename = '{}.pdf'.format(inps.outName)
-        Fig.savefig(savename,type='pdf')
+        fig.savefig(savename, type='pdf')
 
 
     plt.show()

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 '''
-    ** MCMC Incremental Slip Rate Calculator **
-    Use this to create a probability density function (PDF) as a text file.
+** MCMC Incremental Slip Rate Calculator **
+Use this to create a probability density function (PDF) as a text file.
 
-    Rob Zinke 2019, 2020
+Rob Zinke 2019, 2020
 '''
 
 ### IMPORT MODULES ---
@@ -58,7 +58,7 @@ def cmdParser(inpt_args=None):
 ### ANCILLARY FUNCTIONS ---
 def checkInputs(dstrb, values):
     '''
-        Check that the proper number of inputs are given to describe the specified distribution.
+    Check that the proper number of inputs are given to describe the specified distribution.
     '''
 
     # Confirm distribution type
@@ -66,16 +66,16 @@ def checkInputs(dstrb, values):
     if dstrb in ['gaussian', 'gauss']:
         dstrb = 'gaussian'
         assert len(values) == 2, 'Gaussian distribution requires the mean and standard deviation, e.g., 5.0 0.3.'
-    elif dstrb in ['tri','triangle','triangular']:
+    elif dstrb in ['tri', 'triangle', 'triangular']:
         dstrb = 'triangular'
-        values.sort() # sort smallest to largest
+        values.sort()  # sort smallest to largest
         assert len(values) == 3, 'Triangular distribution requires the minimum, preferred, and maximum values, e.g., 4.4 5.0 5.6'
-    elif dstrb in ['trap','trapezoid','trapezoidal']:
+    elif dstrb in ['trap', 'trapezoid', 'trapezoidal']:
         dstrb = 'trapezoidal'
-        values.sort() # sort smallest to largest
+        values.sort()  # sort smallest to largest
         assert len(values) == 4, 'Trapezoidal distribution requires the minimum, boxcar bounds, and maximum values, e.g., 4.4 4.6 5.4 5.6'
     else:
-        print('{} not a valid distribution. Choose from [Gaussian, triangular, trapezoidal]'.format(dstrb))
+        print('{:s} not a valid distribution. Choose from [Gaussian, triangular, trapezoidal]'.format(dstrb))
         exit()
 
     return dstrb, values
@@ -83,52 +83,51 @@ def checkInputs(dstrb, values):
 
 def buildDistribution(dstrb, values, nDataPts, verbose = False):
     '''
-        Build a probability density function based on the specified distribution and values.
+    Build a probability density function based on the specified distribution and values.
     '''
 
     if dstrb == 'gaussian':
         # Gaussian
-        mu=values[0] # mean
-        sd=values[1] # std deviation
-        x=np.linspace(mu-4*sd,mu+4*sd,nDataPts)
-        px=gauss(x,mu,sd)
+        mu = values[0]  # mean
+        sd = values[1]  # std deviation
+        x = np.linspace(mu-4*sd, mu+4*sd, nDataPts)
+        px = gauss(x, mu, sd)
     elif dstrb == 'triangular':
         # Triangular
-        x=np.linspace(values[0],values[2],nDataPts)
-        Ix=intrp.interp1d(values,[0,1,0],kind='linear')
-        px=Ix(x) # interpolate
+        x = np.linspace(values[0], values[2], nDataPts)
+        Ix = intrp.interp1d(values, [0,1,0], kind='linear')
+        px = Ix(x)  # interpolate
     elif dstrb == 'trapezoidal':
         # Trapezoidal
-        x=np.linspace(values[0],values[3],nDataPts)
-        Ix=intrp.interp1d(values,[0,1,1,0],kind='linear')
-        px=Ix(x) # interpolate
+        x = np.linspace(values[0], values[3], nDataPts)
+        Ix = intrp.interp1d(values, [0,1,1,0], kind='linear')
+        px = Ix(x)  # interpolate
 
     # Normalize to area = 1.0
-    P=np.trapz(px,x) # integrated area
-    px/=P # normalize
-    P=np.trapz(px,x) # normalized area (should be 1.0)
+    P = np.trapz(px, x)  # integrated area
+    px /= P  # normalize
+    P = np.trapz(px, x)  # normalized area (should be 1.0)
 
     if verbose == True:
-        print('{} distribution with {} points'.format(nDataPts))
-        print('Final probability mass {}'.format(P))
+        print('{:s} distribution with {:d} points'.format(dstrb, nDataPts))
+        print('Final probability mass {:f}'.format(P))
 
     return x, px
 
 
 def saveOutputs(x, px, outName, verbose = False):
     '''
-        Save outputs to text file.
+    Save outputs to text file.
     '''
-
     fname = outName+'.txt'
-    with open(fname,'w') as outFile:
+    with open(fname, 'w') as outFile:
         outFile.write('# Value,\tProbability\n')
         for i in range(len(x)):
-            outFile.write('{0:f}\t{1:f}\n'.format(x[i],px[i]))
+            outFile.write('{0:f}\t{1:f}\n'.format(x[i], px[i]))
         outFile.close()
 
     if verbose == True:
-        print('Saved data to {}'.format(fname))
+        print('Saved data to {:s}'.format(fname))
 
 
 def plotPDF(x, px, outName, verbose = False):
@@ -139,7 +138,7 @@ def plotPDF(x, px, outName, verbose = False):
     Fig = plt.figure()
     ax = Fig.add_subplot(111)
     ax.plot(x, px, color = 'b', linewidth = 2)
-    ax.set_title('Probability Density Function -- {}'.format(os.path.basename(outName)))
+    ax.set_title('Probability Density Function -- {:s}'.format(os.path.basename(outName)))
     ax.set_xlabel('values'); ax.set_ylabel('rel prob')
 
     # Save to figure
@@ -157,7 +156,6 @@ def makePDF(dstrb, values, outName, nDataPts=100, verbose=False, plot=False):
     '''
         Create a PDF based on the given parameters.
     '''
-
     # Check inputs are valid
     dstrb, values = checkInputs(dstrb, values)
 
@@ -174,7 +172,7 @@ def makePDF(dstrb, values, outName, nDataPts=100, verbose=False, plot=False):
 
 ### MAIN ---
 if __name__ == '__main__':
-    inps = cmdParser() # gather inputs
+    inps = cmdParser()  # gather inputs
     makePDF(dstrb=inps.dstrb, values=inps.values, outName=inps.outName,
         nDataPts=inps.nDataPts,
-        verbose=inps.verbose, plot=inps.plot) # create PDF
+        verbose=inps.verbose, plot=inps.plot)  # create PDF
