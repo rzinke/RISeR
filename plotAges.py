@@ -106,9 +106,7 @@ class agePlot:
         '''
         Setup initial figure.
         '''
-        self.Fig = plt.figure(figsize=(10,10))
-        self.ax = self.Fig.add_subplot(111)
-
+        self.fig, self.ax = plt.subplots(figsize=(10, 10))
 
     def __loadData__(self, ageList):
         '''
@@ -234,13 +232,13 @@ class agePlot:
         self.colors = {}
         self.alphas = {}
         # Non-specific age
-        self.colors['age'] = (0,0,0)
+        self.colors['age'] = (0, 0, 0)
         self.alphas['age'] = 1.0
         # Prior age
-        self.colors['prior'] = (0.6,0.6,0.6)
+        self.colors['prior'] = (0.6, 0.6, 0.6)
         self.alphas['prior'] = 1.0
         # Posterior age
-        self.colors['posterior'] = (0,0,0)
+        self.colors['posterior'] = (0, 0, 0)
         self.alphas['posterior'] = 1.0
         # Phase age
         self.colors['phaseage'] = 'm'
@@ -249,16 +247,16 @@ class agePlot:
         self.colors['betweenage'] = 'b'
         self.alphas['betweenage'] = 1.0
         # Silt age
-        self.colors['silt'] = (0.843,0.867,0.235)
+        self.colors['silt'] = (0.843, 0.867, 0.235)
         self.alphas['silt'] = 1.0
         # Sandy silt age
-        self.colors['sandysilt'] = (0.529,0.831,0.898)
+        self.colors['sandysilt'] = (0.529, 0.831, 0.898)
         self.alphas['sandysilt'] = 1.0
         # Sand age
-        self.colors['sand'] = (0.961,0.580,0.192)
+        self.colors['sand'] = (0.961, 0.580, 0.192)
         self.alphas['sand'] = 1.0
         # Gravel age
-        self.colors['gravel'] = (0.922,0.129,0.184)
+        self.colors['gravel'] = (0.922, 0.129, 0.184)
         self.alphas['gravel'] = 1.0
         # Generic PDF
         self.colors['generic'] = genericColor
@@ -281,12 +279,12 @@ class agePlot:
         if title: self.ax.set_title(title)
 
         # Finalize
-        self.Fig.tight_layout()
+        self.fig.tight_layout()
 
         # Save to file
         if outName:
             savename = '{:s}.pdf'.format(outName)
-            self.Fig.savefig(savename, type='pdf')
+            self.fig.savefig(savename, format='pdf')
             print('Saved to: {:s}'.format(savename))
 
 
