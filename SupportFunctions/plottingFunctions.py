@@ -9,6 +9,7 @@ Rob Zinke 2019, 2020
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+from scipy.interpolate import interp1d
 
 
 ### STATISTICS ---
@@ -89,6 +90,65 @@ def plotRectangles(DspAgeData, label=False):
 
         # Label if requested
         if label == True: ax.text((ageLower+boxWidth)*1.01, (dspLower+boxHeight)*1.01, datumName)
+
+    return fig, ax
+
+
+## Plot joing probabilities
+def plotJointProbs(DspAgeData, cmap='Greys'):
+    '''
+    Plot 2D histograms computed as the outer product between two PDFs.
+    '''
+    # Establish plot
+    fig, ax = plt.subplots()
+
+    # Establish coarse grid on which to resample
+    pts = 100
+    ageMin = 0; ageMax = []
+    dspMin = 0; dspMax = []
+
+    for datumName in DspAgeData:
+        datum = DspAgeData[datumName]
+        ageMax.append(datum['Age'].ages.max())
+        dspMax.append(datum['Dsp'].dsps.max())
+
+    ageMax = 1.1*np.max(ageMax)
+    dspMax = 1.1*np.max(dspMax)
+
+    ageRange = np.linspace(ageMin, ageMax, pts)
+    dspRange = np.linspace(dspMin, dspMax, pts)
+
+    # Plot joint probabilities
+    P = np.zeros((pts, pts))
+    for datumName in DspAgeData:
+        # Gather data
+        datum = DspAgeData[datumName]
+        Age = datum['Age']
+        Dsp = datum['Dsp']
+
+        # Build interpolation functions
+        Iage = interp1d(Age.ages, Age.probs, kind='linear', bounds_error=False, fill_value=0)
+        Idsp = interp1d(Dsp.dsps, Dsp.probs, kind='linear', bounds_error=False, fill_value=0)
+
+        # Interpolate on grid
+        ageProbs = Iage(ageRange)
+        dspProbs = Idsp(dspRange)
+
+        # Construct grid
+        X, Y = np.meshgrid(ageRange, dspRange)
+
+        # Compute joint probability
+        p = np.outer(ageProbs, dspProbs)  # take outer product
+        p = p/p.max()  # normalize peak value to 1
+
+        P += p  # add to area
+
+    # Plot functions
+    ax.pcolormesh(X, Y, P.T, shading='gouraud', cmap=cmap)
+
+    # Format axis
+    ax.set_xlim([0, ageMax])
+    ax.set_ylim([0, dspMax])
 
     return fig, ax
 
