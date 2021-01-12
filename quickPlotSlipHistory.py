@@ -44,7 +44,7 @@ the top; oldest, most-offset features at the bottom.')
         help='Head name for outputs (no extension)')
     # Recommended
     parser.add_argument('-pt','--plot-type', dest='plotType', type=str, default='whisker',
-        help='Plot marker type [\'whisker\',\'rectangle\']')
+        help='Plot marker type [\'whisker\', \'rectangle\', \'PDF\']')
     parser.add_argument('-t','--title', dest='title', type=str, default='Raw data',
         help='Plot title')
     parser.add_argument('-x','--xlabel', dest='xlabel', type=str, default='age',
@@ -53,6 +53,8 @@ the top; oldest, most-offset features at the bottom.')
         help='y-axis label')
     parser.add_argument('-l','--labels', dest='labelFeatures', action='store_true', default=False,
         help='Label displaced markers')
+    parser.add_argument('-c','--cmap', dest='cmap', type=str, default='Greys',
+        help='Cmap for headmap plots')
     parser.add_argument('-v','--verbose', dest='verbose', action='store_true', default=False,
         help='Verbose?')
     parser.add_argument('--plot-inputs',dest='plotInputs', action='store_true',
@@ -81,9 +83,11 @@ if __name__ == '__main__':
     ## Plot data
     # Plot data
     if inps.plotType.lower() in ['w', 'whisker']:
-        fig,ax = plotWhiskers(DspAgeData, label=inps.labelFeatures)
+        fig, ax = plotWhiskers(DspAgeData, label=inps.labelFeatures)
     elif inps.plotType.lower() in ['r', 'rectangle']:
-        fig,ax = plotRectangles(DspAgeData, label=inps.labelFeatures)
+        fig, ax = plotRectangles(DspAgeData, label=inps.labelFeatures)
+    elif inps.plotType.lower() in ['p', 'pdf']:
+        fig, ax = plotJointProbs(DspAgeData, cmap=inps.cmap)
 
 
     ## Finish plot
@@ -103,7 +107,7 @@ if __name__ == '__main__':
     ## Save if requested
     if inps.outName:
         savename = '{}.pdf'.format(inps.outName)
-        fig.savefig(savename, type='pdf')
+        fig.savefig(savename, format='pdf')
 
 
     plt.show()
