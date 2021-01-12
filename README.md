@@ -13,13 +13,26 @@ If you use these scripts, please cite:
 ## SETUP
 These scripts have been tested for Linux, Mac, and Windows systems.
 To use these scripts, clone the GitHub repository to a location of your choice, which will be referred to as ```RISeR_HOME```.
-Once cloned, add the following paths to your ```~/.bashrc``` file for a Linux system or ```~/.bash_profile``` for a Mac system:
+Once cloned, you must append the filepaths to your $PATH AND $PYTHONPATH variables.
+
+If you are running BASH (```echo $SHELL``` = bash), add the following paths to your ```~/.bashrc``` file for a Linux system or ```~/.bash_profile``` for a Mac system:
 
 ```
 RISeR_HOME=<path to repo>
 
 export PATH="${PATH}:${RISeR_HOME}:${RISeR_HOME}/SupportFunctions"
 export PYTHONPATH="${PYTHONPATH}:${RISeR_HOME}:${RISeR_HOME}/SupportFunctions"
+```
+
+If you are running CSH/TCSH (```echo $SHELL``` = (t)csh), add the following paths to your ```~/.cshrc``` or ```~/.tcshrc``` file:
+
+```
+set RISeR_HOME="/home/geovault-00/rzinke/RISeR"
+
+setenv PATH $PATH\:"$RISeR_HOME"\:"${RISeR_HOME}/SupportFunctions"
+
+setenv PYTHONPATH <path to Python3>
+setenv PYTHONPATH $PYTHONPATH\:"${RISeR_HOME}"\:"${RISeR_HOME}/SupportFunctions"
 ```
 
 If you are using Windows, it is recommended you set additional environmental variables.
