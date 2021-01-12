@@ -99,16 +99,14 @@ class dspPlot:
         '''
         Setup initial figure.
         '''
-        self.Fig = plt.figure(figsize=(10,10))
-        self.ax = self.Fig.add_subplot(111)
-
+        self.fig, self.ax = plt.subplots(figsize=(10, 10))
 
     def __loadData__(self, dspList):
         '''
         Open list of displacement files, gather inputs as "data".
         '''
         # Read data from file
-        with open(dspList,'r') as dspFile:
+        with open(dspList, 'r') as dspFile:
             # Parse data within file
             self.dspData = yaml.load(dspFile, Loader=yaml.FullLoader)
 
@@ -224,12 +222,12 @@ class dspPlot:
         if title: self.ax.set_title(title)
 
         # Finalize
-        self.Fig.tight_layout()
+        self.fig.tight_layout()
 
         # Save to file
         if outName:
             savename = '{:s}.pdf'.format(outName)
-            self.Fig.savefig(savename, type='pdf')
+            self.fig.savefig(savename, type='pdf')
             print('Saved to: {:s}'.format(savename))
 
 
