@@ -1,1 +1,1 @@
-plotDisplacements.py DspList.yaml -y 'displacements (m)' -t 'Measurement Examples' -r 80 -o DspPlotExample --generic-color b
+plotDisplacements.py DspList.yaml -x 'displacements (m)' -t 'Measurement Examples' -r 80 -o DspPlotExample --generic-color b
