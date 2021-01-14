@@ -163,10 +163,10 @@ def plotRawData(DspAgeData, label=False, outName=None):
 
     # Format figure
     maxAge,maxDsp = findPlotLimits(DspAgeData)
-    ax.set_xlim([0,1.1*maxAge])  # x-limits
-    ax.set_ylim([0,1.1*maxDsp])  # y-limits
+    ax.set_xlim([0, 1.1*maxAge])  # x-limits
+    ax.set_ylim([0, 1.1*maxDsp])  # y-limits
     ax.set_xlabel('age'); ax.set_ylabel('displacement')
-    ax.set_title('Raw data (95 %% limits)')
+    ax.set_title('Raw data (95 % limits)')
     fig.tight_layout()
 
     # Save figure
