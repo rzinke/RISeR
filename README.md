@@ -3,7 +3,7 @@ This code calculates incremental fault slip rates with the assumption that the f
 
 Conditions are enforced using Markov Chain Monte Carlo (MCMC) sampling. Inputs are sampled via the probability inverse transform method. If any of the samples drawn produces a negative slip rate, that set of samples is thrown out. Sampling continues until the desired number of samples is reached. Slip rates are reported first as percentiles of the allowable picks, and then based on analysis of a pseudo-continous nonparametric function (PDF) determined from the picks.
 
-This code builds on methods described in Gold and Cowgill, 2011 (EPSL), and is based on an earlier Python2 version developed in Zinke et al., 2017 (GRL) and Zinke et al., 2019 (GRL). These codes use Python 3.x, and were tested on versions 3.6, 3.7.
+This code builds on methods described in Gold and Cowgill, 2011 (EPSL), and is based on an earlier Python2 version developed in Zinke et al., 2017 (GRL) and Zinke et al., 2019 (GRL). These codes use Python 3.x, and were tested on versions 3.6 - 3.9.
 If you use these scripts, please cite:
 * Zinke, R., Dolan, J.F., Rhodes, E.J., Van Dissen, R., McGuire, C.P. (2017) Highly Variable Latest Pleistocene-Holocene Incremental Slip Rates on the Awatere Fault at Saxton River, South Island, New Zealand, Revealed by Lidar Mapping and Luminescence Dating, Geophyical Research Letters, 44, https://doi.org/10.1002/2017GL075048
 * Zinke, R., Dolan, J.F., Rhodes, E.J., Van Dissen, R., McGuire, C.P., Hatem, A.E., Brown, N.D., Langridge, R.M. (2019) Multimillennial Incremental Slip Rate Variability of the Clarence Fault at the Tophouse Road Site, Marlborough Fault System, New Zealand, Geophysical Research Letters, 46, https://doi.org/10.1029/2018GL080688
