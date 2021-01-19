@@ -89,11 +89,11 @@ class PDFdiff:
         '''
         # Array of difference values
         maxD = self.x.max()-self.x.min()
-        self.D = np.arange(0,maxD+self.Xstep, self.Xstep)
+        self.D = np.arange(0, maxD+self.Xstep, self.Xstep)
         self.pD = np.zeros(self.D.shape)
 
         # Convolution
-        for i in range(2,self.N):
+        for i in range(2, self.N):
             # Array of difference values X1 - X2
             D = self.x[i]-self.x[:i]
 
@@ -101,8 +101,8 @@ class PDFdiff:
             pD = self.pX1[i]*self.pX2[:i]
 
             # Interpolate function at points in difference array
-            iD = interp1d(D,pD,kind='linear', bounds_error=False, fill_value=0)
-            self.pD += iD(self.D)
+            interpDiff = interp1d(D, pD, kind='linear', bounds_error=False, fill_value=0)
+            self.pD += interpDiff(self.D)
 
         # Normalize area to 1.0
         self.pD = self.pD/np.trapz(self.pD, self.D)
