@@ -4,7 +4,7 @@
 This function applies a form convolution to analytically find the
  difference between two PDFs.
 
-Rob Zinke 2019, 2020
+Rob Zinke 2019-2021
 '''
 
 ### IMPORT MODULES ---
@@ -16,7 +16,7 @@ from scipy.interpolate import interp1d
 
 
 ### PARSER ---
-Description = '''Find the difference between two PDFs.'''
+Description = '''Find the "delta" difference between two PDFs.'''
 
 Examples='''EXAMPLES
 # Subtract Sample1_age from Sampl2_age
