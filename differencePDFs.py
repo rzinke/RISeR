@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 '''
 ** MCMC Incremental Slip Rate Calculator **
-This function applies a form convolution to analytically find the
+This function applies a form of convolution to analytically find the
  difference between two PDFs.
 
 Rob Zinke 2019-2021
@@ -13,14 +13,15 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
+from dataLoading import confirmOutputDir
 
 
 ### PARSER ---
 Description = '''Find the "delta" difference between two PDFs.'''
 
 Examples='''EXAMPLES
-# Subtract Sample1_age from Sampl2_age
-differencePDFs.py Sample2_age.txt Sample1_age.txt -o Sample12_ageDiff -v -p
+# Subtract Younger_age from Older_age
+differencePDFs.py Older_age.txt Younger_age.txt -o Diff_older-younger -v -p
 '''
 
 def createParser():
@@ -53,54 +54,89 @@ class PDFdiff:
         # Record data
         self.verbose = verbose
 
-        # Create common axis and resample PDFs
-        self.__establishCommonAxis__(X1, X2)
+        # Establish difference axis
+        self.__estbDiffAxis__(X1, X2)
+
+        # Resample PDFs at same frequency
         self.__resamplePDFs__(X1, pX1, X2, pX2)
 
         # Compute difference
         self.__diffPDF__()
 
-    def __establishCommonAxis__(self, X1, X2):
+    def __estbDiffAxis__(self, X1, X2):
         '''
-        Establish a common x-axis.
+        Establish a set of "difference" values on which to map the difference probabilities.
         '''
-        # Function parameters
-        self.minX = np.min([X1.min(), X2.min()])
-        self.maxX = np.max([X1.max(), X2.max()])
-        self.Xstep = np.min([np.diff(X1).min(), np.diff(X2).min()])
+        # Establish sampling rate
+        dX1 = np.abs(np.diff(X1)).min()
+        dX2 = np.abs(np.diff(X2)).min()
+        self.dX = np.min([dX1, dX2])
 
-        # Establish common axis
-        self.x = np.arange(self.minX, self. maxX+self.Xstep, self.Xstep)
-        self.N = len(self.x)
+        # Determine min/max differences
+        Dmin = X1.min() - X2.max()
+        Dmax = X1.max() - X2.min()
+
+        # Establish axis
+        self.D = np.arange(Dmin, Dmax+self.dX, self.dX)  # difference values
+        self.nD = len(self.D)  # number of values
+
+        # Report if requested
+        if self.verbose == True:
+            print('Difference parameters:')
+            print('\tMin difference: {:f}'.format(self.Dmin))
+            print('\tMax difference: {:f}'.format(self.Dmax))
+            print('\tStep: {:f}'.format(self.dX))
 
     def __resamplePDFs__(self, X1, pX1, X2, pX2):
         '''
         Resample PDF onto specified x-axis.
         '''
-        I1 = interp1d(X1, pX1, kind='linear', bounds_error=False, fill_value=0)
-        I2 = interp1d(X2, pX2, kind='linear', bounds_error=False, fill_value=0)
+        # Resample PDFs
+        self.X1, self.pX1 = self.__resamplePDF__(X1, pX1, self.dX)
+        self.X2, self.pX2 = self.__resamplePDF__(X2, pX2, self.dX)
 
-        self.pX1 = I1(self.x)
-        self.pX2 = I2(self.x)
+        # Report if requested
+        if self.verbose == True: print('Resampled PDFs')
+
+    def __resamplePDF__(self, X, pX, dx):
+        '''
+        Resample a PDF with the given resolution dx.
+        '''
+        # Build interpolation function
+        Intp = interp1d(X, pX, kind='linear', bounds_error=False, fill_value=0)
+
+        # Resample values
+        Xintp = np.arange(X.min(), X.max()+dx, dx)
+
+        # Resample probabilities
+        pXintp = Intp(Xintp)
+
+        return Xintp, pXintp
 
     def __diffPDF__(self):
         '''
-        Compute probability of differenes bewteen PDFs.
+        Compute probability of differenes bewteen PDFs using convolution.
         '''
-        # Array of difference values
-        maxD = self.x.max()-self.x.min()
-        self.D = np.arange(0, maxD+self.Xstep, self.Xstep)
-        self.pD = np.zeros(self.D.shape)
+        # Establish difference probabilities
+        self.pD = np.zeros(self.nD)
 
-        # Convolution
-        for i in range(2, self.N):
-            # Array of difference values X1 - X2
-            D = self.x[i]-self.x[:i]
+        # Array lengths
+        nX1 = len(self.X1)
+        nX2 = len(self.X2)
 
-            # Joint probability of pX1[i] and all pX2 values less than X1
-            pD = self.pX1[i]*self.pX2[:i]
+        # Loop through X1's
+        for i in range(nX1):
+            # Set/Reset difference arrays
+            D = []  # difference values
+            pD = []  # difference probabilities
 
-            # Interpolate function at points in difference array
+            # Loop through X2's
+            for j in range(nX2):
+                # Difference
+                D.append(self.X1[i] - self.X2[j])  # difference value
+                pD.append(self.pX1[i] * self.pX2[j])  # difference probability
+
+            # Add to PDF
             interpDiff = interp1d(D, pD, kind='linear', bounds_error=False, fill_value=0)
             self.pD += interpDiff(self.D)
 
@@ -116,8 +152,8 @@ class PDFdiff:
 
         # Plot raw data
         self.axRaw = self.fig.add_subplot(211)
-        self.axRaw.plot(self.x, self.pX1, color='b', linewidth=2, label='PDF1')
-        self.axRaw.plot(self.x, self.pX2, color='g', linewidth=2, label='PDF2')
+        self.axRaw.plot(self.X1, self.pX1, color='b', linewidth=2, label='PDF1')
+        self.axRaw.plot(self.X2, self.pX2, color='g', linewidth=2, label='PDF2')
         self.axRaw.legend()
 
         # Plot difference
@@ -125,10 +161,15 @@ class PDFdiff:
         self.axDiff.plot(self.D, self.pD, color = 'k', linewidth=3, label = 'difference')
 
         # Format plot
-        self.axRaw.set_title('Difference (blue - green)')
+        self.axRaw.set_title('Difference (PDF1 - PDF2)')
+        self.axRaw.set_yticks([])
         self.axRaw.set_ylabel('Input functions')
-        self.axDiff.set_ylabel('Difference')
+
+        self.axDiff.set_yticks([])
+        self.axDiff.set_ylabel('Difference\n(PDF1 - PDF2)')
+
         if title: self.fig.suptitle(title)
+        self.fig.tight_layout()
 
     def savePDF(self, outName):
         '''
@@ -137,14 +178,18 @@ class PDFdiff:
         outName += '.txt'
         with open(outName, 'w') as outFile:
             outFile.write('# Value,\tProbability\n')
-            for i in range(self.N):
+            for i in range(self.nD):
                 outFile.write('{0:f}\t{1:f}\n'.format(self.D[i], self.pD[i]))
             outFile.close()
 
 
 ### MAIN ---
 if __name__ == '__main__':
-    inps = cmdParser()  # gather inputs
+    # Gather inputs
+    inps = cmdParser()
+
+    # Confirm output directory exists
+    confirmOutputDir(inps.outName)
 
     # Load PDFs from file
     PDF1 = np.loadtxt(inps.PDF1name)
@@ -157,11 +202,9 @@ if __name__ == '__main__':
     diff = PDFdiff(X1, pX1, X2, pX2, verbose=inps.verbose)
 
     # Save to file
-    if inps.outName:
-        diff.savePDF(inps.outName)
+    if inps.outName: diff.savePDF(inps.outName)
 
     # Plot if requested
-    if inps.plot == True:
-        diff.plot()
+    if inps.plot == True: diff.plot()
 
     plt.show()

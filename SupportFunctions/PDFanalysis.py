@@ -3,7 +3,7 @@
 Find inter-quantile range (IQR) or highest posterior density (HPD)
  of a probability density function (PDF).
 
-Rob Zinke 2019, 2020
+Rob Zinke 2019-2021
 '''
 
 ### IMPORT MODULES ---

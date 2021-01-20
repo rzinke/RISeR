@@ -4,7 +4,7 @@
 Use this to create a probability density function (PDF) representing the
  likeliness of a value between two PDFs.
 
-Rob Zinke 2019, 2020
+Rob Zinke 2019-2021
 '''
 
 ### IMPORT MODULES ---
@@ -17,7 +17,7 @@ from scipy import interpolate as intrp
 
 ### PARSER ---
 Description = '''Calculate a PDF representing the values between two PDFs.
-The first PDF should be smaller than the second PDF.
+The first PDF should typically be smaller than the second PDF.
 '''
 
 Examples='''EXAMPLES

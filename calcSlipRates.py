@@ -5,7 +5,7 @@ This function will compute the incremental slip rates of a data
  set consisting of offsets and age markers described as
  probability density functions (PDFs).
 
-Rob Zinke 2019, 2020
+Rob Zinke 2019-2021
 '''
 
 ### IMPORT MODULES ---

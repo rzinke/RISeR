@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 '''
 ** MCMC Incremental Slip Rate Calculator **
-View and compute statistics for a probability density function
+View and compute statistics for a probability density function.
 
-Rob Zinke 2019, 2020
+Rob Zinke 2019-2021
 '''
 
 ### IMPORT MODULES ---
@@ -18,12 +18,18 @@ from scipy.interpolate import interp1d
 def createParser():
     import argparse
     parser = argparse.ArgumentParser(description='Quickly view and compute statistics for a probability density function (PDF)')
-    parser.add_argument(dest='pdfFile', help='File with PDF data, first column = x, second column = px.')
-    parser.add_argument('-t','--title', dest='title', default=None, type=str, help='x-axis label')
-    parser.add_argument('--x-label', dest='xLabel', default=None, type=str, help='x-axis label')
-    parser.add_argument('--y-label', dest='yLabel', default='rel. probability', type=str, help='y-axis label')
-    parser.add_argument('--show-stats', dest='showStats', action='store_true', help='Plot lines representing statistics.')
-    parser.add_argument('-o','--out-name', dest='outName', type=str, default=None, help='Save plot to outName.')
+    parser.add_argument(dest='pdfFile', 
+        help='File with PDF data, first column = x, second column = px.')
+    parser.add_argument('-t','--title', dest='title', default=None, type=str, 
+        help='x-axis label')
+    parser.add_argument('--x-label', dest='xLabel', default=None, type=str, 
+        help='x-axis label')
+    parser.add_argument('--y-label', dest='yLabel', default='rel. probability', type=str, 
+        help='y-axis label')
+    parser.add_argument('--show-stats', dest='showStats', action='store_true', 
+        help='Plot lines representing statistics.')
+    parser.add_argument('-o','--out-name', dest='outName', type=str, default=None, 
+        help='Save plot to outName.')
     return parser
 
 def cmdParser(inps=None):

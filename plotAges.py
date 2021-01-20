@@ -3,7 +3,7 @@
     ** MCMC Incremental Slip Rate Calculator **
     Plot ages on a single figure
 
-    Rob Zinke 2019, 2020
+    Rob Zinke 2019-2021
 '''
 
 ### IMPORT MODULES ---

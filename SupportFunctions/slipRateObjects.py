@@ -2,7 +2,7 @@
 ** MCMC Incremental Slip Rate Calculator **
 Objects and support functions for MCMC slip rate calculator
 
-Rob Zinke 2019, 2020
+Rob Zinke 2019-2021
 '''
 
 ### IMPORT MODULES ---

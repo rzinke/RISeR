@@ -4,7 +4,7 @@
 This function applies a form convolution to analytically find the
  quotient two PDFs.
 
-Rob Zinke 2019, 2020
+Rob Zinke 2019-2021
 '''
 
 ### IMPORT MODULES ---

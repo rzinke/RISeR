@@ -2,7 +2,7 @@
 ** MCMC Incremental Slip Rate Calculator **
 Plotting functions for use with RISeR data structures.
 
-Rob Zinke 2019, 2020
+Rob Zinke 2019-2021
 '''
 
 ### IMPORT MODULES ---

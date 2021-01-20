@@ -4,7 +4,7 @@
 Combine probability density functions (PDFs) as union (sum)
  for intersection (multiplication).
 
-Rob Zinke 2019, 2020
+Rob Zinke 2019-2021
 '''
 
 ### IMPORT MODULES ---

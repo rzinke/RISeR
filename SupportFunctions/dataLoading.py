@@ -4,7 +4,7 @@
 These functions are designed to load and parse properly
  formatted data.
 
-Rob Zinke 2019, 2020
+Rob Zinke 2019-2021
 '''
 
 ### IMPORT MODULES ---

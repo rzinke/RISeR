@@ -2,7 +2,7 @@
 ** MCMC Incremental Slip Rate Calculator **
 Markov chain Monte Carlo sampling schema for Bayesian analysis of fault slip rate data.
 
-Rob Zinke 2019, 2020
+Rob Zinke 2019-2021
 '''
 
 ### IMPORT MODULES ---

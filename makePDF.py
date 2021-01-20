@@ -3,7 +3,7 @@
 ** MCMC Incremental Slip Rate Calculator **
 Use this to create a probability density function (PDF) as a text file.
 
-Rob Zinke 2019, 2020
+Rob Zinke 2019-2021
 '''
 
 ### IMPORT MODULES ---
@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import interpolate as intrp
 from slipRateObjects import gauss
+from dataLoading import confirmOutputDir
 
 
 ### PARSER ---
@@ -60,7 +61,6 @@ def checkInputs(dstrb, values):
     '''
     Check that the proper number of inputs are given to describe the specified distribution.
     '''
-
     # Confirm distribution type
     dstrb = dstrb.lower()
     if dstrb in ['gaussian', 'gauss']:
@@ -85,7 +85,7 @@ def buildDistribution(dstrb, values, nDataPts, verbose = False):
     '''
     Build a probability density function based on the specified distribution and values.
     '''
-
+    # Continue by distribution type
     if dstrb == 'gaussian':
         # Gaussian
         mu = values[0]  # mean
@@ -172,7 +172,13 @@ def makePDF(dstrb, values, outName, nDataPts=100, verbose=False, plot=False):
 
 ### MAIN ---
 if __name__ == '__main__':
-    inps = cmdParser()  # gather inputs
+    # Gather inputs
+    inps = cmdParser()
+
+    # Confirm output directory exists
+    confirmOutputDir(inps.outName)
+
+    # Create PDF
     makePDF(dstrb=inps.dstrb, values=inps.values, outName=inps.outName,
         nDataPts=inps.nDataPts,
         verbose=inps.verbose, plot=inps.plot)  # create PDF
