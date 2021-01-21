@@ -77,7 +77,7 @@ def loadDspAgeInputs(fname, verbose=False, plotInputs=False):
     if verbose == True: print('Loading displacement-age data')
 
     # Open .yaml file
-    with open(fname,'r') as inputFile:
+    with open(fname, 'r') as inputFile:
         # Parse data within file
         DspAgeData = yaml.load(inputFile, Loader=yaml.FullLoader)
 
@@ -107,11 +107,13 @@ def loadDspAgeInputs(fname, verbose=False, plotInputs=False):
             # Load age PDF
             datum['Age'] = ageDatum(name = ageName)
             datum['Age'].readFromFile(filepath = ageFile)
-            datum['Age'].format(verbose=verbose, plot=plotInputs)
+            datum['Age'].format(verbose = verbose)
+            if plotInputs == True: datum['Age'].plot()
 
             # Load dsp PDF
             datum['Dsp'] = dspDatum(name = dspName)
             datum['Dsp'].readFromFile(filepath = dspFile)
-            datum['Dsp'].format(verbose=verbose, plot=plotInputs)
+            datum['Dsp'].format(verbose = verbose)
+            if plotInputs == True: datum['Dsp'].plot()
 
     return DspAgeData

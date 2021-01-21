@@ -57,8 +57,8 @@ def createParser():
         help='Data file in YAML format. Each entry provides a unique marker \
 name, with ageFile and dspFile specified. Youngest, least offset features at \
 the top; oldest, most-offset features at the bottom.')
-    requiredArgs.add_argument('-n','--Nsamples', dest='Nsamples', type=int, default=10000,
-        help='Number of samples picked in MC run (default 1000; more is often better).')
+    requiredArgs.add_argument('-t','--computation-scheme', dest='scheme', type=str, default='analytical',
+        help='Slip rate computation scheme (\'[analytical]\', \'MCMC\'')
     requiredArgs.add_argument('-o','--outName', dest='outName', type=str, default='Out',
         help='Head name for outputs (no extension)')
 
@@ -73,6 +73,8 @@ the top; oldest, most-offset features at the bottom.')
 
     # Fine-tuning
     detailMCargs = parser.add_argument_group('DETAILED MC ARGUMENTS')
+    detailMCargs.add_argument('-n','--Nsamples', dest='Nsamples', type=int, default=10000,
+        help='Number of samples picked in MC run (default 10,000; more is often better).')
     detailMCargs.add_argument('--seed', dest='seed', type=float, default=0,
         help='Seed value for random number generator. Default = 0')
     detailMCargs.add_argument('--max-rate', dest='maxRate', type=float, default=1E4,
@@ -108,6 +110,9 @@ def cmdParser(inps_args=None):
 
 
 ### FORMATTING FUNCTIONS ---
+## Check whether analytical computation is appropriate
+
+
 ## Output text file
 def startTXTfile(outName, Nsamples):
     '''
@@ -128,73 +133,6 @@ def startTXTfile(outName, Nsamples):
 
 
 ### STATISTICAL FUNCTIONS ---
-## Percentiles from raw picks
-def rawPercentiles(DspAgeData, RatePicks, confidence, txtName):
-    '''
-    Compute the percentiles of slip rate picks.
-    '''
-    # Parameters
-    dataNames = list(DspAgeData.keys())
-    m = RatePicks.shape[0] # nb incremental rates
-    Nsamples = RatePicks.shape[1]
-    percentiles=[50-confidence/2, 50, 50+confidence/2]
-
-    print('Slip rate statistics from {:d} samples:'.format(Nsamples))
-    print('Raw slip rates: (Interval: median values and {:.2f}% confidence)'.format(confidence))
-    if txtName:
-        with open(txtName,'a') as TXTout:
-            TXTout.write('\nIncremental slip rates based on percentiles of slip rate picks ({:.2f}% confidence):\n'.\
-                format(confidence))
-
-    for i in range(m):
-        # Formulate interval name
-        intvl = '{:s}-{:s}'.format(dataNames[i], dataNames[i+1])
-
-        # Calculate percentile
-        pct = np.percentile(RatePicks[i,:], percentiles)
-        median = pct[1]
-        high_err = pct[2]-pct[1]
-        low_err = pct[1]-pct[0]
-        rawStats = '{0:s}: {1:.2f} +{2:.2f} -{3:.2f}'.format(intvl, median, high_err, low_err)
-        print(rawStats)
-
-        # Update text file
-        with open(txtName,'a') as TXTout:
-            TXTout.write(rawStats+'\n')
-
-
-## Convert to PDF
-def convert2PDF(DspAgeData, RatePicks, method, stepsize,
-    smoothingKernel=None, kernelWidth=2,
-    verbose=False):
-    '''
-    Convert rate picks to a probability function using the specified
-     method.
-    '''
-    # Parameters
-    dataNames = list(DspAgeData.keys())
-    m = RatePicks.shape[0]
-
-    if verbose == True:
-        print('*******************************')
-        print('Converting slip rate picks to PDFs using {:s} method'.format(method))
-
-    intervals = []
-    Rates = {} # dictionary of object instances
-    for i in range(m):
-        # Formulate interval name
-        intvl = '{}-{}'.format(dataNames[i], dataNames[i+1])
-        intervals.append(intvl)
-
-        # Create slip rate object
-        Rates[intvl] = incrSlipRate(name=intvl)
-
-        # Convert picks to PDF
-        Rates[intvl].picks2PDF(RatePicks[i,:], method, stepsize, smoothingKernel, kernelWidth)
-
-    return Rates
-
-
 ## Analyze PDFs
 def analyzePDFs(Rates,method,confidence,verbose=False):
     '''
@@ -248,6 +186,7 @@ def printIncSlipRates(Rates, analysisMethod, confidence, txtName, outName=None):
 
 ### MAIN ---
 if __name__ == '__main__':
+    ## Gather inputs
     inps = cmdParser()
 
 
@@ -255,46 +194,46 @@ if __name__ == '__main__':
     # Check output directory exists
     inps.outName = confirmOutputDir(inps.outName)
 
-    # Start text file for results
-    txtName = startTXTfile(inps.outName, inps.Nsamples)
-
     # Load data from YAML file
     DspAgeData = loadDspAgeInputs(inps.dataFile, verbose=inps.verbose, plotInputs=inps.plotInputs)
 
     # Plot raw data
     plotRawData(DspAgeData, label=inps.labelMarkers, outName=inps.outName)
 
-
-    ## Monte Carlo resamping
-    AgePicks, DspPicks, RatePicks = MCMCresample(DspAgeData, inps.Nsamples,
-        condition='standard', maxRate=inps.maxRate,
-        seed_value=inps.seed,
-        verbose=inps.verbose,
-        outName=inps.outName)
-
-    # Plot MC results
-    plotMCresults(DspAgeData, AgePicks, DspPicks, maxPicks=inps.maxPicks, outName=inps.outName)
-
-    # Compute statistics based on picks and save to file
-    rawPercentiles(DspAgeData, RatePicks, inps.rateConfidence, txtName)
+    # Determine computation scheme
+    scheme = checkScheme(DspAgeData, inps.scheme)
 
 
-    ## Convert MC results to PDFs
-    Rates = convert2PDF(DspAgeData, RatePicks, method=inps.pdfMethod,
-        stepsize=inps.rateStep,
-        smoothingKernel=inps.smoothingKernel, kernelWidth=inps.kernelWidth,
-        verbose=inps.verbose)
+    # ## Monte Carlo resamping
+    # AgePicks, DspPicks, RatePicks = MCMCresample(DspAgeData, inps.Nsamples,
+    #     condition='standard', maxRate=inps.maxRate,
+    #     seed_value=inps.seed,
+    #     verbose=inps.verbose,
+    #     outName=inps.outName)
+
+    # # Plot MC results
+    # plotMCresults(DspAgeData, AgePicks, DspPicks, maxPicks=inps.maxPicks, outName=inps.outName)
+
+    # # Compute statistics based on picks and save to file
+    # rawPercentiles(DspAgeData, RatePicks, inps.rateConfidence, txtName)
 
 
-    ## Analyze PDFs
-    # Compute statistics based on PDFs
-    analyzePDFs(Rates, method=inps.pdfAnalysis, confidence=inps.rateConfidence, verbose=inps.verbose)
+    # ## Convert MC results to PDFs
+    # Rates = convert2PDF(DspAgeData, RatePicks, method=inps.pdfMethod,
+    #     stepsize=inps.rateStep,
+    #     smoothingKernel=inps.smoothingKernel, kernelWidth=inps.kernelWidth,
+    #     verbose=inps.verbose)
 
-    # Plot incremental slip rates on same plot
-    plotIncSlipRates(Rates, inps.pdfAnalysis, plotMax=inps.maxRate2plot, outName=inps.outName)
 
-    # Print intervals to file
-    printIncSlipRates(Rates, inps.pdfAnalysis, inps.rateConfidence, txtName, outName = inps.outName)
+    # ## Analyze PDFs
+    # # Compute statistics based on PDFs
+    # analyzePDFs(Rates, method=inps.pdfAnalysis, confidence=inps.rateConfidence, verbose=inps.verbose)
+
+    # # Plot incremental slip rates on same plot
+    # plotIncSlipRates(Rates, inps.pdfAnalysis, plotMax=inps.maxRate2plot, outName=inps.outName)
+
+    # # Print intervals to file
+    # printIncSlipRates(Rates, inps.pdfAnalysis, inps.rateConfidence, txtName, outName = inps.outName)
 
 
     if inps.plotOutputs == True or inps.plotInputs == True:
