@@ -104,7 +104,7 @@ def startTXTfile(outName):
     txtName = '{:s}_Slip_Rate_Report.txt'.format(outName)
 
     # Output string
-    openingRepor = 'Incremental slip rates based on analytical method\n'
+    openingReport = 'Incremental slip rates based on analytical method\n'
 
     # Establish file
     with open(txtName, 'w') as TXTout:

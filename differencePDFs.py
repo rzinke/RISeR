@@ -83,8 +83,8 @@ class PDFdiff:
         # Report if requested
         if self.verbose == True:
             print('Difference parameters:')
-            print('\tMin difference: {:f}'.format(self.Dmin))
-            print('\tMax difference: {:f}'.format(self.Dmax))
+            print('\tMin difference: {:f}'.format(Dmin))
+            print('\tMax difference: {:f}'.format(Dmax))
             print('\tStep: {:f}'.format(self.dX))
 
     def __resamplePDFs__(self, X1, pX1, X2, pX2):

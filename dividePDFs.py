@@ -50,16 +50,21 @@ class PDFquotient:
     '''
     Find analytically the quotient of two quantities described by two PDFs.
     '''
-    def __init__(self, Xnumer, pXnumer, Xdenom, pXdenom, n=1000, verbose=False):
+    def __init__(self, Xnumer, pXnumer, Xdenom, pXdenom, Qmax=None, n=1000, verbose=False):
         # Record data
         self.verbose = verbose
+
+        if self.verbose == True: print('Computing quotient')
 
         # Format data
         self.Xnumer, self.pXnumer = self.__formatPDF__(Xnumer, pXnumer)
         self.Xdenom, self.pXdenom = self.__formatPDF__(Xdenom, pXdenom)
 
+        # Compute quotient axis
+        self.__quotientAxis__(n, Qmax)
+
         # Compute quotient
-        self.__dividePDFs__(n=n)
+        self.__dividePDFs__()
 
     def __formatPDF__(self, X, pX):
         '''
@@ -80,24 +85,36 @@ class PDFquotient:
 
         return X, pX
 
-    def __dividePDFs__(self, n):
+    def __quotientAxis__(self, n, Qmax=None):
+        '''
+        Format axis along which the quotient is to be computed.
+        '''
+        # Axis limits
+        Qmin = self.Xnumer.min()/self.Xdenom.max()
+        if Qmax is None:
+            Qmax = self.Xnumer.max()/self.Xdenom.min()
+
+        # Establish quotient axis, Q
+        self.Q = np.linspace(Qmin, Qmax, n)
+
+        # Report if requested
+        if self.verbose == True:
+            print('\tquotient min {:f}'.format(Qmin))
+            print('\tquotient max {:f}'.format(Qmax))
+
+    def __dividePDFs__(self):
         '''
         Compute quotient Q, as probability function pQ.
         '''
-        # Establish quotient axis, Q
-        minQ = self.Xnumer.min()/self.Xdenom.max()
-        maxQ = self.Xnumer.max()/self.Xdenom.min()
-        self.Q = np.linspace(minQ, maxQ, n)
-
         # Establish interpolation function for numerator
         Inumer = interp1d(self.Xnumer, self.pXnumer, kind='linear', bounds_error=False, fill_value=0)
 
-        # Compute convolution\
+        # Compute convolution
         self.pQ = []
         for q in self.Q:
             # Equivalent numerator at each Q * denominator
             Pnumer = Inumer(q*self.Xdenom)
-            pQ = np.sum(self.pXdenom*Pnumer*self.Xdenom)
+            pQ = np.sum(self.pXdenom * Pnumer * self.Xdenom)
             self.pQ.append(pQ)
         self.pQ = np.array(self.pQ)
 
