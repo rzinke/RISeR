@@ -47,7 +47,7 @@ SmoothWidth=3     # how strong is smoothing
 Confidence=68.27  # percent confidence to report
 PlotMax=10        # maximum of incr. slip rate plot
 
-calcSlipRates.py Inputs.yaml -o $Outname -n $Nsamples \
+calcSlipRates_MCMC.py Inputs.yaml -o $Outname -n $Nsamples \
 --pdf-method $PDFmethod --pdf-analysis $PDFanalysis \
 --max-rate $maxRate --rate-step $SlipRateStep \
 --smoothing-kernel $SmoothType --kernel-width $SmoothWidth \

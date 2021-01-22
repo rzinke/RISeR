@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 '''
-** MCMC Incremental Slip Rate Calculator **
-These functions are designed to load and parse properly
- formatted data.
+** RISeR Incremental Slip Rate Calculator **
+These functions are designed to load and parse data.
 
 Rob Zinke 2019-2021
 '''
@@ -34,29 +33,10 @@ the necessity of ordered dictionary keys. Please upgrade to v. 3.6 or higher.')
         exit()
 
 
-## Confirm output directory
-def confirmOutputDir(outName, verbose=False):
-    '''
-    Confirm the existence of the output directory. If it does not exist, create it.
-    '''
-    # Convert outName to aboslute path
-    outName = os.path.abspath(outName)
-
-    # Get directory name
-    dirName = os.path.dirname(outName)
-
-    # Create directory if it does not exist
-    if not os.path.exists(dirName):
-        os.mkdir(dirName)
-
-    # Return outName as absolute path
-    return outName
-
-
 
 ### LOADING FUNCTIONS ---
 ## Load displacement-age inputs from YAML file for slip rate analysis
-def loadDspAgeInputs(fname, verbose=False, plotInputs=False):
+def loadDspAgeInputs(fname, verbose=False, printDetails=False, plotInputs=False):
     '''
     Load age and displacement data based on YAML inputs.
     Inputs should be specified as one input per line.
@@ -74,7 +54,9 @@ def loadDspAgeInputs(fname, verbose=False, plotInputs=False):
     checkVersion()
 
     # Report if requested
-    if verbose == True: print('Loading displacement-age data')
+    if verbose == True:
+        print('*'*32)
+        print('Loading displacement-age data')
 
     # Open .yaml file
     with open(fname, 'r') as inputFile:
@@ -99,7 +81,7 @@ def loadDspAgeInputs(fname, verbose=False, plotInputs=False):
 
             # Report if requested
             if verbose == True:
-                print('*******************************')
+                print('*'*32)
                 print('Datum name: {:s}'.format(datumName))
                 print('\tAge file: {:s}'.format(os.path.basename(ageFile)))
                 print('\tDisp file: {:s}'.format(os.path.basename(dspFile)))
@@ -107,13 +89,13 @@ def loadDspAgeInputs(fname, verbose=False, plotInputs=False):
             # Load age PDF
             datum['Age'] = ageDatum(name = ageName)
             datum['Age'].readFromFile(filepath = ageFile)
-            datum['Age'].format(verbose = verbose)
+            datum['Age'].format(verbose = printDetails)
             if plotInputs == True: datum['Age'].plot()
 
             # Load dsp PDF
             datum['Dsp'] = dspDatum(name = dspName)
             datum['Dsp'].readFromFile(filepath = dspFile)
-            datum['Dsp'].format(verbose = verbose)
+            datum['Dsp'].format(verbose = printDetails)
             if plotInputs == True: datum['Dsp'].plot()
 
     return DspAgeData

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-** MCMC Incremental Slip Rate Calculator **
+** RISeR Incremental Slip Rate Calculator **
 Convert calendar years to years before present
 
 Rob Zinke 2019-2021
@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import cumtrapz
 from PDFanalysis import smoothPDF
+from resultSaving import confirmOutputDir
 
 
 ### PARSER ---
@@ -145,7 +146,11 @@ def plotPDF(xDate, pxDate, xAge, pxAge, refDate, ageFactor):
 
 ### MAIN ---
 if __name__ == '__main__':
+    # Gather inputs
     inps = cmdParser()
+
+    # Confirm output directory exists
+    confirmOutputDir(inps.outName)
 
     # Load input data
     xDate, pxDate = loadDates(inps.datefile, verbose=inps.verbose)

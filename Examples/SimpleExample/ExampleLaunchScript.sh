@@ -6,6 +6,6 @@
 
 
 # Compare analytical results to MC samples
-analyticalSlipRates.py DspAgeList.yaml -o AnalyticalOutputs/run1 --pdf-analysis HPD -v -p -l --max-rate2plot 10
+calcSlipRates_Analytical.py DspAgeList.yaml -o AnalyticalOutputs/run1 --pdf-analysis HPD -v -p -l --max-rate2plot 10
 
-calcSlipRates.py DspAgeList.yaml -o MCoutputs/run1 -n 100000 --pdf-analysis HPD -v -p -l --max-rate2plot 10
+calcSlipRates_MCMC.py DspAgeList.yaml -o MCoutputs/run1 -n 100000 --pdf-analysis HPD -v -p -l --max-rate2plot 10

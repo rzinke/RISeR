@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-** MCMC Incremental Slip Rate Calculator **
+** RISeR Incremental Slip Rate Calculator **
 View and compute statistics for a probability density function.
 
 Rob Zinke 2019-2021
@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
+from resultSaving import confirmOutputDir
 
 
 ### PARSER ---
@@ -18,7 +19,7 @@ from scipy.interpolate import interp1d
 def createParser():
     import argparse
     parser = argparse.ArgumentParser(description='Quickly view and compute statistics for a probability density function (PDF)')
-    parser.add_argument(dest='pdfFile', 
+    parser.add_argument(dest='pdfFile', type=str,
         help='File with PDF data, first column = x, second column = px.')
     parser.add_argument('-t','--title', dest='title', default=None, type=str, 
         help='x-axis label')
@@ -75,19 +76,17 @@ if __name__ == '__main__':
     # Gather arguments
     inps = cmdParser()
 
-    ## Load file
+    # Load and parse file
     PDF = np.loadtxt(inps.pdfFile)
     x = PDF[:,0]  # values
     px = PDF[:,1]  # probabilities
 
-
-    ## Check area = 1.0
+    # Check area = 1.0
     P = np.trapz(px, x)
     if np.abs(1-P) > 1E-14:
         print('WARNING: Mass is not unity')
 
-
-    ## Compute statistics
+    # Compute statistics
     stats = pdfStats(x, px)
 
     # Report stats
@@ -101,7 +100,7 @@ if __name__ == '__main__':
     print('Mode 95%: {:.2f} +{:.2f} -{:.2f}'.format(stats.mode, stats.upper-stats.mode, stats.mode-stats.lower))
 
 
-    ## Plot figure
+    # Plot figure
     fig, ax = plt.subplots()
     ax.plot(x, px, 'k', linewidth=2, zorder=2, label='data')
     if inps.title: ax.set_title(inps.title)
@@ -119,7 +118,13 @@ if __name__ == '__main__':
 
     # Save if requested
     if inps.outName:
+        # Confirm output directory exists
+        confirmOutputDir(inps.outName)
+
+        # Format save name
         if inps.outName[-4:] in ['.png', '.PNG']: inps.outName = inps.outName[:-4]
+
+        # Save
         fig.savefig('{:s}.png'.format(inps.outName), dpi=600)
 
 

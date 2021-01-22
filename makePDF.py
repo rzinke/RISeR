@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-** MCMC Incremental Slip Rate Calculator **
+** RISeR Incremental Slip Rate Calculator **
 Use this to create a probability density function (PDF) as a text file.
 
 Rob Zinke 2019-2021
@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import interpolate as intrp
 from slipRateObjects import gauss
-from dataLoading import confirmOutputDir
+from resultSaving import confirmOutputDir
 
 
 ### PARSER ---
@@ -106,7 +106,7 @@ def checkInputs(dstrb, values):
         print('{:s} not a valid distribution. Choose from [Gaussian, triangular, trapezoidal]'.format(dstrb))
         exit()
 
-    return dstrb
+    return dstrb, values
 
 
 def buildDistribution(dstrb, values, nDataPts, verbose = False):

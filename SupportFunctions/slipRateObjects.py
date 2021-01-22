@@ -1,6 +1,6 @@
 '''
-** MCMC Incremental Slip Rate Calculator **
-Objects and support functions for MCMC slip rate calculator
+** RISeR Incremental Slip Rate Calculator **
+Objects and support functions for MCMC slip rate calculator.
 
 Rob Zinke 2019-2021
 '''
@@ -104,7 +104,7 @@ class ageDatum:
         Build probability inverse transform (PIT) function.
         '''
         # Inverse interpolation function
-        #    use cdf as "x" value for inverse interpolation
+        #    use cdf as 'x' value for inverse interpolation
         #    leave kind as linear to avoid values < 0 or > 1
         self.InvCDF = interp1d(self.cdf, self.ages, kind='linear')
 
@@ -233,7 +233,7 @@ class dspDatum:
         Build probability inverse transform (PIT) function.
         '''
         # Inverse interpolation function
-        #    use cdf as "x" value for inverse interpolation
+        #    use cdf as 'x' value for inverse interpolation
         #    leave kind as linear to avoid values < 0 or > 1
         self.InvCDF = interp1d(self.cdf, self.dsps, kind='linear')
 
@@ -284,17 +284,17 @@ class incrSlipRate:
         self.name = name
 
     # Convert picks to PDF
-    def picks2PDF(self, RatePicks, method, stepsize, smoothingKernel=None, kernelWidth=2, verbose=False, plot=False):
+    def picks2PDF(self, RatePicks, method, stepSize, smoothingKernel=None, kernelWidth=2, verbose=False, plot=False):
         '''
         Convert slip rate picks to PDF using arrayHist or arrayKDE methods.
         '''
         # Use histogram method
         if method.lower() in ['hist', 'histogram']:
-            self.rates, self.probs = arrayHist(RatePicks, stepsize,
+            self.rates, self.probs = arrayHist(RatePicks, stepSize,
                 smoothingKernel, kernelWidth, verbose, plot)
         # Use kernel density method
         elif method.lower() in ['kde', 'kernel']:
-            self.rates, self.probs = arrayKDE(RatePicks, stepsize,
+            self.rates, self.probs = arrayKDE(RatePicks, stepSize,
                 smoothingKernel, kernelWidth, verbose,plot)
         else:
             print('Choose PDF conversion method: \'histogram\'/\'kde\'')

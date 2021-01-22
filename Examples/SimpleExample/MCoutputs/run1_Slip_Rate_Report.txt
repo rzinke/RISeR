@@ -1,10 +1,11 @@
-Incremental slip rates based on 100000 samples
+Incremental slip rate based on MCMC sampling (2021 01 22, 11:36:23)
 
-Incremental slip rates based on percentiles of slip rate picks:
+
+Incremental slip rates based on percentiles of 100000 slip rate picks (68.27% confidence):
 T3/T4 riser-T2/T3 riser: 1.93 +0.72 -0.56
 T2/T3 riser-T1/T2 riser: 1.05 +0.31 -0.25
 
-Incremental slip rates based on PDF analysis
+Incremental slip rates based on PDF analysis (HPD, 68.27% confidence)
 T3/T4 riser-T2/T3 riser: 1.78 +0.69 -0.55
 	Ranges:
 	1.23 to 2.47

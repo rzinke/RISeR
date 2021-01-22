@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-** MCMC Incremental Slip Rate Calculator **
+** RISeR Incremental Slip Rate Calculator **
 Combine probability density functions (PDFs) as union (sum)
  for intersection (multiplication).
 
@@ -13,6 +13,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from PDFanalysis import HPDpdf, smoothPDF
+from resultSaving import confirmOutputDir
+
 
 
 ### PARSER ---
@@ -209,7 +211,7 @@ class PDFcombo:
 
         # Save to figure
         figName = outName+'.png'
-        Fig.savefig(figName)
+        fig.savefig(figName)
         if self.verbose == True: print('Saved figure to {:s}'.format(figName))
 
         plt.show()
@@ -220,6 +222,9 @@ class PDFcombo:
 if __name__ == '__main__':
     # Gather arguments
     inps=cmdParser()
+
+    # Confirm output directory exists
+    confirmOutputDir(inps.outName)
 
     # Load PDFs
     PDFs = loadPDFs(pdfList=inps.pdfList, verbose=inps.verbose)
