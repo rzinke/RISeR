@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-** MCMC Incremental Slip Rate Calculator **
+** RISeR Incremental Slip Rate Calculator **
 Use this to create a probability density function (PDF) representing the
  likeliness of a value between two PDFs.
 
@@ -13,6 +13,7 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import interpolate as intrp
+from resultSaving import confirmOutputDir
 
 
 ### PARSER ---
@@ -163,7 +164,11 @@ def betweenPDF(x, px1, px2, verbose=False):
 
 ### MAIN ---
 if __name__ == '__main__':
+    # Gather inputs
     inps = cmdParser()
+
+    # Confirm output directory exists
+    confirmOutputDir(inps.outName)
 
     # Load input data
     x1, px1 = loadPDF(inps.pdf1, verbose=inps.verbose)

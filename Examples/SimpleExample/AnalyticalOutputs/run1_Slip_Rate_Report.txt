@@ -1,1 +1,0 @@
-Incremental slip rates based on analytical method

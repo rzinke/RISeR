@@ -1,5 +1,5 @@
 '''
-** MCMC Incremental Slip Rate Calculator **
+** RISeR Incremental Slip Rate Calculator **
 Plotting functions for use with RISeR data structures.
 
 Rob Zinke 2019-2021
@@ -27,6 +27,7 @@ def findPlotLimits(DspAgeData):
     for datumName in DspAgeData.keys():
         Age = DspAgeData[datumName]['Age']
         Dsp = DspAgeData[datumName]['Dsp']
+
         # Update max age/displacement
         if Age.ages.max() > maxAge: maxAge = Age.ages.max()
         if Dsp.dsps.max() > maxDsp: maxDsp = Dsp.dsps.max()
@@ -154,7 +155,7 @@ def plotJointProbs(DspAgeData, cmap='Greys'):
 
 
 ## Plot raw data (whisker plot)
-def plotRawData(DspAgeData, label=False, outName=None):
+def plotRawData(DspAgeData, figNb, label=False, outName=None):
     '''
     Plot raw data as whisker plot. Whiskers represent 95 % intervals.
     '''
@@ -170,14 +171,16 @@ def plotRawData(DspAgeData, label=False, outName=None):
     fig.tight_layout()
 
     # Save figure
-    if outName: fig.savefig('{:s}_Fig1_RawData.pdf'.format(outName), format='pdf')
+    if outName:
+        fig.savefig('{:s}_Fig{:d}_RawData.pdf'.format(outName, figNb), format='pdf')
+        figNb += 1  # update figure number
 
     # Return values
-    return fig, ax
+    return fig, ax, figNb
 
 
 ## Plot MC results
-def plotMCresults(DspAgeData, AgePicks, DspPicks, maxPicks=500, outName=None):
+def plotMCresults(DspAgeData, AgePicks, DspPicks, figNb, maxPicks=500, outName=None):
     '''
     Plot valid MC picks in displacement-time space. Draw rectangles representing the 95 %
      confidence bounds using the plotRectangles function.
@@ -207,14 +210,16 @@ def plotMCresults(DspAgeData, AgePicks, DspPicks, maxPicks=500, outName=None):
     fig.tight_layout()
 
     # Save figure
-    if outName: fig.savefig('{:s}_Fig2_MCpicks.pdf'.format(outName), format='pdf')
+    if outName: 
+        fig.savefig('{:s}_Fig{:d}_MCpicks.pdf'.format(outName, figNb), format='pdf')
+        figNb += 1  # update figure number
 
     # Return values
-    return fig, ax
+    return fig, ax, figNb
 
 
 ## Plot incremental slip rate results
-def plotIncSlipRates(Rates, analysisMethod, plotMax=None, outName=None):
+def plotIncSlipRates(Rates, analysisMethod, figNb, plotMax=None, outName=None):
     '''
     Plot PDFs of incremental slip rates.
      Rates is a dictionary with slip rate objects, where each entry
@@ -232,9 +237,14 @@ def plotIncSlipRates(Rates, analysisMethod, plotMax=None, outName=None):
     for intvl in intervalNames:
         Rate = Rates[intvl]
 
+        rates = Rate.rates
+        rates = np.pad(rates, (1, 1), 'edge')
+        probs = Rate.probs
+        probs = np.pad(probs, (1, 1), 'constant')
+
         # Plot full PDF
         scaleVal=Rate.probs.max()
-        ax.fill(Rate.rates, 0.9*Rate.probs/scaleVal+k, color=(0.4,0.4,0.4), zorder=2)
+        ax.fill(rates, 0.9*probs/scaleVal+k, color=(0.4,0.4,0.4), zorder=2)
 
         # Plot confidence bounds
         if analysisMethod == 'IQR':
@@ -260,6 +270,6 @@ def plotIncSlipRates(Rates, analysisMethod, plotMax=None, outName=None):
 
     # Save figure
     if outName:
-        fig.savefig('{:s}_Fig3_Incremental_slip_rates.pdf'.format(outName), format='pdf')
+        fig.savefig('{:s}_Fig{:d}_Incremental_slip_rates.pdf'.format(outName, figNb), format='pdf')
 
     return fig, ax

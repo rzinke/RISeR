@@ -1,5 +1,5 @@
 '''
-** MCMC Incremental Slip Rate Calculator **
+** RISeR Incremental Slip Rate Calculator **
 Find inter-quantile range (IQR) or highest posterior density (HPD)
  of a probability density function (PDF).
 

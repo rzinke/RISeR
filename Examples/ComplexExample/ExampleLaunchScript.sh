@@ -16,7 +16,8 @@
 #  the random picks, which I smoothed using a smoothing kernel with a width of
 #  5 smaples (i.e., 2-sigma width of ~0.5 mm/yr).
 
-calcSlipRates.py Dsp-AgeList.yaml -o outputs/Practice -n 10 \
+calcSlipRates_MCMC.py Dsp-AgeList.yaml -o outputs/Practice \
+    -n 100000 -b 1000000 \
     --max-rate 50 --pdf-method hist --rate-step 0.1 --smoothing-kernel gauss \
     --kernel-width 5 --pdf-analysis HPD \
     -v -p -l --plot-inputs

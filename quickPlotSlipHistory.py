@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-    ** MCMC Incremental Slip Rate Calculator **
+    ** RISeR Incremental Slip Rate Calculator **
     Quickly plot displacement and age data before calculating
      slip rates by MC sampling.
     This script relies definitions plottingFunctions.py
@@ -10,7 +10,8 @@
 
 ### IMPORT MODULES ---
 import argparse
-from dataLoading import confirmOutputDir, loadDspAgeInputs
+from dataLoading import loadDspAgeInputs
+from resultSaving import confirmOutputDir
 from plottingFunctions import *
 
 
@@ -69,6 +70,7 @@ def cmdParser(inpt_args=None):
 
 ### MAIN ---
 if __name__ == '__main__':
+    # Gather arguments
     inps = cmdParser()
 
     # Check output directory exists

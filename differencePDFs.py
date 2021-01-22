@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-** MCMC Incremental Slip Rate Calculator **
+** RISeR Incremental Slip Rate Calculator **
 This function applies a form of convolution to analytically find the
  difference between two PDFs.
 
@@ -13,7 +13,7 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
-from dataLoading import confirmOutputDir
+from resultSaving import confirmOutputDir
 
 
 ### PARSER ---
@@ -47,10 +47,10 @@ def cmdParser(inpt_args=None):
 
 ### PDF DIFFERENCE CLASS ---
 class PDFdiff:
-    '''
-    Class for differencing two PDFs.
-    '''
     def __init__(self, X1, pX1, X2, pX2, verbose=False):
+        '''
+        Find the "delta" difference of two PDFs using convolution.
+        '''
         # Record data
         self.verbose = verbose
 
@@ -94,9 +94,6 @@ class PDFdiff:
         # Resample PDFs
         self.X1, self.pX1 = self.__resamplePDF__(X1, pX1, self.dX)
         self.X2, self.pX2 = self.__resamplePDF__(X2, pX2, self.dX)
-
-        # Report if requested
-        if self.verbose == True: print('Resampled PDFs')
 
     def __resamplePDF__(self, X, pX, dx):
         '''

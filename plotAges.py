@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-    ** MCMC Incremental Slip Rate Calculator **
+    ** RISeR Incremental Slip Rate Calculator **
     Plot ages on a single figure
 
     Rob Zinke 2019-2021
@@ -14,6 +14,7 @@ except:
     print('Please install pyyaml'); exit()
 import numpy as np
 import matplotlib.pyplot as plt
+from resultSaving import confirmOutputDir
 
 
 ### PARSER ---
@@ -291,9 +292,11 @@ class agePlot:
 
 ### MAIN ---
 if __name__ == '__main__':
-    ## Arguments and setup
-    # Parser
+    # Gather arguments
     inps = cmdParser()
+
+    # Confirm output directory exists
+    confirmOutputDir(inps.outName)
 
     # Plot ages
     ages = agePlot(inps.ageList)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-** MCMC Incremental Slip Rate Calculator **
+** RISeR Incremental Slip Rate Calculator **
 Use this to create a probability density function (PDF) as a text file.
 
 Rob Zinke 2019-2021
@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import interpolate as intrp
 from slipRateObjects import gauss
-from dataLoading import confirmOutputDir
+from resultSaving import confirmOutputDir
 
 
 ### PARSER ---
@@ -22,14 +22,17 @@ parametric distribution. Ages are in (kilo)years B.P.'''
 
 Examples='''EXAMPLES
 
+# Create a uniform (a.k.a. "boxcar") distribution between 3.0 and 5.5
+makePDF.py -d boxcar -v 3.0 5.0 -o PDFx1
+
 # Create a Gaussian distribution with mean 5.0 and standard deviation 0.3
-makePDF.py -d gauss -v 5.0 0.3 -o PDFx1
+makePDF.py -d gauss -v 5.0 0.3 -o PDFx2
 
 # Create a triangular distribution with minimum 3.8, preferred 5.0, maximum 5.6, composed of 1000 data points
-makePDF.py -d tri -v 3.8 5.0 5.6 -o PDFx2 -n 1000
+makePDF.py -d tri -v 3.8 5.0 5.6 -o PDFx3 -n 1000
 
-# Create a pseudo-boxcar distribution bewteen 5 and 6, and plot the results
-makePDF.py -d trap -v 4.99 5.0 6.0 6.01 -o PDFx3 -p
+# Create a trapezoidal distribution with a boxcar shape bewteen 5 and 6, and plot the results
+makePDF.py -d trap -v 4.0 5.0 6.0 7.5 -o PDFx4 -p
 
 '''
 
@@ -59,21 +62,46 @@ def cmdParser(inpt_args=None):
 ### ANCILLARY FUNCTIONS ---
 def checkInputs(dstrb, values):
     '''
-    Check that the proper number of inputs are given to describe the specified distribution.
+    Check that the specified distribution is valid, and that the proper number
+     of inputs are given to describe that distribution.
     '''
-    # Confirm distribution type
+    # Format distribution
     dstrb = dstrb.lower()
+
+    # Treatment based on distribution
     if dstrb in ['gaussian', 'gauss']:
         dstrb = 'gaussian'
+
+        # Assert correct number of values
         assert len(values) == 2, 'Gaussian distribution requires the mean and standard deviation, e.g., 5.0 0.3.'
+
+    elif dstrb in ['uniform', 'boxcar']:
+        dstrb = 'uniform'
+        values.sort()  # sort smallest to largest
+
+        # Assert correct number of values
+        assert len(values) == 2, 'Uniform distribution requires the minimum and maximum values, e.g., 3.0 5.0'
+
+        # Assert nonzero distance between values
+        assert (values[1]-values[0]) > 0, 'Must provide nonzero distance between specified values. (Use an arbitrarily small difference to approximate zero-width).'
+
     elif dstrb in ['tri', 'triangle', 'triangular']:
         dstrb = 'triangular'
         values.sort()  # sort smallest to largest
+
+        # Assert correct number of values
         assert len(values) == 3, 'Triangular distribution requires the minimum, preferred, and maximum values, e.g., 4.4 5.0 5.6'
+
+        # Assert nonzero distance between values
+        assert np.sum(np.diff(values)) > 0, 'Must provide nonzero distance between at least two of the specified values. (Use an arbitrarily small difference to approximate zero-distance).'
+
     elif dstrb in ['trap', 'trapezoid', 'trapezoidal']:
         dstrb = 'trapezoidal'
         values.sort()  # sort smallest to largest
+
+        # Assert correct number of values
         assert len(values) == 4, 'Trapezoidal distribution requires the minimum, boxcar bounds, and maximum values, e.g., 4.4 4.6 5.4 5.6'
+
     else:
         print('{:s} not a valid distribution. Choose from [Gaussian, triangular, trapezoidal]'.format(dstrb))
         exit()
@@ -92,11 +120,18 @@ def buildDistribution(dstrb, values, nDataPts, verbose = False):
         sd = values[1]  # std deviation
         x = np.linspace(mu-4*sd, mu+4*sd, nDataPts)
         px = gauss(x, mu, sd)
+
+    elif dstrb == 'uniform':
+        # Uniform
+        x = np.linspace(values[0], values[1], nDataPts)
+        px = np.ones(nDataPts)
+
     elif dstrb == 'triangular':
         # Triangular
         x = np.linspace(values[0], values[2], nDataPts)
         Ix = intrp.interp1d(values, [0,1,0], kind='linear')
         px = Ix(x)  # interpolate
+
     elif dstrb == 'trapezoidal':
         # Trapezoidal
         x = np.linspace(values[0], values[3], nDataPts)

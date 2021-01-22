@@ -1,6 +1,6 @@
 '''
-** MCMC Incremental Slip Rate Calculator **
-Objects and support functions for MCMC slip rate calculator
+** RISeR Incremental Slip Rate Calculator **
+Objects and support functions for MCMC slip rate calculator.
 
 Rob Zinke 2019-2021
 '''
@@ -18,121 +18,260 @@ from PDFanalysis import IQRpdf, HPDpdf
 ### AGE, DISPLACEMENT, SLIP RATE CLASSES ---
 ## Age datum class
 class ageDatum:
-    '''
-    PDF representing an age measurement. Units are thousands of years.
-    '''
     def __init__(self, name):
+        '''
+        PDF representing an age measurement.
+        '''
         # Basic parameters
         self.name = name
 
-    # Read in data from csv or similar text file
     def readFromFile(self, filepath):
+        '''
+        Read data from 2-column file (txt, csv, or similar).
+        First col = age; Second col = probability.
+        '''
         # Format raw data
         data = np.loadtxt(filepath)
         self.ages = data[:,0]
         self.probs = data[:,1]
 
     # Format for use in slip rate analysis
-    def format(self, verbose=False, plot=False):
-        if verbose == True:
-            print('Formatting {:s} for slip rate analysis'.format(self.name))
+    def format(self, verbose=False):
+        '''
+        Format for use in slip rate analysis:
+            Sum probabilities to CDF
+            Sort for unique CDF values
+            Ensure unit mass
+            Build inverse interpolation function
+            Compute basic statistics
+        '''
+        if verbose == True: print('Formatted {:s} for slip rate analysis'.format(self.name))
 
-        # Sum to CDF
-        P=np.trapz(self.probs, self.ages) # area under curve
-        self.probs /= P # normalize area to 1.0
-        cdf_all=cumtrapz(self.probs, self.ages, initial=0)
+        # Build initial CDF
+        if verbose == True: print('\t...building initial CDF')
+        self.__buildCDF__()
 
-        # Use only unique values
-        uniqueVals, uniqueNdx = np.unique(cdf_all, return_index=True)
-        self.ages = self.ages[uniqueNdx]  # unique ages
-        self.probs = self.probs[uniqueNdx]  # unique age probs
-        self.probs = self.probs/np.trapz(self.probs, self.ages)  # re-norm area
-        self.cdf = cumtrapz(self.probs, self.ages, initial=0)  # re-calc CDF
-        if verbose == True:
-            print('\t...limiting to unique values')
-            print('\t...final CDF value: {}'.format(self.cdf[-1]))
+        # Limit to unique values
+        if verbose == True: print('\t...limiting to unique values')
+        self.__uniqueCDF__()
 
-        # Inverse interpolation function
-        #    use cdf as "x" value for inverse interpolation
-        #    leave kind as linear to avoid values < 0 or > 1
-        self.InvCDF = interp1d(self.cdf, self.ages, kind='linear')
-        if verbose == True:
-            print('\t...built inverse interpolation function')
+        # Re-normalize mass
+        self.__normalizeMass__()
 
-        # Basic statistics
-        self.lowerLimit, self.median, self.upperLimit = self.InvCDF([0.025, 0.5, 0.975])
+        # Recompute final CDF
+        self.__buildCDF__()
+        if verbose == True: print('\t...final CDF value: {:f}'.format(self.cdf[-1]))
+
+        # Build inverse interpolation function
+        if verbose == True: print('\t...builing inverse interpolation function')
+        self.__buildPIT__()
+
+        # Compute basic statistics
+        self.__computeStats__()
         if verbose == True:
             print('\t95.45 % limits: {0:.5f}; {1:.5f}'.format(self.lowerLimit, self.upperLimit))
 
-        # Plot if requested
-        if plot == True:
-            fig, ax = plt.subplots()
-            ax.plot(self.ages, 0.8*self.probs/self.probs.max(), color=(0.3,0.3,0.6), label='PDF')
-            ax.plot(self.ages, self.cdf,color='k', linewidth=2, label='CDF')
-            ax.plot([self.lowerLimit, self.upperLimit], [0,0], 'rx', label='95% bounds')
-            ax.set_ylim([-0.1,1.1])
-            ax.set_xlabel('age'); ax.set_ylabel('prob')
-            ax.set_title('INPUT: {:s}'.format(self.name))
-            ax.legend()
+    def __normalizeMass__(self):
+        '''
+        Normalize a PDF to unit mass.
+        '''
+        # Compute area
+        A = np.trapz(self.probs, self.ages)
+
+        # Normalize probability
+        self.probs = self.probs/A
+
+    def __buildCDF__(self, verbose=False):
+        '''
+        Sum values to cumulative distribution function (CDF).
+        '''
+        # Sum to CDF
+        self.cdf = cumtrapz(self.probs, self.ages, initial=0)
+
+    def __uniqueCDF__(self):
+        '''
+        Sort for only unique values of the CDF such that it is monotonic and not flat.
+        '''
+        # Fine unique values
+        uniqueVals, uniqueNdx = np.unique(self.cdf, return_index=True)
+
+        # Keep only unique values
+        self.ages = self.ages[uniqueNdx]  # unique ages
+        self.probs = self.probs[uniqueNdx]  # unique age probs
+
+    def __buildPIT__(self):
+        '''
+        Build probability inverse transform (PIT) function.
+        '''
+        # Inverse interpolation function
+        #    use cdf as 'x' value for inverse interpolation
+        #    leave kind as linear to avoid values < 0 or > 1
+        self.InvCDF = interp1d(self.cdf, self.ages, kind='linear')
+
+    def __computeStats__(self):
+        '''
+        Compute basic statistics.
+        '''
+        # Basic statistics
+        self.lowerLimit, self.median, self.upperLimit = self.InvCDF([0.025, 0.5, 0.975])
+
+
+    def plot(self):
+        '''
+        Plot for visual inspection.
+        '''
+        # Establish axis
+        fig, ax = plt.subplots()
+
+        # Plot PDF
+        ages = np.pad(self.ages, (1, 1), 'edge')
+        probs = np.pad(self.probs, (1, 1), 'constant')
+        ax.fill(ages, probs/probs.max(), color=(0.6, 0.6, 0.6), label='PDF')
+
+        # Plot CDF
+        ax.plot(self.ages, self.cdf, color=(0.0, 0.3, 0.7), linewidth=2, label='CDF')
+
+        # Plot 95% limits
+        ax.axvline(self.lowerLimit, color='r', linestyle='--')
+        ax.axvline(self.upperLimit, color='r', linestyle='--')
+        ax.plot(0, 0, color='r', linestyle='--', label='95%')
+
+        # Format plot
+        ax.set_xlim([self.ages.min(), self.ages.max()])
+        ax.set_ylim([-0.1, 1.1])
+        ax.set_xlabel('age')
+        ax.set_ylabel('cum. prob')
+        ax.set_title('INPUT: {:s}'.format(self.name))
+        ax.legend()
 
 
 ## Displacement datum class
 class dspDatum:
-    '''
-    PDF representing a displacement measurement. Units are meters.
-    '''
     def __init__(self, name):
+        '''
+        PDF representing an displacement measurement.
+        '''
         # Basic parameters
         self.name = name
 
-    # Read in data from csv or similar text file
     def readFromFile(self, filepath):
+        '''
+        Read data from 2-column file (txt, csv, or similar).
+        First col = displacement; Second col = probability.
+        '''
         # Format raw data
         data = np.loadtxt(filepath)
         self.dsps = data[:,0]
         self.probs = data[:,1]
 
     # Format for use in slip rate analysis
-    def format(self, verbose=False, plot=False):
-        if verbose == True:
-            print('Formatting {:s} for slip rate analysis'.format(self.name))
+    def format(self, verbose=False):
+        '''
+        Format for use in slip rate analysis:
+            Sum probabilities to CDF
+            Sort for unique CDF values
+            Ensure unit mass
+            Build inverse interpolation function
+            Compute basic statistics
+        '''
+        if verbose == True: print('Formatted {:s} for slip rate analysis'.format(self.name))
 
-        # Sum to CDF
-        P = np.trapz(self.probs, self.dsps)  # area under curve
-        self.probs /= P  # normalize area to 1.0
-        cdf_all = cumtrapz(self.probs, self.dsps, initial=0)
+        # Build initial CDF
+        if verbose == True: print('\t...building initial CDF')
+        self.__buildCDF__()
 
-        # Use only unique values
-        uniqueVals, uniqueNdx = np.unique(cdf_all, return_index=True)
-        self.dsps = self.dsps[uniqueNdx]  # unique displacements
-        self.probs = self.probs[uniqueNdx]  # unique displacement probs
-        self.probs = self.probs/np.trapz(self.probs, self.dsps)  # re-norm area
-        self.cdf = cumtrapz(self.probs, self.dsps, initial=0)  # re-calc CDF
-        if verbose == True:
-            print('\t...limiting to unique values')
-            print('\t...final CDF value: {}'.format(self.cdf[-1]))
+        # Limit to unique values
+        if verbose == True: print('\t...limiting to unique values')
+        self.__uniqueCDF__()
 
-        # Inverse interpolation function
-        #    use cdf as "x" value for inverse interpolation
-        #    leave kind as linear to avoid values < 0 or > 1
-        self.InvCDF = interp1d(self.cdf, self.dsps, kind='linear')
-        if verbose == True: print('\t...built inverse interpolation function')
+        # Re-normalize mass
+        self.__normalizeMass__()
 
-        # Basic stats
-        self.lowerLimit, self.median, self.upperLimit = self.InvCDF([0.025, 0.5, 0.975])
+        # Recompute final CDF
+        self.__buildCDF__()
+        if verbose == True: print('\t...final CDF value: {:f}'.format(self.cdf[-1]))
+
+        # Build inverse interpolation function
+        if verbose == True: print('\t...builing inverse interpolation function')
+        self.__buildPIT__()
+
+        # Compute basic statistics
+        self.__computeStats__()
         if verbose == True:
             print('\t95.45 % limits: {0:.5f}; {1:.5f}'.format(self.lowerLimit, self.upperLimit))
 
-        # Plot if requested
-        if plot == True:
-            fig, ax = plt.subplots()
-            ax.plot(self.dsps, 0.8*self.probs/self.probs.max(), color=(0.3,0.3,0.6), label='PDF')
-            ax.plot(self.dsps, self.cdf, color='k', linewidth=2, label='CDF')
-            ax.plot([self.lowerLimit, self.upperLimit], [0,0], 'rx', label='95% bounds')
-            ax.set_ylim([-0.1, 1.1])
-            ax.set_xlabel('displacement'); ax.set_ylabel('prob')
-            ax.set_title('INPUT: {:s}'.format(self.name))
-            ax.legend()
+    def __normalizeMass__(self):
+        '''
+        Normalize a PDF to unit mass.
+        '''
+        # Compute area
+        A = np.trapz(self.probs, self.dsps)
+
+        # Normalize probability
+        self.probs = self.probs/A
+
+    def __buildCDF__(self, verbose=False):
+        '''
+        Sum values to cumulative distribution function (CDF).
+        '''
+        # Sum to CDF
+        self.cdf = cumtrapz(self.probs, self.dsps, initial=0)
+
+    def __uniqueCDF__(self):
+        '''
+        Sort for only unique values of the CDF such that it is monotonic and not flat.
+        '''
+        # Fine unique values
+        uniqueVals, uniqueNdx = np.unique(self.cdf, return_index=True)
+
+        # Keep only unique values
+        self.dsps = self.dsps[uniqueNdx]  # unique displacements
+        self.probs = self.probs[uniqueNdx]  # unique displacement probs
+
+    def __buildPIT__(self):
+        '''
+        Build probability inverse transform (PIT) function.
+        '''
+        # Inverse interpolation function
+        #    use cdf as 'x' value for inverse interpolation
+        #    leave kind as linear to avoid values < 0 or > 1
+        self.InvCDF = interp1d(self.cdf, self.dsps, kind='linear')
+
+    def __computeStats__(self):
+        '''
+        Compute basic statistics.
+        '''
+        # Basic statistics
+        self.lowerLimit, self.median, self.upperLimit = self.InvCDF([0.025, 0.5, 0.975])
+
+
+    def plot(self):
+        '''
+        Plot for visual inspection.
+        '''
+        # Establish axis
+        fig, ax = plt.subplots()
+
+        # Plot PDF
+        dsps = np.pad(self.dsps, (1, 1), 'edge')
+        probs = np.pad(self.probs, (1, 1), 'constant')
+        ax.fill(dsps, probs/probs.max(), color=(0.6, 0.6, 0.6), label='PDF')
+
+        # Plot CDF
+        ax.plot(self.dsps, self.cdf, color=(0.0, 0.3, 0.7), linewidth=2, label='CDF')
+
+        # Plot 95% limits
+        ax.axvline(self.lowerLimit, color='r', linestyle='--')
+        ax.axvline(self.upperLimit, color='r', linestyle='--')
+        ax.plot(0, 0, color='r', linestyle='--', label='95%')
+
+        # Format plot
+        ax.set_xlim([self.dsps.min(), self.dsps.max()])
+        ax.set_ylim([-0.1, 1.1])
+        ax.set_xlabel('displacement')
+        ax.set_ylabel('cum. prob')
+        ax.set_title('INPUT: {:s}'.format(self.name))
+        ax.legend()
 
 
 ## Slip rate object
@@ -145,17 +284,17 @@ class incrSlipRate:
         self.name = name
 
     # Convert picks to PDF
-    def picks2PDF(self, RatePicks, method, stepsize, smoothingKernel=None, kernelWidth=2, verbose=False, plot=False):
+    def picks2PDF(self, RatePicks, method, stepSize, smoothingKernel=None, kernelWidth=2, verbose=False, plot=False):
         '''
         Convert slip rate picks to PDF using arrayHist or arrayKDE methods.
         '''
         # Use histogram method
         if method.lower() in ['hist', 'histogram']:
-            self.rates, self.probs = arrayHist(RatePicks, stepsize,
+            self.rates, self.probs = arrayHist(RatePicks, stepSize,
                 smoothingKernel, kernelWidth, verbose, plot)
         # Use kernel density method
         elif method.lower() in ['kde', 'kernel']:
-            self.rates, self.probs = arrayKDE(RatePicks, stepsize,
+            self.rates, self.probs = arrayKDE(RatePicks, stepSize,
                 smoothingKernel, kernelWidth, verbose,plot)
         else:
             print('Choose PDF conversion method: \'histogram\'/\'kde\'')
