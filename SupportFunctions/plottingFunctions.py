@@ -155,7 +155,7 @@ def plotJointProbs(DspAgeData, cmap='Greys'):
 
 
 ## Plot raw data (whisker plot)
-def plotRawData(DspAgeData, figNb, label=False, outName=None):
+def plotRawData(DspAgeData, figNb, label=False, ageUnits=None, dspUnits=None, outName=None):
     '''
     Plot raw data as whisker plot. Whiskers represent 95 % intervals.
     '''
@@ -164,9 +164,17 @@ def plotRawData(DspAgeData, figNb, label=False, outName=None):
 
     # Format figure
     maxAge,maxDsp = findPlotLimits(DspAgeData)
-    ax.set_xlim([0, 1.1*maxAge])  # x-limits
-    ax.set_ylim([0, 1.1*maxDsp])  # y-limits
-    ax.set_xlabel('age'); ax.set_ylabel('displacement')
+    ax.set_xlim([0, 1.1*maxAge])
+    ax.set_ylim([0, 1.1*maxDsp])
+
+    xLabel = 'age'
+    if ageUnits is not None: xLabel += ' ({:s})'.format(ageUnits)
+    ax.set_xlabel(xLabel)
+
+    yLabel = 'displacement'
+    if dspUnits is not None: yLabel += ' ({:s})'.format(dspUnits)
+    ax.set_ylabel(yLabel)
+
     ax.set_title('Raw data (95 % limits)')
     fig.tight_layout()
 
@@ -180,7 +188,7 @@ def plotRawData(DspAgeData, figNb, label=False, outName=None):
 
 
 ## Plot MC results
-def plotMCresults(DspAgeData, AgePicks, DspPicks, figNb, maxPicks=500, outName=None):
+def plotMCresults(DspAgeData, AgePicks, DspPicks, figNb, maxPicks=500, ageUnits=None, dspUnits=None, outName=None):
     '''
     Plot valid MC picks in displacement-time space. Draw rectangles representing the 95 %
      confidence bounds using the plotRectangles function.
@@ -204,8 +212,17 @@ def plotMCresults(DspAgeData, AgePicks, DspPicks, figNb, maxPicks=500, outName=N
 
     # Format figure
     maxAge,maxDsp = findPlotLimits(DspAgeData)  # plot limits
-    ax.set_xlim([0,1.1*maxAge]); ax.set_ylim([0,1.1*maxDsp])
-    ax.set_xlabel('age'); ax.set_ylabel('displacement')
+    ax.set_xlim([0, 1.1*maxAge])
+    ax.set_ylim([0, 1.1*maxDsp])
+
+    xLabel = 'age'
+    if ageUnits is not None: xLabel += ' ({:s})'.format(ageUnits)
+    ax.set_xlabel(xLabel)
+
+    yLabel = 'displacement'
+    if dspUnits is not None: yLabel += ' ({:s})'.format(dspUnits)
+    ax.set_ylabel(yLabel)
+
     ax.set_title('MC Picks (N = {:d})'.format(n))
     fig.tight_layout()
 
@@ -219,7 +236,7 @@ def plotMCresults(DspAgeData, AgePicks, DspPicks, figNb, maxPicks=500, outName=N
 
 
 ## Plot incremental slip rate results
-def plotIncSlipRates(Rates, analysisMethod, figNb, plotMax=None, outName=None):
+def plotIncSlipRates(Rates, analysisMethod, figNb, plotMax=None, rateUnits=None, outName=None):
     '''
     Plot PDFs of incremental slip rates.
      Rates is a dictionary with slip rate objects, where each entry
@@ -264,7 +281,12 @@ def plotIncSlipRates(Rates, analysisMethod, figNb, plotMax=None, outName=None):
     ax.set_yticklabels(ylabels, rotation='vertical')
     ax.set_ylim([0, m])
     if plotMax: ax.set_xlim([0, plotMax])
-    ax.set_xlabel('slip rate')
+
+    xLabel = 'slip rate'
+    if rateUnits is not None:
+        xLabel += ' ({:s})'.format(rateUnits)
+    ax.set_xlabel(xLabel)
+
     ax.set_title('Incremental slip rates')
     fig.tight_layout()
 

@@ -100,6 +100,12 @@ the top; oldest, most-offset features at the bottom.')
         help='Max number of picks to plot on MC results figure. [Default = 500].')
     detailFigureArgs.add_argument('--max-rate2plot', dest='maxRate2plot', type=float, default=None,
         help='Maximum spreading rate to plot (unlike -max-rate, this will not affect calculations). [Default = None].')
+    detailFigureArgs.add_argument('--age-units', dest='ageUnits', type=str, default=None,
+        help='Label for age axis (calculations not affected). [Default = None].')
+    detailFigureArgs.add_argument('--dsp-units', dest='dspUnits', type=str, default=None,
+        help='Label for displacement axis (calculations not affected). [Default = None].')
+    detailFigureArgs.add_argument('--rate-units', dest='rateUnits', type=str, default=None,
+        help='Label for slip rate axis (calculations not affected). [Default = None].')
     detailFigureArgs.add_argument('--plot-inputs', dest='plotInputs', action='store_true',
         help='Plot inputs.')
     return parser

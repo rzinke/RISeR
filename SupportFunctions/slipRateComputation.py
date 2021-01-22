@@ -43,7 +43,8 @@ def computeIncrRates(scheme, args):
 
     # Plot raw data
     figNb = 1  # start figure counter
-    _, _, figNb = plotRawData(DspAgeData, figNb, label=args.labelMarkers, outName=args.outName)
+    _, _, figNb = plotRawData(DspAgeData, figNb, label=args.labelMarkers,
+        ageUnits=args.ageUnits, dspUnits=args.dspUnits, outName=args.outName)
 
 
     ## Compute incremental slip rates
@@ -65,10 +66,11 @@ def computeIncrRates(scheme, args):
         verbose=args.verbose, outName=args.outName)
 
     # Plot incremental slip rates on same plot
-    plotIncSlipRates(Rates, args.pdfAnalysis, figNb, plotMax=args.maxRate2plot, outName=args.outName)
+    plotIncSlipRates(Rates, args.pdfAnalysis, figNb, plotMax=args.maxRate2plot, 
+        rateUnits=args.rateUnits, outName=args.outName)
 
     # Print intervals to file
-    printIncSlipRates(txtFile, Rates, args.pdfAnalysis, args.rateConfidence)
+    printIncSlipRates(txtFile, Rates, args.pdfAnalysis, args.rateConfidence, rateUnits=args.rateUnits)
 
     if args.plotOutputs == True or args.plotInputs == True:
         plt.show()
@@ -115,7 +117,7 @@ def computeMCMCrates(DspAgeData, args, txtFile):
     # Plot MC results
     figNb = 2
     plotMCresults(DspAgeData, AgePicks, DspPicks, figNb, maxPicks=args.maxPicks2plot,
-        outName=args.outName)
+        ageUnits=args.ageUnits, dspUnits=args.dspUnits, outName=args.outName)
 
     # Convert MC results to PDFs
     Rates = picks2PDF(DspAgeData, RatePicks, 

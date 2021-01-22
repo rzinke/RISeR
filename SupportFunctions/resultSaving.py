@@ -77,13 +77,16 @@ class slipRateTxtFile:
             TXTout.write(txtstr)
 
 
-def printIncSlipRates(txtFile, Rates, analysisMethod, confidence=68.27):
+def printIncSlipRates(txtFile, Rates, analysisMethod, confidence=68.27, rateUnits=None):
     '''
     Append incremental slip rate statistics to the text file.
     '''
     intervalNames = list(Rates.keys())
     txtFile.append('\nIncremental slip rates based on PDF analysis ')
     txtFile.append('({:s}, {:.2f}% confidence)\n'.format(analysisMethod, confidence))
+
+    if rateUnits is not None:
+        txtFile.append('Slip rates reported in units of {:s}\n'.format(rateUnits))
 
     # Text string
     txtStr = '{0:s}: {1:.2f} +{2:.2f} -{3:.2f}\n'
