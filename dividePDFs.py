@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-** MCMC Incremental Slip Rate Calculator **
+** RISeR Incremental Slip Rate Calculator **
 This function applies a form convolution to analytically find the
  quotient two PDFs.
 
@@ -13,6 +13,7 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
+from resultSaving import confirmOutputDir
 
 
 ### PARSER ---
@@ -31,8 +32,10 @@ def createParser():
         help='PDF to be used as the denominator')
     parser.add_argument('-o', '--output', dest='outName', type=str, required=True,
         help='Output file path/name')
-    parser.add_argument('-n', '--number-points', dest='nPts', type=int, default=1000,
-        help='Number of data points in quotient function')
+    parser.add_argument('--step-size', dest='stepSize', type=float, default=None,
+        help='Step size of quotient axis, in units of <numerator units>/<denominator units>. [Default sets this value to result in 1000 data points].')
+    parser.add_argument('--max-quotient', dest='Qmax', type=float, default=None,
+        help='Maximum quotient value to be computed.')
     parser.add_argument('-v','--verbose', dest='verbose', action='store_true',
         help='Print outputs to command line')
     parser.add_argument('-p', '--plot', dest='plot', action='store_true',
@@ -47,21 +50,19 @@ def cmdParser(inpt_args=None):
 
 ### PDF DIFFERENCE CLASS ---
 class PDFquotient:
-    '''
-    Find analytically the quotient of two quantities described by two PDFs.
-    '''
-    def __init__(self, Xnumer, pXnumer, Xdenom, pXdenom, Qmax=None, n=1000, verbose=False):
+    def __init__(self, Xnumer, pXnumer, Xdenom, pXdenom, stepSize=None, Qmax=None, verbose=False):
+        '''
+        Analytically compute the quotient of two quantities described by two PDFs.
+        '''
         # Record data
         self.verbose = verbose
-
-        if self.verbose == True: print('Computing quotient')
 
         # Format data
         self.Xnumer, self.pXnumer = self.__formatPDF__(Xnumer, pXnumer)
         self.Xdenom, self.pXdenom = self.__formatPDF__(Xdenom, pXdenom)
 
-        # Compute quotient axis
-        self.__quotientAxis__(n, Qmax)
+        # Establish quotient axis
+        self.__estbQuotientAxis__(Xnumer, Xdenom, stepSize, Qmax)
 
         # Compute quotient
         self.__dividePDFs__()
@@ -85,7 +86,7 @@ class PDFquotient:
 
         return X, pX
 
-    def __quotientAxis__(self, n, Qmax=None):
+    def __estbQuotientAxis__(self, Xnumer, Xdenom, stepSize, Qmax):
         '''
         Format axis along which the quotient is to be computed.
         '''
@@ -93,14 +94,23 @@ class PDFquotient:
         Qmin = self.Xnumer.min()/self.Xdenom.max()
         if Qmax is None:
             Qmax = self.Xnumer.max()/self.Xdenom.min()
+        else:
+            Qmax = np.min([self.Xnumer.max()/self.Xdenom.min(), Qmax])
+
+        # Determine step size
+        if stepSize is None:
+            stepSize = (Qmax - Qmin)/1000
 
         # Establish quotient axis, Q
-        self.Q = np.linspace(Qmin, Qmax, n)
+        self.Q = np.arange(Qmin, Qmax+stepSize, stepSize)
 
         # Report if requested
         if self.verbose == True:
+            print('Quotient parameters:')
             print('\tquotient min {:f}'.format(Qmin))
             print('\tquotient max {:f}'.format(Qmax))
+            print('\tquotient step {:f}'.format(stepSize))
+            print('\tquotient len {:d}'.format(len(self.Q)))
 
     def __dividePDFs__(self):
         '''
@@ -160,7 +170,10 @@ class PDFquotient:
 
 ### MAIN ---
 if __name__ == '__main__':
-    inps = cmdParser() # gather inputs
+    inps = cmdParser()  # gather inputs
+
+    # Confirm output directory exists
+    confirmOutputDir(inps.outName)
 
     # Load PDFs from file
     numerPDF = np.loadtxt(inps.numerPDFname)
@@ -171,7 +184,8 @@ if __name__ == '__main__':
 
 
     # Difference PDFs
-    quot = PDFquotient(Xnumer, pXnumer, Xdenom, pXdenom, n=inps.nPts, verbose=inps.verbose)
+    quot = PDFquotient(Xnumer, pXnumer, Xdenom, pXdenom, inps.stepSize, Qmax=inps.Qmax,
+        verbose=inps.verbose)
 
     # Save to file
     if inps.outName:
