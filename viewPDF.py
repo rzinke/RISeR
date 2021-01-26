@@ -39,7 +39,17 @@ def cmdParser(inps=None):
 
 
 
-### ANCILLARY FUNCTIONS ---
+### STATISTICS ---
+def checkArea(x, px):
+    '''
+    Check that area has unity mass.
+    '''
+    # Calculate area
+    P = np.trapz(px, x)
+
+    # Report if area is not 1.0
+    if np.abs(1-P) > 1E-6: print('WARNING: Mass is not unity')
+
 class pdfStats:
     # Initialize
     def __init__(self, x, px):
@@ -59,15 +69,30 @@ class pdfStats:
         Icdf=interp1d(Px, x, kind='linear', bounds_error=False, fill_value=np.nan)
 
         # Find percentiles
-        confidenceInterval = 95.45
-        self.lower = Icdf((50-confidenceInterval/2)/100)
-        self.upper = Icdf((50+confidenceInterval/2)/100)
+        c68 = 68.27
+        self.lower68 = Icdf((50-c68/2)/100)
+        self.upper68 = Icdf((50+c68/2)/100)
+
+        c95 = 95.45
+        self.lower95 = Icdf((50-c95/2)/100)
+        self.upper95 = Icdf((50+c95/2)/100)
+
         self.median = Icdf(50/100)
 
 
         ## Mean
         dx = np.mean(np.diff(x))
         self.mean = np.sum(dx*x*px)
+
+
+
+### PLOTTING ---
+def plotPDF(x, px, stats, showStats=False):
+    '''
+    Plot a probability density function.
+    Optionally plot statistics.
+    '''
+    # Spawn figure
 
 
 
@@ -82,50 +107,49 @@ if __name__ == '__main__':
     px = PDF[:,1]  # probabilities
 
     # Check area = 1.0
-    P = np.trapz(px, x)
-    if np.abs(1-P) > 1E-14:
-        print('WARNING: Mass is not unity')
+    checkArea(x, px)
 
     # Compute statistics
     stats = pdfStats(x, px)
 
     # Report stats
-    print('Mass: {}'.format(P))
-    print('Min: {:.4f}'.format(stats.min))
-    print('Lower 95.45%: {:.4f}'.format(stats.lower))
-    print('Mean: {:.4f}'.format(stats.mean))
-    print('Median: {:.4f}'.format(stats.median))
-    print('Upper 95.45%: {:.4f}'.format(stats.upper))
-    print('Max: {:.4f}'.format(stats.max))
-    print('Mode 95%: {:.2f} +{:.2f} -{:.2f}'.format(stats.mode, stats.upper-stats.mode, stats.mode-stats.lower))
+    print('Min: {min:.4f}'.format(**stats))
+    # print('Mass: {}'.format(P))
+    # print('Min: {:.4f}'.format(stats.min))
+    # print('Lower 95.45%: {:.4f}'.format(stats.lower95))
+    # print('Mean: {:.4f}'.format(stats.mean))
+    # print('Median: {:.4f}'.format(stats.median))
+    # print('Upper 95.45%: {:.4f}'.format(stats.upper95))
+    # print('Max: {:.4f}'.format(stats.max))
+    # print('Mode 95%: {:.2f} +{:.2f} -{:.2f}'.format(stats.mode, stats.upper-stats.mode, stats.mode-stats.lower))
 
 
-    # Plot figure
-    fig, ax = plt.subplots()
-    ax.plot(x, px, 'k', linewidth=2, zorder=2, label='data')
-    if inps.title: ax.set_title(inps.title)
-    if inps.xLabel: ax.set_xlabel(inps.xLabel)
-    if inps.yLabel: ax.set_ylabel(inps.yLabel)
+    # # Plot figure
+    # fig, ax = plt.subplots()
+    # ax.plot(x, px, 'k', linewidth=2, zorder=2, label='data')
+    # if inps.title: ax.set_title(inps.title)
+    # if inps.xLabel: ax.set_xlabel(inps.xLabel)
+    # if inps.yLabel: ax.set_ylabel(inps.yLabel)
 
-    # Label statistics if requested
-    if inps.showStats is True:
-        ax.axvline(stats.lower, color='b', alpha=0.25, zorder=1, label='95.45%')
-        ax.axvline(stats.upper, color='b', alpha=0.25, zorder=1, label='95.45%')
-        ax.axvline(stats.median, color='b', alpha=0.5, zorder=1, label='median')
-        ax.axvline(stats.mode, color='r', alpha=0.5, zorder=1, label='mode')
-        ax.axvline(stats.mean, color=(148/255,0/255,211/255), alpha=0.5, zorder=1, label='mean')
-        ax.legend()
+    # # Label statistics if requested
+    # if inps.showStats is True:
+    #     ax.axvline(stats.lower, color='b', alpha=0.25, zorder=1, label='95.45%')
+    #     ax.axvline(stats.upper, color='b', alpha=0.25, zorder=1, label='95.45%')
+    #     ax.axvline(stats.median, color='b', alpha=0.5, zorder=1, label='median')
+    #     ax.axvline(stats.mode, color='r', alpha=0.5, zorder=1, label='mode')
+    #     ax.axvline(stats.mean, color=(148/255,0/255,211/255), alpha=0.5, zorder=1, label='mean')
+    #     ax.legend()
 
-    # Save if requested
-    if inps.outName:
-        # Confirm output directory exists
-        confirmOutputDir(inps.outName)
+    # # Save if requested
+    # if inps.outName:
+    #     # Confirm output directory exists
+    #     confirmOutputDir(inps.outName)
 
-        # Format save name
-        if inps.outName[-4:] in ['.png', '.PNG']: inps.outName = inps.outName[:-4]
+    #     # Format save name
+    #     if inps.outName[-4:] in ['.png', '.PNG']: inps.outName = inps.outName[:-4]
 
-        # Save
-        fig.savefig('{:s}.png'.format(inps.outName), dpi=600)
+    #     # Save
+    #     fig.savefig('{:s}.png'.format(inps.outName), dpi=600)
 
 
     plt.show()
