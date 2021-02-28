@@ -37,13 +37,14 @@ def findPlotLimits(DspAgeData):
 
 ### PLOTTING FUNCTIONS ---
 ## Whisker plot
-def plotWhiskers(DspAgeData, label=False):
+def plotWhiskers(DspAgeData, label=False, fig=None, ax=None):
     '''
     Plot data as points and whiskers representing the 95 % confidence
      intervals.
     '''
     # Establish plot
-    fig, ax = plt.subplots()
+    if fig is None or ax is None:
+        fig, ax = plt.subplots()
 
     # Plot whiskers
     for datumName in DspAgeData:
@@ -67,12 +68,13 @@ def plotWhiskers(DspAgeData, label=False):
 
 
 ## Plot rectangles
-def plotRectangles(DspAgeData, label=False):
+def plotRectangles(DspAgeData, label=False, fig=None, ax=None):
     '''
     Draw rectangular patches representing the 95 % confidence intervals.
     '''
     # Establish plot
-    fig, ax = plt.subplots()
+    if fig is None or ax is None:
+        fig, ax = plt.subplots()
 
     # Plot rectangles
     for datumName in DspAgeData:
@@ -96,12 +98,13 @@ def plotRectangles(DspAgeData, label=False):
 
 
 ## Plot joing probabilities
-def plotJointProbs(DspAgeData, cmap='Greys'):
+def plotJointProbs(DspAgeData, cmap='Greys', fig=None, ax=None):
     '''
     Plot 2D histograms computed as the outer product between two PDFs.
     '''
     # Establish plot
-    fig, ax = plt.subplots()
+    if fig is None or ax is None:
+        fig, ax = plt.subplots()
 
     # Establish coarse grid on which to resample
     pts = 100
@@ -145,7 +148,7 @@ def plotJointProbs(DspAgeData, cmap='Greys'):
         P += p  # add to area
 
     # Plot functions
-    ax.pcolormesh(X, Y, P.T, shading='gouraud', cmap=cmap)
+    ax.pcolormesh(X, Y, P.T, shading='gouraud', cmap=cmap, zorder=1)
 
     # Format axis
     ax.set_xlim([0, ageMax])

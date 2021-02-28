@@ -44,7 +44,7 @@ the top; oldest, most-offset features at the bottom.')
     parser.add_argument('-o','--out-name', dest='outName', type=str, default='Out',
         help='Head name for outputs (no extension)')
     # Recommended
-    parser.add_argument('-pt','--plot-type', dest='plotType', type=str, default='whisker',
+    parser.add_argument('-pt','--plot-type', dest='plotTypes', type=str, nargs='+', default=['whisker'],
         help='Plot marker type [\'whisker\', \'rectangle\', \'PDF\']')
     parser.add_argument('-t','--title', dest='title', type=str, default='Raw data',
         help='Plot title')
@@ -58,8 +58,10 @@ the top; oldest, most-offset features at the bottom.')
         help='Cmap for headmap plots')
     parser.add_argument('-v','--verbose', dest='verbose', action='store_true', default=False,
         help='Verbose?')
-    parser.add_argument('--plot-inputs',dest='plotInputs', action='store_true',
+    parser.add_argument('--plot-inputs', dest='plotInputs', action='store_true',
         help='Plot inputs')
+    parser.add_argument('--plot-marginals', dest='plotMarginals', action='store_true',
+        help='Plot marginal distributions along the sides of the plot.')
     return parser
 
 def cmdParser(inpt_args=None):
@@ -83,13 +85,45 @@ if __name__ == '__main__':
     maxAge, maxDsp = findPlotLimits(DspAgeData)
 
     ## Plot data
+    # Spawn figure, axes
+    if inps.plotMarginals == False:
+        # Standard, single-axis figure
+        fig, ax = plt.subplots()
+
+    else:
+        # Three part figure with marginal distributions
+        fig = plt.figure()
+        ax = fig.add_subplot(position=(0.32, 0.32, 0.60, 0.60))
+        axAge = fig.add_subplot(position=(0.32, 0.05, 0.60, 0.15))
+        axDsp = fig.add_subplot(position=(0.05, 0.32, 0.15, 0.60))
+
     # Plot data
-    if inps.plotType.lower() in ['w', 'whisker']:
-        fig, ax = plotWhiskers(DspAgeData, label=inps.labelFeatures)
-    elif inps.plotType.lower() in ['r', 'rectangle']:
-        fig, ax = plotRectangles(DspAgeData, label=inps.labelFeatures)
-    elif inps.plotType.lower() in ['p', 'pdf']:
-        fig, ax = plotJointProbs(DspAgeData, cmap=inps.cmap)
+    plotTypes = [plotType.lower() for plotType in inps.plotTypes]
+    for plotType in plotTypes:
+        if plotType in ['p', 'pdf']:
+            fig, ax = plotJointProbs(DspAgeData, cmap=inps.cmap, fig=fig, ax=ax)
+        if plotType in ['r', 'rectangle']:
+            fig, ax = plotRectangles(DspAgeData, label=inps.labelFeatures, fig=fig, ax=ax)
+        if plotType in ['w', 'whisker']:
+            fig, ax = plotWhiskers(DspAgeData, label=inps.labelFeatures, fig=fig, ax=ax)
+
+    # Plot marginals if specified
+    if inps.plotMarginals == True:
+        for datumName in DspAgeData:
+            # Gather data
+            datum = DspAgeData[datumName]
+            Age = datum['Age']
+            Dsp = datum['Dsp']
+
+            # Pad data
+            ages = np.pad(Age.ages, (1, 1), 'edge')
+            ageProbs = np.pad(Age.probs, (1, 1), 'constant')
+            dsps = np.pad(Dsp.dsps, (1, 1), 'edge')
+            dspProbs = np.pad(Dsp.probs, (1, 1), 'constant')
+
+            # Plot marginals
+            axAge.fill(ages, ageProbs, facecolor='gray', edgecolor=(0.3,0.3,0.6))
+            axDsp.fill(dspProbs, dsps, facecolor='gray', edgecolor=(0.3,0.3,0.6))
 
 
     ## Finish plot
@@ -103,12 +137,24 @@ if __name__ == '__main__':
 
     # Figure
     ax.set_title(inps.title)
-    fig.tight_layout()
+
+    # Conditional formatting
+    if inps.plotMarginals == False:
+        fig.tight_layout()  # tight layout
+
+    else:
+        # Age marginals
+        axAge.set_xlim([0, 1.1*maxAge])
+        axAge.set_yticks([])
+
+        # Displacement marginals
+        axDsp.set_ylim([0, 1.1*maxDsp])
+        axDsp.set_xticks([])
 
 
     ## Save if requested
     if inps.outName:
-        savename = '{}.pdf'.format(inps.outName)
+        savename = '{:s}.pdf'.format(inps.outName)
         fig.savefig(savename, format='pdf')
 
 
