@@ -80,7 +80,7 @@ def formatRefDate(refDate, verbose=False):
     Format the reference date as an integer.
     '''
     # Format reference date
-    if refDate.lower() in ['now', 'today', 'this year', 'present', 'present day']:
+    if str(refDate).lower() in ['now', 'today', 'this year', 'present', 'present day']:
         thisYear = date.today().strftime('%Y')
         refDate = int(thisYear)
     else:
