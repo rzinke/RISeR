@@ -25,6 +25,8 @@ def createParser():
         help='x-axis label')
     parser.add_argument('-x','--x-label', dest='xLabel', default=None, type=str, 
         help='x-axis label')
+    parser.add_argument('--fill-color', dest='fillColor', type=str, default=None,
+        help='PDF fill color.')
     parser.add_argument('--show-stats', dest='showStats', action='store_true', 
         help='Plot lines representing statistics.')
     parser.add_argument('-o','--out-name', dest='outName', type=str, default=None, 
@@ -146,7 +148,7 @@ Max:       {max:.4f}'''.format(**vars(stats)))
 
 
 ### PLOTTING ---
-def plotPDF(x, px, stats, title=None, xLabel=None, showStats=False):
+def plotPDF(x, px, stats, title=None, xLabel=None, fillColor=None, showStats=False):
     '''
     Plot a probability density function.
     Optionally plot statistics.
@@ -155,7 +157,12 @@ def plotPDF(x, px, stats, title=None, xLabel=None, showStats=False):
     fig, ax = plt.subplots()
 
     # Plot PDF
-    ax.plot(x, px, color='k', linewidth=2, zorder=2, label='data')
+    if fillColor is not None:
+        # Plot filled
+        ax.fill(x, px, color=fillColor, zorder=1, label='data')
+    else:
+        # Plot line
+        ax.plot(x, px, color='k', linewidth=2, zorder=2, label='data')
 
     # Plot statistics if requested
     if showStats == True: plotStats(ax, x, px, stats)
@@ -255,6 +262,7 @@ if __name__ == '__main__':
     # Plot figure
     fig, ax = plotPDF(x, px, stats, 
         title=inps.title, xLabel=inps.xLabel,
+        fillColor=inps.fillColor,
         showStats=inps.showStats)
 
     # Save if requested
