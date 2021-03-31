@@ -259,7 +259,7 @@ if __name__ == '__main__':
 
     # Save if requested
     if inps.outName:
-        saveFigure(inps.outName)
+        saveFigure(fig, inps.outName)
 
 
     plt.show()
