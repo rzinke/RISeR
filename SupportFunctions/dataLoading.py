@@ -26,8 +26,7 @@ def checkVersion():
     Vs = sys.version_info
     VsMajor = Vs[0]
     VsMinor = Vs[1]
-    Vs = float('{}.{}'.format(VsMajor, VsMinor))
-    if Vs < 3.6:
+    if VsMajor < 3 and VsMinor < 6:
         print('Python version must be 3.6+ to use loadInputs function due to \
 the necessity of ordered dictionary keys. Please upgrade to v. 3.6 or higher.')
         exit()
