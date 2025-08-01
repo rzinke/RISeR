@@ -9,8 +9,11 @@ Rob Zinke 2019-2021
 ### IMPORT MODULES ---
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
+try:
+    from scipy.integrate import cumulative_trapezoid as sp_cumulative_trapezoid
+except ImportError:
+    from scipy.integrate import cumtrapz as sp_cumulative_trapezoid
 
 
 ### PDF ANALYSIS CLASSES ---
@@ -35,7 +38,7 @@ class IQRpdf:
         # Integrate to CDF
         P = np.trapz(px, x) # check that area = 1.0
         px /= P  # normalize
-        Px = cumtrapz(px, x, initial=0)
+        Px = cumulative_trapezoid(px, x, initial=0)
 
         # Interpolate CDF to back-calculate values
         Icdf = interp1d(Px, x, kind='linear')
@@ -274,3 +277,11 @@ def smoothPDF(x, px, ktype, kwidth):
     px /= P
 
     return px
+
+
+def cumulative_trapezoid(*args, **kwargs):
+    """
+    Function to allow cumulative trapezoid integration without updating
+    scipy, or potentially having to upgrade python to 3.7
+    """
+    return sp_cumulative_trapezoid(*args, **kwargs)

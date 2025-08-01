@@ -11,8 +11,7 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import date
-from scipy.integrate import cumtrapz
-from PDFanalysis import smoothPDF
+from PDFanalysis import smoothPDF, cumulative_trapezoid
 from resultSaving import confirmOutputDir
 
 
@@ -143,7 +142,7 @@ def plotPDF(xDate, pxDate, xAge, pxAge, refDate, ageFactor):
     Plot date and equivalent age PDFs.
     '''
     # Calculate CDF
-    PxAge=cumtrapz(pxAge, xAge, initial=0)
+    PxAge=cumulative_trapezoid(pxAge, xAge, initial=0)
 
     # Set up figure
     fig = plt.figure()

@@ -9,10 +9,9 @@ Rob Zinke 2019-2021
 ### IMPORT MODULES ---
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import cumtrapz
 from scipy.interpolate import interp1d
 from resultSaving import confirmOutputDir
-
+from PDFanalysis import cumulative_trapezoid
 
 ### PARSER ---
 # Command line parser
@@ -82,7 +81,7 @@ class pdfStats:
         Find percentiles.
         '''
         # Compute CDF
-        Px = cumtrapz(px, x, initial=0)
+        Px = cumulative_trapezoid(px, x, initial=0)
 
         # Inverse transform
         Icdf=interp1d(Px, x, kind='linear', bounds_error=False, fill_value=np.nan)
