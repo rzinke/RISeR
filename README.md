@@ -5,10 +5,11 @@ The incremental slip rate calcuations are carried out using one of two methods:
 * Markov Chain Monte Carlo (MCMC) sampling. Inputs are sampled via the probability inverse transform method. If any of the samples drawn produces a negative slip rate, that set of samples is thrown out. Sampling continues until the desired number of samples is reached. Slip rates are reported first as percentiles of the viable picks, and then based on analysis of a pseudo-continous nonparametric function (PDF) determined from the picks. This method is ideal for data sets in which two or more observations overlap within uncertainty.
 * Analytical formulation. Incremental slip rates for a dated fault slip history are computed using an analytical forumlation. Age and displacements differences between marker pairs are assumed to be always positive, and as such some increase in the accuracy and precision of the output slip rates is achieved. For complex, highly uncertain data sets, however, this functionality does not provide the full Bayesian leverage of eliminating all geologically implausible displacement-time paths, as done by the MCMC method. This analytical method is therefore ideal for data sets in which dated markers are independent (i.e., do not overlap within uncertainty).
 
-This code builds on methods described in Gold and Cowgill, 2011 (EPSL), and is based on work developed in Zinke et al., 2017 (GRL) and Zinke et al., 2019 (GRL). These codes use Python 3.6 and above, and have been tested on versions 3.6 - 3.9.
+This code builds on methods described in Gold and Cowgill, 2011 (EPSL), and is based on work developed in Zinke et al., 2017 (GRL) and Zinke et al., 2019 (GRL); and implemented in its current form in Zinke et al., 2021 (G-cubed). These codes use Python 3.6 and above, and have been tested on versions 3.6 - 3.9.
 If you use these scripts, please cite:
-* Zinke, R., Dolan, J.F., Rhodes, E.J., Van Dissen, R., McGuire, C.P. (2017) Highly Variable Latest Pleistocene-Holocene Incremental Slip Rates on the Awatere Fault at Saxton River, South Island, New Zealand, Revealed by Lidar Mapping and Luminescence Dating, Geophyical Research Letters, 44, https://doi.org/10.1002/2017GL075048
-* Zinke, R., Dolan, J.F., Rhodes, E.J., Van Dissen, R., McGuire, C.P., Hatem, A.E., Brown, N.D., Langridge, R.M. (2019) Multimillennial Incremental Slip Rate Variability of the Clarence Fault at the Tophouse Road Site, Marlborough Fault System, New Zealand, Geophysical Research Letters, 46, https://doi.org/10.1029/2018GL080688
+* Zinke, R., Dolan, J.F., Rhodes, E.J., Van Dissen, R., Hatem, A.E., McGuire, C.P., Brown, N.D., Grenader, J.R. (2021) Latest Pleistocene-Holocene Incremental Slip Rates of the Wairau Fault: Implications for Long-Distance and Long-Term Coordination of Faulting Between North and South Island, New Zealand. Geochemistry, Geophysics, Geosystems, 22, e2021GC009656. https://doi.org/10.1029/2021GC009656
+* Zenodo: https://zenodo.org/records/4733235. https://doi.org/10.5281/zenodo.4733235
+
 
 
 
@@ -24,19 +25,19 @@ If you are running BASH (```echo $SHELL``` = bash), add the following paths to y
 ```
 RISeR_HOME=<path to repo>
 
-export PATH="${PATH}:${RISeR_HOME}:${RISeR_HOME}/SupportFunctions"
-export PYTHONPATH="${PYTHONPATH}:${RISeR_HOME}:${RISeR_HOME}/SupportFunctions"
+export PATH="${PATH}:${RISeR_HOME}"
+export PYTHONPATH="${PYTHONPATH}:${RISeR_HOME}/SupportFunctions"
 ```
 
 If you are running CSH/TCSH (```echo $SHELL``` = (t)csh), add the following paths to your ```~/.cshrc``` or ```~/.tcshrc``` file:
 
 ```
-set RISeR_HOME="/home/geovault-00/rzinke/RISeR"
+set RISeR_HOME=<path to repo>
 
-setenv PATH $PATH\:"$RISeR_HOME"\:"${RISeR_HOME}/SupportFunctions"
+setenv PATH $PATH\:"$RISeR_HOME"
 
 setenv PYTHONPATH <path to Python3>
-setenv PYTHONPATH $PYTHONPATH\:"${RISeR_HOME}"\:"${RISeR_HOME}/SupportFunctions"
+setenv PYTHONPATH $PYTHONPATH\:"${RISeR_HOME}/SupportFunctions"
 ```
 
 If you are using Windows, it is recommended you set additional environmental variables.
