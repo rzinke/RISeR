@@ -8,7 +8,6 @@ Rob Zinke 2019-2021
 ### IMPORT MODULES ---
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import cumtrapz
 from PDFanalysis import *
 from array2pdf import arrayHist, arrayKDE
 from PDFanalysis import IQRpdf, HPDpdf
@@ -86,7 +85,7 @@ class ageDatum:
         Sum values to cumulative distribution function (CDF).
         '''
         # Sum to CDF
-        self.cdf = cumtrapz(self.probs, self.ages, initial=0)
+        self.cdf = cumulative_trapezoid(self.probs, self.ages, initial=0)
 
     def __uniqueCDF__(self):
         '''
@@ -215,7 +214,7 @@ class dspDatum:
         Sum values to cumulative distribution function (CDF).
         '''
         # Sum to CDF
-        self.cdf = cumtrapz(self.probs, self.dsps, initial=0)
+        self.cdf = cumulative_trapezoid(self.probs, self.dsps, initial=0)
 
     def __uniqueCDF__(self):
         '''
