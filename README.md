@@ -1,4 +1,7 @@
 # Rejection sampling for Incremental Slip Rate calculation (RISeR)
+
+This is the original implementation of RISeR. It has been superceded by [RISeR V2](https://github.com/rzinke/RISeR2). Check it out!
+
 This code provides a Bayesian framework for computating incremental fault slip rates, where the age and/or displacement recorded by different markers is known only to within some nonzero, finite uncertainty. The slip rate computations herein enforce the assumption that the fault did not slip backwards (inversely to its overall kinematics) at any point in its history. This type of estimation is especially important in situations for which uncertainties in age or displacement are large, or measurements overlap within uncertainty.
 
 The incremental slip rate calcuations are carried out using one of two methods:
